@@ -8,3 +8,4 @@ macro/tests/cuts
 macro/tests/parameters
 run.sh
 *.sw*
+core*

@@ -1,5 +1,5 @@
 
-void sim_digi (Int_t nEvents = 100000) {
+void sim_digi (Int_t nEvents = 10000) {
 //----------------------------------
   Double_t BeamDetLToF = 1232.0;     // [cm] 12348
   Double_t BeamDetPosZToF = -95.3;  // [cm] 
@@ -8,20 +8,21 @@ void sim_digi (Int_t nEvents = 100000) {
   // --------------- Beam start position ------------------------------------
   Double_t beamStartPosition = -1600.;  // [cm]
   // --------------- Target -------------------------------------------------
-  Double_t targetD2Thickness = 0.6;  // [cm] this parameter should coincide with target H2 thickness in /macro/geo/create_target_D2_geo.C
+  Double_t targetD2Thickness = 0.1;  // [cm] this parameter should coincide with target H2 thickness in /macro/geo/create_target_D2_geo.C
   //---------------------Files-----------------------------------------------
   TString outFile= "sim_digi.root";
   TString datFile= "new_10he_0p_r.dat";
   TString parFile= "par.root";
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
   TString paramFileQTelescope = workDirPath 
-						 + "/db/QTelescope/QTelescopeParts_10heND.xml";
+						 + "/db/QTelescope/QTelescopeParts_3heND.xml";
   TString paramFileBeamDet = workDirPath
                          + "/db/BeamDet/BeamDetParts_10he.xml";
   TString targetGeoFileName = workDirPath + "/geometry/target.1h_Steel.geo.root";
   TString interactionVol = "target1HVol";
   TString ndGeoFileName = workDirPath + "/geometry/ND.geo.exp1904.10he.8m.root";  
-    
+  
+  
   // -----   Timer   --------------------------------------------------------
   TStopwatch timer; 
   timer.Start();
@@ -71,20 +72,30 @@ void sim_digi (Int_t nEvents = 100000) {
   setupQTelescope->SetGeoName("QTelescopeTmp");
 
   // ----- instead of annular parameters ----------------------------------------------------
-  Double_t xPos, yPos, zPos;
+  Double_t xPos, yPos, zPos, distDet;
   xPos = 0.;
   yPos = 0.;
-  zPos = -10.05;
+  zPos = 37.;
   TVector3 rotationC(0., 0., 0.);
+  distDet = 0.5; //cm. Расстояние между началами детекторов
   
   ERGeoSubAssembly* assembly_proton= new ERGeoSubAssembly("Telescope_proton", TVector3(xPos, yPos, zPos), rotationC);    
-  ERRTelescopeGeoComponentDoubleSi* det_proton = new ERRTelescopeGeoComponentDoubleSi("DoubleSi", "DoubleSi_R", 
+  ERRTelescopeGeoComponentSingleSi* det_proton_thin_r = new ERRTelescopeGeoComponentSingleSi("SingleSi", "SingleSi_R1", 
                                                                                     TVector3(0., 0., 0.), TVector3(), "X");  
-  assembly_proton->AddComponent(det_proton);
+  ERRTelescopeGeoComponentSingleSi* det_proton_thin_phi = new ERRTelescopeGeoComponentSingleSi("SingleSi", "SingleSi_Phi1", 
+                                                                                    TVector3(0., 0., 0.014), TVector3(), "Y");  
+  ERRTelescopeGeoComponentSingleSi* det_proton_thick_r = new ERRTelescopeGeoComponentSingleSi("SingleSi", "SingleSi_R2", 
+                                                                                    TVector3(0., 0., distDet+0.014+0.007+0.025), TVector3(), "X");  
+  ERRTelescopeGeoComponentSingleSi* det_proton_thick_phi = new ERRTelescopeGeoComponentSingleSi("SingleSi", "SingleSi_Phi2", 
+                                                                                    TVector3(0., 0., distDet+0.014+0.007+0.025+0.05), TVector3(), "Y");  
+  assembly_proton->AddComponent(det_proton_thin_r);
+  assembly_proton->AddComponent(det_proton_thin_phi);
+  assembly_proton->AddComponent(det_proton_thick_r);
+  assembly_proton->AddComponent(det_proton_thick_phi);
   setupQTelescope->AddSubAssembly(assembly_proton);
 
   // ----- square telescope parameters ----------------------------------------------------
-  Double_t x,y,z_d1,z_d2,z;
+  /*Double_t x,y,z_d1,z_d2,z;
   x = 0.;
   y = 0.;
   z = 25.15;
@@ -115,7 +126,7 @@ void sim_digi (Int_t nEvents = 100000) {
   assembly_he8->AddComponent(det_he8_Y4);
   assembly_he8->AddComponent(det_he8_Y5);
 
-  setupQTelescope->AddSubAssembly(assembly_he8);
+  setupQTelescope->AddSubAssembly(assembly_he8);*/
 
  
   // ------QTelescope -------------------------------------------------------

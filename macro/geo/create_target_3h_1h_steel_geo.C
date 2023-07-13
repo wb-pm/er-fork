@@ -36,21 +36,24 @@ void create_target_3h_1h_steel_geo()
   TGeoMedium* pH2 = geoM->GetMedium(mediumName);
   if (!pH2) Fatal("create_target_1h_geo", "Medium %s not found", mediumName.Data());
   
-  mediumName = "Steel";
-  FairGeoMedium* mSteel = geoMedia->getMedium( mediumName);
-  if ( ! mSteel ) Fatal("SOS", "FairMedium Steel not found");
-  geoBuild->createMedium(mSteel);
-  TGeoMedium* psteel = geoM->GetMedium("Steel");
-  if ( ! psteel ) Fatal("SOS", "Medium vacuum not found");
+  mediumName = "beryllium";
+  FairGeoMedium* mBeryllium = geoMedia->getMedium( mediumName);
+  if ( ! mBeryllium ) Fatal("SOS", "FairMedium beryllium not found");
+  geoBuild->createMedium(mBeryllium);
+  TGeoMedium* pBeryllium = geoM->GetMedium("beryllium");
+  if ( ! pBeryllium ) Fatal("SOS", "Medium vacuum not found");
 
   // General dimensions
   Double_t transX = 0.; // cm
   Double_t transY = 0.; // cm
   Double_t transZ = 0.; // cm
   Double_t target1HR = 1.25; // cm
-  Double_t target1HZ = 0.6; // cm
-  Double_t shellOuterThickness = 0.0010; // cm default=[0.5]
-  Double_t shellZThickness = 0.0010; // cm default=[0.25]
+  //Double_t target1HZ = 0.6; // cm
+  Double_t target1HZ = 0.07; // cm
+  //Double_t shellOuterThickness = 0.0010; // cm default=[0.5]
+  //Double_t shellZThickness = 0.0010; // cm default=[0.25]
+  Double_t shellOuterThickness = 0.001; // cm default=[0.5]
+  Double_t shellZThickness = 0.001; // cm default=[0.25]
 
   // Shapes
   TGeoTube* target1HShape = new TGeoTube("target1HShape",
@@ -64,7 +67,7 @@ void create_target_3h_1h_steel_geo()
 
   // Volumes
   TGeoVolume* target1HVol = new TGeoVolume("target1HVol", target1HShape, pH2);
-  TGeoVolume* targetShellVol = new TGeoVolume("targetShellVol", targetShellShape, psteel);
+  TGeoVolume* targetShellVol = new TGeoVolume("targetShellVol", targetShellShape, pBeryllium);
 
   // Matrices
   TGeoRotation* rotNoRot = new TGeoRotation("rotNoRot", 0., 0., 0.);

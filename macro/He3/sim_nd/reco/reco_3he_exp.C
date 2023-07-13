@@ -2,7 +2,7 @@
 
 // int fTriggerNum = 2;
 int fTriggerNum = 1;
-void reco_10he_exp(){
+void reco_3he_exp(){
   //---------------------Files-----------------------------------------------
 TString inFile = "sim_digi.root";
 TString outFile = inFile;
@@ -38,7 +38,7 @@ run->SetOutputFile(outFile);
   // ------------------------BeamDetTrackFinger--------------------------------
 Int_t verbose = 1; // 1 - only standard log print, 2 - print digi information 
 ERBeamDetTrackFinder* trackFinder = new ERBeamDetTrackFinder(verbose);
-trackFinder->SetTargetVolume("target3HVol");   
+trackFinder->SetTargetVolume("target1HVol");   
 run->AddTask(trackFinder);
 
 
@@ -55,22 +55,24 @@ run->AddTask(beamdetPid);
   
   // ------- QTelescope TrackFinder -------------------------------------------
 ERTelescopeTrackFinder* qtelescopeTrackFinder = new ERTelescopeTrackFinder(verbose);
-qtelescopeTrackFinder->SetHitStation("Telescope_he8", "Telescope_he8_SingleSi_SSD20_X", "Telescope_he8_SingleSi_SSD20_1_Y");
-qtelescopeTrackFinder->SetHitStation("Telescope_proton", "Telescope_proton_DoubleSi_R_XY");
+//qtelescopeTrackFinder->SetHitStation("Telescope_he8", "Telescope_he8_SingleSi_SSD20_X", "Telescope_he8_SingleSi_SSD20_1_Y");
+qtelescopeTrackFinder->SetHitStation("Telescope_proton", "Telescope_proton_SingleSi_R1_X","Telescope_proton_SingleSi_Phi1_Y");
+qtelescopeTrackFinder->SetHitStation("Telescope_proton", "Telescope_proton_SingleSi_R2_X","Telescope_proton_SingleSi_Phi2_Y");
 run->AddTask(qtelescopeTrackFinder);
   
   
   // ------   QTelescope TrackPID -----------------------------------------
 ERTelescopePID* qtelescopePID = new ERTelescopePID(verbose);
-TString deStation1 = "SSD20_1";
-TString eStation1 = "SSD_1";
+//TString deStation1 = "SSD20_1";
+//TString eStation1 = "SSD_1";
 Double_t normalizedThickness = 0.002; // [cm]
-Double_t DSD_thickness = 0.15; // [cm]
+Double_t DSD_thickness = 0.014; // [cm]
 
-qtelescopePID->SetParticle("Telescope_proton_DoubleSi_R_XY", 1000010030, "R", "Si", DSD_thickness);	//geant перестал понимать обозначение протона
-qtelescopePID->SetEdepAccountingStrategy("R", ERTelescopePID::EdepAccountingStrategy::EdepFromXChannel);
-qtelescopePID->SetParticle("Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y", 1000010030, 
-                             "SSD20_1", {"SSD20_1","SSD20_2","SSD20_3", "SSD20_4", "SSD20_5"}, normalizedThickness, {});
+//qtelescopePID->SetParticle("Telescope_3_SingleSi_SSD20_3_XTelescope_3_SingleSi_SSD_3_Y", 1000020030,"SSD20_3", "SSD_3", normalizedThickness, {}, {"SSD20_3"});
+
+qtelescopePID->SetParticle("Telescope_proton_SingleSi_R1_XTelescope_proton_SingleSi_Phi1_Y", 1000020030, "R1", {"R2","Phi2"}, DSD_thickness, {},{"R1","Phi1"}); //geant перестал понимать обозначение He3
+//qtelescopePID->SetEdepAccountingStrategy("R", ERTelescopePID::EdepAccountingStrategy::EdepFromXChannel);
+//qtelescopePID->SetParticle("Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y", 1000010030, "SSD20_1", {"SSD20_1","SSD20_2","SSD20_3", "SSD20_4", "SSD20_5"}, normalizedThickness, {});
 run->AddTask(qtelescopePID);
   
   

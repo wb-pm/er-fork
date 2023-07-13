@@ -35,6 +35,8 @@ data/ERNDPoint.cxx
 data/ERNDDigi.cxx
 data/ERNDTrack.cxx
 data/ERNDParticle.cxx
+data/ERBC404Point.cxx
+data/ERBC404Digi.cxx
 )
 
 # fill list of header files from list of source files

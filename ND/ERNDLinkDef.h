@@ -12,6 +12,8 @@
 
 #pragma link C++ class ERNDPoint+;
 #pragma link C++ class ERNDDigi+;
+#pragma link C++ class ERBC404Point+;
+#pragma link C++ class ERBC404Digi+;
 #pragma link C++ class ERNDTrack+;
 #pragma link C++ class ERNDParticle+;
 

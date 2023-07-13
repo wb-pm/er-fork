@@ -13,6 +13,7 @@
 
 #include "ERDetector.h"
 #include "ERNDPoint.h"
+#include "ERBC404Point.h"
 
 #include "TLorentzVector.h"
 
@@ -60,7 +61,8 @@ public:
    *@param cl1     Origin
    *@param cl2     Target
    *@param offset  Index offset **/
-  virtual void CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset);
+  virtual void CopyClonesND(TClonesArray* cl1ND, TClonesArray* cl2ND, Int_t offset);
+  virtual void CopyClonesBC404(TClonesArray* cl1BC404, TClonesArray* cl2BC404, Int_t offset);
   /// Constructs the ERND geometry
   virtual void ConstructGeometry();  
   /// Initialize ERND data
@@ -73,13 +75,14 @@ public:
   virtual Bool_t CheckIfSensitive(std::string name);
 private:
   TClonesArray* fNDPoints = nullptr; //!  The point collection
+  TClonesArray* fBC404Points = nullptr;
   TClonesArray*  fMCTracks = nullptr;
   Double_t fStep = 1.; //! Max lengt of step of track propagetion in sensetive volume
   std::set<Int_t> fCandidatesForParentPdgs = {22, 2112};
 private:
   void FindParentParticle(int track_id, int& parentTrackId, int& parentPdg);
   /// Adds a NeuRadPoint to the Point Collection
-  ERNDPoint* AddPoint(
+  ERNDPoint* AddNDPoint(
     Int_t eventID, Int_t trackID,
     Int_t mot0trackID,
     Int_t pdg,
@@ -90,6 +93,18 @@ private:
     Int_t stilbenNr,Float_t lightYield,
     Int_t parentTrackId, Int_t parentPdg
   );
+  /// Adds a BC404Point to the Point Collection
+  ERBC404Point* AddBC404Point(
+    Int_t eventID, Int_t trackID,
+    Int_t mot0trackID,
+    Int_t pdg,
+    TVector3 posIn,
+    TVector3 pos_out, TVector3 momIn,
+    TVector3 momOut, Double_t time,
+    Double_t length, Double_t eLoss, 
+    Int_t hexNr,Float_t lightYield,
+    Int_t parentTrackId, Int_t parentPdg
+  );    
   ClassDef(ERND,1);
 };
 

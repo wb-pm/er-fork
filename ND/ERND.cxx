@@ -29,6 +29,7 @@ ERND::ERND()
 {
   LOG(INFO) << "  ERND::ERND()" << FairLogger::endl;
   fNDPoints = new TClonesArray("ERNDPoint");
+  fBC404Points = new TClonesArray("ERBC404Point");
   flGeoPar = new TList();
   flGeoPar->SetName( GetName());
   fVerboseLevel = 1;
@@ -38,6 +39,7 @@ ERND::ERND(const char* name, Bool_t active, Int_t verbose)
   : FairDetector(name, active,verbose)
 {
   fNDPoints = new TClonesArray("ERNDPoint");
+  fBC404Points = new TClonesArray("ERBC404Point");
   flGeoPar = new TList();
   flGeoPar->SetName( GetName());
 }
@@ -47,6 +49,10 @@ ERND::~ERND() {
     fNDPoints->Delete();
     delete fNDPoints;
   }
+  if (fBC404Points) {
+    fBC404Points->Delete();
+    delete fBC404Points;
+  }  
 }
 //--------------------------------------------------------------------------------------------------
 void ERND::Initialize()
@@ -57,20 +63,24 @@ void ERND::Initialize()
 Bool_t ERND::ProcessHits(FairVolume* vol) {
   // Set constants for Birk's Law implentation (Geant 4parametrization)
   /*
-  static const Double_t dP = 1.032 ;
-  static const Double_t BirkC1 =  0.013/dP;
-  static const Double_t BirkC2 =  9.6e-6/(dP * dP);
+  static const Double_t dPND = 1.032 ;
+  static const Double_t BirkC1ND =  0.013/dPND;
+  static const Double_t BirkC2ND =  9.6e-6/(dPND * dPND);
   */
   //Birks constants from Craun, R. L.; Smith, D. L. NIM 80,2, p. 239, 1970
   /*
-  static const Double_t dP = 0.97;
-  static const Double_t BirkC1 =  0.00856/dP;
-  static const Double_t BirkC2 =  4.99e-6/(dP * dP);
+  static const Double_t dPND = 0.97;
+  static const Double_t BirkC1ND =  0.00856/dPND;
+  static const Double_t BirkC2ND =  4.99e-6/(dPND * dPND);
   */
   // Bircks constant from experiment. S. Belogurov, E. Gazeeva
-  static const Double_t dP = 1.16;
-  static const Double_t BirkC1 =  0.027/dP;
-  static const Double_t BirkC2 =  0.0/(dP * dP);
+  static const Double_t dPND = 1.16;
+  static const Double_t BirkC1ND =  0.027/dPND;
+  static const Double_t BirkC2ND =  0.0/(dPND * dPND);
+
+  static const Double_t dPBC404 = 1.16;
+  static const Double_t BirkC1BC404 =  0.027/dPBC404;
+  static const Double_t BirkC2BC404 =  0.0/(dPBC404 * dPBC404);
 
   static Int_t          eventID;           //!  event index
   static Int_t          trackID;           //!  track index
@@ -81,72 +91,128 @@ Bool_t ERND::ProcessHits(FairVolume* vol) {
   static Double32_t     time;              //!  time
   static Double32_t     length;            //!  length
   static Double32_t     eLoss;             //!  energy loss
-  static Int_t          stilbenNr;
   static Double_t       lightYield;
 
   static Int_t          parentTrackId = -1;
   static Int_t          parentPdg = -1;
 
-  gMC->SetMaxStep(fStep);
+    gMC->SetMaxStep(fStep);
 
-  if ( gMC->IsTrackEntering() ) { // Return true if this is the first step of the track in the current volume
-    eLoss  = 0.;
-    lightYield = 0.;
-    eventID = gMC->CurrentEvent();
-    gMC->TrackPosition(posIn);
-    gMC->TrackMomentum(momIn);
-    trackID  = gMC->GetStack()->GetCurrentTrackNumber();
-    time   = gMC->TrackTime() * 1.0e09;  // Return the current time of flight of the track being transported
-    length = gMC->TrackLength(); // Return the length of the current track from its origin (in cm)
-    mot0TrackID  = gMC->GetStack()->GetCurrentTrack()->GetMother(0);
-    pdg = gMC->TrackPid();
-    gMC->CurrentVolOffID(3,stilbenNr); 
-  }
-  const Double_t stepEloss = gMC->Edep() * 1000; // MeV //Return the energy lost in the current step
-  eLoss += stepEloss;
-  Double_t curLightYield = 0.;
-  // Apply Birk's law ( Adapted from G3BIRK/Geant3)
-  // Correction for all charge states
-  if (gMC->TrackCharge()!=0) { // Return the charge of the track currently transported
-    Double_t BirkC1Mod = 0;
-    // Apply correction for higher charge states
-      if (TMath::Abs(gMC->TrackCharge())>=2)
-        BirkC1Mod=BirkC1*7.2/12.6;
-      else
-        BirkC1Mod=BirkC1;
-
-    if (gMC->TrackStep()>0)
-    {
-      Double_t dedxcm = stepEloss/gMC->TrackStep(); //[MeV/cm]
-      curLightYield = stepEloss /(1.+BirkC1Mod*dedxcm+BirkC2*dedxcm*dedxcm); //[MeV]
-      lightYield+=curLightYield;
+    if ( gMC->IsTrackEntering() ) { // Return true if this is the first step of the track in the current volume
+      eLoss  = 0.;
+      lightYield = 0.;
+      eventID = gMC->CurrentEvent();
+      gMC->TrackPosition(posIn);
+      gMC->TrackMomentum(momIn);
+      trackID  = gMC->GetStack()->GetCurrentTrackNumber();
+      time   = gMC->TrackTime() * 1.0e09;  // Return the current time of flight of the track being transported
+      length = gMC->TrackLength(); // Return the length of the current track from its origin (in cm)
+      mot0TrackID  = gMC->GetStack()->GetCurrentTrack()->GetMother(0);
+      pdg = gMC->TrackPid();
+      //gMC->CurrentVolOffID(3,stilbenNr); 
     }
-  }
 
-	if (gMC->IsTrackExiting()    || //Return true if this is the last step of the track in the current volume 
-	    gMC->IsTrackStop()       || //Return true if the track energy has fallen below the threshold
-	    gMC->IsTrackDisappeared()) 
-	{ 
-    gMC->TrackPosition(posOut);
-    gMC->TrackMomentum(momOut);
+    
+    TString volName = gMC->CurrentVolName();
+    if(volName.Contains("crystal")){
+      //gMC->CurrentVolID(stilbenNr);
+    static Int_t          stilbenNr;
+    gMC->CurrentVolOffID(3,stilbenNr);
+      //std::cout << "Current volume with offset ID " << gMC->CurrentVolOffID(3,stilbenNr) << std::endl;
+      //std::cout << "Current volume ID " << gMC->CurrentVolID(stilbenNr) << std::endl;
+      //std::cout << "Current volume name " << volName << std::endl;
+      const Double_t stepEloss = gMC->Edep() * 1000; // MeV //Return the energy lost in the current step
+      eLoss += stepEloss;
+      Double_t curLightYieldND = 0.;
+      // Apply Birk's law ( Adapted from G3BIRK/Geant3)
+      // Correction for all charge states
+      if (gMC->TrackCharge()!=0) { // Return the charge of the track currently transported
+        Double_t BirkC1NDMod = 0;
+        // Apply correction for higher charge states
+          if (TMath::Abs(gMC->TrackCharge())>=2)
+            BirkC1NDMod=BirkC1ND*7.2/12.6;
+          else
+            BirkC1NDMod=BirkC1ND;
 
-	  if (eLoss > 0. && gMC->TrackCharge()!=0)
-    {
-      FindParentParticle(trackID, parentTrackId, parentPdg);
-      AddPoint( eventID, trackID, mot0TrackID, pdg,
-                TVector3(posIn.X(),   posIn.Y(),   posIn.Z()),
-                TVector3(posOut.X(),  posOut.Y(),  posOut.Z()),
-                TVector3(momIn.Px(),  momIn.Py(),  momIn.Pz()),
-                TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
-                time, length, eLoss, stilbenNr, lightYield,
-                parentTrackId, parentPdg);
+        if (gMC->TrackStep()>0)
+        {
+          Double_t dedxcmND = stepEloss/gMC->TrackStep(); //[MeV/cm]
+          curLightYieldND = stepEloss /(1.+BirkC1NDMod*dedxcmND+BirkC2ND*dedxcmND*dedxcmND); //[MeV]
+          lightYield+=curLightYieldND;
+        }
+      }
+
+    	if (gMC->IsTrackExiting()    || //Return true if this is the last step of the track in the current volume 
+    	    gMC->IsTrackStop()       || //Return true if the track energy has fallen below the threshold
+    	    gMC->IsTrackDisappeared()) 
+    	{ 
+        gMC->TrackPosition(posOut);
+        gMC->TrackMomentum(momOut);
+
+    	  if (eLoss > 0. && gMC->TrackCharge()!=0)
+        {
+          FindParentParticle(trackID, parentTrackId, parentPdg);
+          AddNDPoint( eventID, trackID, mot0TrackID, pdg,
+                    TVector3(posIn.X(),   posIn.Y(),   posIn.Z()),
+                    TVector3(posOut.X(),  posOut.Y(),  posOut.Z()),
+                    TVector3(momIn.Px(),  momIn.Py(),  momIn.Pz()),
+                    TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
+                    time, length, eLoss, stilbenNr, lightYield,
+                    parentTrackId, parentPdg);
+        }
+      }
     }
-  }
+    if(volName.Contains("BC404")){
+      static Int_t hexNr;
+      gMC->CurrentVolOffID(2,hexNr);
+      //gMC->CurrentVolID(hexNr);
+      const Double_t stepEloss = gMC->Edep() * 1000; // MeV //Return the energy lost in the current step
+      eLoss += stepEloss;
+      Double_t curLightYieldBC404 = 0.;
+      // Apply Birk's law ( Adapted from G3BIRK/Geant3)
+      // Correction for all charge states
+      if (gMC->TrackCharge()!=0) { // Return the charge of the track currently transported
+        Double_t BirkC1BC404Mod = 0;
+        // Apply correction for higher charge states
+          if (TMath::Abs(gMC->TrackCharge())>=2)
+            BirkC1BC404Mod=BirkC1BC404*7.2/12.6;
+          else
+            BirkC1BC404Mod=BirkC1BC404;
+
+        if (gMC->TrackStep()>0)
+        {
+          Double_t dedxcmBC404 = stepEloss/gMC->TrackStep(); //[MeV/cm]
+          curLightYieldBC404 = stepEloss /(1.+BirkC1BC404Mod*dedxcmBC404+BirkC2BC404*dedxcmBC404*dedxcmBC404); //[MeV]
+          lightYield+=curLightYieldBC404;
+        }
+      }
+
+      if (gMC->IsTrackExiting()    || //Return true if this is the last step of the track in the current volume 
+          gMC->IsTrackStop()       || //Return true if the track energy has fallen below the threshold
+          gMC->IsTrackDisappeared()) 
+      { 
+        gMC->TrackPosition(posOut);
+        gMC->TrackMomentum(momOut);
+
+        if (eLoss > 0. && gMC->TrackCharge()!=0)
+        {
+          FindParentParticle(trackID, parentTrackId, parentPdg);
+          AddBC404Point( eventID, trackID, mot0TrackID, pdg,
+                    TVector3(posIn.X(),   posIn.Y(),   posIn.Z()),
+                    TVector3(posOut.X(),  posOut.Y(),  posOut.Z()),
+                    TVector3(momIn.Px(),  momIn.Py(),  momIn.Pz()),
+                    TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
+                    time, length, eLoss, hexNr, lightYield,
+                    parentTrackId, parentPdg);
+        }
+      }
+    }
   return kTRUE;
 }
 //--------------------------------------------------------------------------------------------------
 void ERND::EndOfEvent() {
   LOG(DEBUG) << "ND Points Count: " << fNDPoints->GetEntriesFast() << FairLogger::endl;
+  LOG(DEBUG) << "BC404 Points Count: " << fBC404Points->GetEntriesFast() << FairLogger::endl;
   Print();
   Reset();
 }
@@ -157,12 +223,15 @@ void ERND::Register() {
 	Fatal("Init", "IO manager is not set");
   fMCTracks = (TClonesArray*) ioman->GetObject("MCTrack");
   ioman->Register("NDPoint","ND", fNDPoints, kTRUE);
+  ioman->Register("BC404Point","ND", fBC404Points, kTRUE);
 }
 //--------------------------------------------------------------------------------------------------
 TClonesArray* ERND::GetCollection(Int_t iColl) const {
-  if (iColl == 0) 
+  if (iColl == 0)
     return fNDPoints;
-  else 
+  else if (iColl == 1)
+    return fBC404Points;
+  else
     return NULL;
 }
 //--------------------------------------------------------------------------------------------------
@@ -171,29 +240,50 @@ void ERND::Print(Option_t *option) const {
     ERNDPoint* point = (ERNDPoint*)fNDPoints->At(i_point);
     point->Print();
   }
+  for (Int_t i_point = 0; i_point < fBC404Points->GetEntriesFast(); i_point++){
+    ERBC404Point* point = (ERBC404Point*)fBC404Points->At(i_point);
+    point->Print();
+  }  
 }
 //--------------------------------------------------------------------------------------------------
 void ERND::Reset() {
   fNDPoints->Clear();
+  fBC404Points->Clear();
 }
 //--------------------------------------------------------------------------------------------------
-void ERND::CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset) {
-  LOG(DEBUG) << "   ERND::CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset)" 
+void ERND::CopyClonesND(TClonesArray* cl1ND, TClonesArray* cl2ND, Int_t offset) {
+  LOG(DEBUG) << "   ERND::CopyClones(TClonesArray* cl1ND, TClonesArray* cl2ND, Int_t offset)" 
             << FairLogger::endl;
-  Int_t nEntries = cl1->GetEntriesFast();
+  Int_t nEntries = cl1ND->GetEntriesFast();
   LOG(DEBUG) << "decector: " << nEntries << " entries to add" << FairLogger::endl;
-  TClonesArray& clref = *cl2;
+  TClonesArray& clref = *cl2ND;
   ERNDPoint* oldpoint = NULL;
   for (Int_t i=0; i<nEntries; i++) {
-  oldpoint = (ERNDPoint*) cl1->At(i);
+  oldpoint = (ERNDPoint*) cl1ND->At(i);
    Int_t index = oldpoint->GetTrackID() + offset;
    oldpoint->SetTrackID(index);
-   new (clref[cl2->GetEntriesFast()]) ERNDPoint(*oldpoint);
+   new (clref[cl2ND->GetEntriesFast()]) ERNDPoint(*oldpoint);
   }
-  LOG(DEBUG) << "decector: " << cl2->GetEntriesFast() << " merged entries" << FairLogger::endl;
+  LOG(DEBUG) << "decector: " << cl2ND->GetEntriesFast() << " merged entries" << FairLogger::endl;
 }
 //--------------------------------------------------------------------------------------------------
-ERNDPoint* ERND::AddPoint(
+void ERND::CopyClonesBC404(TClonesArray* cl1BC404, TClonesArray* cl2BC404, Int_t offset) {
+  LOG(DEBUG) << "   ERND::CopyClones(TClonesArray* cl1BC404, TClonesArray* cl2BC404, Int_t offset)" 
+            << FairLogger::endl;
+  Int_t nEntries = cl1BC404->GetEntriesFast();
+  LOG(DEBUG) << "decector: " << nEntries << " entries to add" << FairLogger::endl;
+  TClonesArray& clref = *cl2BC404;
+  ERNDPoint* oldpoint = NULL;
+  for (Int_t i=0; i<nEntries; i++) {
+  oldpoint = (ERNDPoint*) cl1BC404->At(i);
+   Int_t index = oldpoint->GetTrackID() + offset;
+   oldpoint->SetTrackID(index);
+   new (clref[cl2BC404->GetEntriesFast()]) ERNDPoint(*oldpoint);
+  }
+  LOG(DEBUG) << "decector: " << cl2BC404->GetEntriesFast() << " merged entries" << FairLogger::endl;
+}
+//--------------------------------------------------------------------------------------------------
+ERNDPoint* ERND::AddNDPoint(
     Int_t eventID, Int_t trackID, Int_t mot0trackID, Int_t pdg,
     TVector3 posIn, TVector3 posOut, TVector3 momIn,
     TVector3 momOut, Double_t time, Double_t length,
@@ -204,6 +294,20 @@ ERNDPoint* ERND::AddPoint(
   Int_t size = clref.GetEntriesFast();
   return new(clref[size]) ERNDPoint(eventID, trackID, mot0trackID, pdg,
 					  posIn, posOut, momIn, momOut, time, length, eLoss,stilbenNr, lightYield,
+            parentTrackId, parentPdg);
+}
+//--------------------------------------------------------------------------------------------------
+ERBC404Point* ERND::AddBC404Point(
+    Int_t eventID, Int_t trackID, Int_t mot0trackID, Int_t pdg,
+    TVector3 posIn, TVector3 posOut, TVector3 momIn,
+    TVector3 momOut, Double_t time, Double_t length,
+    Double_t eLoss, Int_t hexNr, Float_t lightYield,
+    Int_t parentTrackId, Int_t parentPdg) 
+{
+  TClonesArray& clref = *fBC404Points;
+  Int_t size = clref.GetEntriesFast();
+  return new(clref[size]) ERBC404Point(eventID, trackID, mot0trackID, pdg,
+            posIn, posOut, momIn, momOut, time, length, eLoss,hexNr, lightYield,
             parentTrackId, parentPdg);
 }
 //--------------------------------------------------------------------------------------------------
@@ -275,7 +379,9 @@ Bool_t ERND::CheckIfSensitive(std::string name)
   if(volName.Contains("crystal")) {
     return kTRUE;
   }
-
+  if(volName.Contains("BC404")) {
+    return kTRUE;
+  }
   return kFALSE;
 }
 //--------------------------------------------------------------------------------------------------

@@ -68,6 +68,10 @@ Double_t KineticEnergyOnTarget(const ERNDTrack& track, Double_t kineticEnergy) {
       node = gGeoManager->Step();
       continue;
     }
+    if (materialName == TString("BC408")) {
+      node = gGeoManager->Step();
+      continue;
+    }
     const auto* material = G4NistManager::Instance()->FindOrBuildMaterial(materialName.Data());
     LOG(DEBUG) <<"[ERNDPID] [CalcEnergyDeposites]"
                 <<" Calc energy deposite for range " << range << " in materail "

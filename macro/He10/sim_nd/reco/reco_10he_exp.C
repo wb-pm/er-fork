@@ -4,7 +4,7 @@
 int fTriggerNum = 1;
 void reco_10he_exp(){
   //---------------------Files-----------------------------------------------
-TString inFile = "sim_digi.root";
+TString inFile = "sim_digi_bc404.root";
 TString outFile = inFile;
 inFile.Prepend("../");
 

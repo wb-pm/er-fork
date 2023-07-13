@@ -58,8 +58,8 @@ void ERNDSetup::ReadGeoParamsFromParContainer() {
     if (nd->GetNdaughters() != 1)
       LOG(FATAL) << "Wrong ND geometry structure" << FairLogger::endl;
     const auto* airBox = nd->GetDaughter(0);
-    for (Int_t iStilben = 0; iStilben < airBox->GetNdaughters(); iStilben++) {
-        const auto* node = airBox->GetDaughter(iStilben);
+    for (Int_t iModule = 0; iModule < airBox->GetNdaughters(); iModule++) {
+        const auto* node = airBox->GetDaughter(iModule);
         const auto* translation = node->GetMatrix()->GetTranslation();
         fChannel2Node[node->GetNumber()] = node;
     }
@@ -68,13 +68,13 @@ void ERNDSetup::ReadGeoParamsFromParContainer() {
 }
 
 void ERNDSetup::PMTPos(TVector3 pos, TVector3& pmtPos){
-	//@TODO пока что высчитывается координата центра стилбена.
-	TGeoNode* stilben = gGeoManager->FindNode(pos.X(), pos.Y(), pos.Z());
+	//@TODO пока что высчитывается координата центра модуля (стильбена либо bc404).
+	TGeoNode* module = gGeoManager->FindNode(pos.X(), pos.Y(), pos.Z());
 
-	TGeoMatrix* stilbenMatrix = stilben->GetMatrix();
-	pmtPos.SetXYZ(stilbenMatrix->GetTranslation()[0],
-				stilbenMatrix->GetTranslation()[1],
-				stilbenMatrix->GetTranslation()[2]);
+	TGeoMatrix* moduleMatrix = module->GetMatrix();
+	pmtPos.SetXYZ(moduleMatrix->GetTranslation()[0],
+				moduleMatrix->GetTranslation()[1],
+				moduleMatrix->GetTranslation()[2]);
 }
 
 TVector3 ERNDSetup::Pos(Int_t channel) {

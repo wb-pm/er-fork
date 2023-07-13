@@ -26,6 +26,7 @@ class ERNDTrackFinder : public ERTask {
   protected:
     //Input arrays
     TClonesArray* fNDDigis = nullptr;
+    TClonesArray* fBC404Digis = nullptr;
     TClonesArray* fBeamDetTrack = nullptr; 
     //Output arrays
     TClonesArray *fNDTracks = nullptr;

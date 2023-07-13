@@ -10,7 +10,7 @@ void sim_digi (Int_t nEvents = 10000) {
   // --------------- Target -------------------------------------------------
   Double_t targetD2Thickness = 0.6;  // [cm] this parameter should coincide with target H2 thickness in /macro/geo/create_target_D2_geo.C
   //---------------------Files-----------------------------------------------
-  TString outFile= "sim_digi.root";
+  TString outFile= "sim_digi_bc404.root";
   TString datFile= "new_10he_0p_r.dat";
   TString parFile= "par.root";
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
@@ -20,7 +20,7 @@ void sim_digi (Int_t nEvents = 10000) {
                          + "/db/BeamDet/BeamDetParts_10he.xml";
   TString targetGeoFileName = workDirPath + "/geometry/target.3h_Steel.geo.root";
   TString interactionVol = "target3HVol";
-  TString ndGeoFileName = workDirPath + "/geometry/ND.geo.exp1904.10he.8m.root";  
+  TString ndGeoFileName = workDirPath + "/geometry/NDoff.BC404on.geo.exp1904.root";  
     
   // -----   Timer   --------------------------------------------------------
   TStopwatch timer; 
@@ -189,13 +189,21 @@ void sim_digi (Int_t nEvents = 10000) {
   run->AddTask(beamDetDigitizer);
   // ------------------------------------------------------------------------
   ERNDDigitizer* ndDigitizer = new ERNDDigitizer(1);
-  ndDigitizer->SetEdepError(0.0,0.04,0.02);
-  ndDigitizer->SetLYError(0.0,0.04,0.02);
-  ndDigitizer->SetTimeError(0.001);
-  ndDigitizer->SetQuenchThreshold(0.005);
-  ndDigitizer->SetLYThreshold(0.004);
-  ndDigitizer->SetProbabilityB(0.1);
-  ndDigitizer->SetProbabilityC(0.3);
+  ndDigitizer->SetEdepErrorND(0.0,0.04,0.02);
+  ndDigitizer->SetLYErrorND(0.0,0.04,0.02);
+  ndDigitizer->SetTimeErrorND(0.001);
+  ndDigitizer->SetQuenchThresholdND(0.005);
+  ndDigitizer->SetLYThresholdND(0.004);
+  ndDigitizer->SetProbabilityNDB(0.1);
+  ndDigitizer->SetProbabilityNDC(0.3);
+
+  ndDigitizer->SetEdepErrorBC404(0.0,0.04,0.02);
+  ndDigitizer->SetLYErrorBC404(0.0,0.04,0.02);
+  ndDigitizer->SetTimeErrorBC404(0.001);
+  ndDigitizer->SetQuenchThresholdBC404(0.005);
+  ndDigitizer->SetLYThresholdBC404(0.004);
+  ndDigitizer->SetProbabilityBC404B(0.1);
+  ndDigitizer->SetProbabilityBC404C(0.3); 
   run->AddTask(ndDigitizer);
   //-------Set visualisation flag to true------------------------------------
   //run->SetStoreTraj(kTRUE);		//MCTrack is not written -> saves capacity of the disk

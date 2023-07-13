@@ -5,7 +5,7 @@ void create_ND_geo_exp1904_BC_404(TString SensitiveVolName)
   TString erPath = gSystem->Getenv("VMCWORKDIR");
 
   // Output paths
-  TString outGeoFilenameRoot = erPath + "/geometry/ND.geo.exp1904.BC.404.root";
+  TString outGeoFilenameRoot = erPath + "/geometry/NDoff.BC404on.geo.exp1904.root";
 
   // Input paths
   TString medFile = erPath + "/geometry/media.geo";
@@ -199,9 +199,13 @@ void create_ND_geo_exp1904_BC_404(TString SensitiveVolName)
     TGeoVolume* sixBC404Vol = new TGeoVolume("sixBC404Vol", sixBC404, pBC408);
     TGeoVolume* sixMylarVol = new TGeoVolume("sixMylarVol", sixMylar, pMylar);
 
+    TGeoVolume* modulePolygonVol = new TGeoVolumeAssembly("modulePolygonVol");
+
     // Structure
     // BC404 in mylar
     sixMylarVol->AddNode(sixBC404Vol, 1, new TGeoCombiTrans("mBC404InMylar", 0., 0., 0., rotNoRot));
+    // Mylar in modulePolygon
+    modulePolygonVol->AddNode(sixMylarVol,1,new TGeoCombiTrans("MylarVolInModulePolygon", 0.,0.,0., rotNoRot));
 
     Double_t gap = 0.14;            //зазор между шестиугольниками
     Double_t D = 9. + 2*gap;        //диаметр вписанной в шестиугольник окружности, для расчета координат шестиугольников
@@ -221,12 +225,12 @@ void create_ND_geo_exp1904_BC_404(TString SensitiveVolName)
     Double_t X5 = -X0;
     Double_t Y5 = Y0;
 
-    AirBox->AddNode(sixMylarVol,0, new TGeoCombiTrans("polygon1",X0,Y0,0., rotNoRot));
-    AirBox->AddNode(sixMylarVol,1, new TGeoCombiTrans("polygon2",X1,Y1,0., rotNoRot));
-    AirBox->AddNode(sixMylarVol,2, new TGeoCombiTrans("polygon3",X2,Y2,0., rotNoRot));
-    AirBox->AddNode(sixMylarVol,3, new TGeoCombiTrans("polygon4",X3,Y3,0., rotNoRot));
-    AirBox->AddNode(sixMylarVol,4, new TGeoCombiTrans("polygon5",X4,Y4,0., rotNoRot));
-    AirBox->AddNode(sixMylarVol,5, new TGeoCombiTrans("polygon5",X5,Y5,0., rotNoRot));
+    AirBox->AddNode(modulePolygonVol,0, new TGeoCombiTrans("polygon1",X0,Y0,0., rotNoRot));
+    AirBox->AddNode(modulePolygonVol,1, new TGeoCombiTrans("polygon2",X1,Y1,0., rotNoRot));
+    AirBox->AddNode(modulePolygonVol,2, new TGeoCombiTrans("polygon3",X2,Y2,0., rotNoRot));
+    AirBox->AddNode(modulePolygonVol,3, new TGeoCombiTrans("polygon4",X3,Y3,0., rotNoRot));
+    AirBox->AddNode(modulePolygonVol,4, new TGeoCombiTrans("polygon5",X4,Y4,0., rotNoRot));
+    AirBox->AddNode(modulePolygonVol,5, new TGeoCombiTrans("polygon5",X5,Y5,0., rotNoRot));
   }
     
   //////////////////////////////////////////////////////////////////////////////////////////////////

@@ -12,6 +12,7 @@
 
 #include "ERBeamDetTrack.h"
 #include "ERNDDigi.h"
+#include "ERBC404Digi.h"
 
 ERNDTrackFinder::ERNDTrackFinder()
   : ERTask("ER ND track finder") 
@@ -26,7 +27,11 @@ InitStatus ERNDTrackFinder::Init() {
   FairRootManager* ioman = FairRootManager::Instance();
   if ( ! ioman ) Fatal("Init", "No FairRootManager");
   fNDDigis = (TClonesArray*) ioman->GetObject("NDDigi");
-  if (!fNDDigis) Fatal("Init", "Can`t find collection NDDigi!"); 
+  //if (!fNDDigis) Fatal("Init", "Can`t find collection NDDigi!"); 
+  
+  fBC404Digis = (TClonesArray*) ioman->GetObject("BC404Digi");
+  //if (!fBC404Digis) Fatal("Init", "Can`t find collection BC404Digi!");
+
   fNDTracks = new TClonesArray("ERNDTrack",1000);
   ioman->Register("NDTrack", "ND track", fNDTracks, kTRUE);
   fSetup = ERNDSetup::Instance();
@@ -54,10 +59,17 @@ void ERNDTrackFinder::Exec(Option_t* opt) {
     fTargetVertex = TVector3(trackFromMWPC->GetTargetX(), trackFromMWPC->GetTargetY(),
                              trackFromMWPC->GetTargetZ());
   }
-  for (Int_t iDigi(0); iDigi < fNDDigis->GetEntriesFast(); iDigi++) {
-    const auto* digi = static_cast<ERNDDigi*>(fNDDigis->At(iDigi));
-    AddTrack(fSetup->Pos(digi->Channel()), fTargetVertex, digi->Edep(), digi->Time(), digi->TAC());
+  if(fBC404Digis->GetEntriesFast() != 0){
+    for (Int_t iDigi(0); iDigi < fBC404Digis->GetEntriesFast(); iDigi++) {
+    const auto* digi = static_cast<ERBC404Digi*>(fBC404Digis->At(iDigi));
+    AddTrack(fSetup->Pos(digi->Channel()), fTargetVertex, digi->Edep(), digi->Time(), digi->TAC());}
   }
+  else if(fNDDigis->GetEntriesFast() != 0){
+    for (Int_t iDigi(0); iDigi < fNDDigis->GetEntriesFast(); iDigi++) {
+    const auto* digi = static_cast<ERNDDigi*>(fNDDigis->At(iDigi));
+    AddTrack(fSetup->Pos(digi->Channel()), fTargetVertex, digi->Edep(), digi->Time(), digi->TAC());}
+  }
+    //Fatal("Init", "Can`t find any collection, NDDigi or BC404Digi!");
 }
 
 void ERNDTrackFinder::Reset() {

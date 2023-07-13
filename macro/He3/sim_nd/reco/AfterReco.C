@@ -17,7 +17,7 @@ void AfterReco(){
 	CreateCut();	
 	TString inFilelab;
 
-	inFilelab.Form("sim_digi.root");
+	inFilelab.Form("sim_digi_geo.root");
 	TString inFilereco = inFilelab;
 	TString parFile = "../par.root";	
 	Ssiz_t p = inFilelab.First(".");
@@ -35,9 +35,9 @@ void AfterReco(){
 	f_out = new TFile(outFile,"RECREATE");
 	TTree *tree_out = new TTree("er","");
 		
-	arr_reco_8he = new TClonesArray("ERTelescopeParticle",1000);
+	//arr_reco_8he = new TClonesArray("ERTelescopeParticle",1000);
 	arr_reco_p = new TClonesArray("ERTelescopeParticle",1000);
-	arr_reco_track8he = new TClonesArray("ERTelescopeTrack",1000);
+	//arr_reco_track8he = new TClonesArray("ERTelescopeTrack",1000);
 	arr_reco_trackp = new TClonesArray("ERTelescopeTrack",1000);
 	arr_reco_bdt = new TClonesArray("ERBeamDetTrack",1000);
 	arr_reco_bdp = new TClonesArray("ERBeamDetParticle",1000);
@@ -47,19 +47,19 @@ void AfterReco(){
 	
 	ER3Hto3HeEventHeader *b_EventHeader = new ER3Hto3HeEventHeader();	
 	tree_sim->SetBranchAddress("MCEventHeader.",&b_EventHeader);
-	tree_sim->SetBranchAddress("TelescopeParticle_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y_1000020080",&arr_reco_8he);
-	tree_sim->SetBranchAddress("TelescopeParticle_Telescope_proton_DoubleSi_R_XY_1000010010",&arr_reco_p);
+	//tree_sim->SetBranchAddress("TelescopeParticle_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y_1000020080",&arr_reco_8he);
+	tree_sim->SetBranchAddress("TelescopeParticle_Telescope_proton_DoubleSi_R_XY",&arr_reco_p);
 	tree_sim->SetBranchAddress("BeamDetTrack",&arr_reco_bdt);
 	tree_sim->SetBranchAddress("BeamDetParticle.",&arr_reco_bdp);
-	tree_sim->SetBranchAddress("TelescopeTrack_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y",&arr_reco_track8he);
+	//tree_sim->SetBranchAddress("TelescopeTrack_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y",&arr_reco_track8he);
 	tree_sim->SetBranchAddress("TelescopeTrack_Telescope_proton_DoubleSi_R_XY",&arr_reco_trackp);
 	tree_sim->SetBranchAddress("NDTrack",&arr_ndtrack);
 	tree_sim->SetBranchAddress("NDParticle",&arr_ndparticle);
 	tree_sim->SetBranchAddress("NDPoint",&arr_ndpoint);
 	
-	tree_out->Branch("TelescopeParticle_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y_1000020080",&arr_reco_8he);
-	tree_out->Branch("TelescopeParticle_Telescope_proton_DoubleSi_R_XY_1000010010",&arr_reco_p);
-	tree_out->Branch("TelescopeTrack_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y",&arr_reco_track8he);
+	//tree_out->Branch("TelescopeParticle_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y_1000020080",&arr_reco_8he);
+	tree_out->Branch("TelescopeParticle_Telescope_proton_DoubleSi_R_XY",&arr_reco_p);
+	//tree_out->Branch("TelescopeTrack_Telescope_he8_SingleSi_SSD20_XTelescope_he8_SingleSi_SSD20_1_Y",&arr_reco_track8he);
 	tree_out->Branch("TelescopeTrack_Telescope_proton_DoubleSi_R_XY",&arr_reco_trackp);
 	tree_out->Branch("BeamDetTrack",&arr_reco_bdt);
 	tree_out->Branch("BeamDetParticle.",&arr_reco_bdp);
@@ -79,13 +79,13 @@ void AfterReco(){
 		tree_reco->GetEntry(i);	
 		trigger_reaction = (Int_t)b_EventHeader->GetTrigger();
 
-		if(arr_reco_8he->GetEntries()>0 && arr_reco_p->GetEntries()>0){
+		if(/*arr_reco_8he->GetEntries()>0 &&*/ arr_reco_p->GetEntries()>0){
 			
-			he8_E = ((ERTelescopeParticle*)arr_reco_8he->At(0))->GetEdepInThickStation();
-			he8_dE = ((ERTelescopeParticle*)arr_reco_8he->At(0))->GetEdepInThinStation();
-			if(cut_8he->IsInside(he8_dE, he8_E)) {			
-				trigger_8he = 1;
-				hEdE.Fill(he8_dE,he8_E);
+			//he8_E = ((ERTelescopeParticle*)arr_reco_8he->At(0))->GetEdepInThickStation();
+			//he8_dE = ((ERTelescopeParticle*)arr_reco_8he->At(0))->GetEdepInThinStation();
+			//if(cut_8he->IsInside(he8_dE, he8_E)) {			
+				//trigger_8he = 1;
+				//hEdE.Fill(he8_dE,he8_E);
 				for(Int_t iNDpoint=0;iNDpoint < arr_ndpoint->GetEntries();iNDpoint++){
 					ndpoint_pdg = ((ERNDPoint*)arr_ndpoint->At(0))->GetPDG();
 					ndpoint_Eloss = ((ERNDPoint*)arr_ndpoint->At(0))->GetEnergyLoss();
@@ -94,25 +94,25 @@ void AfterReco(){
 					hTrackID.Fill(parent_trackid);
 					hParentPDG.Fill(parent_pdg);						
 				}
-				}
-			if(trigger_8he != 1) Clear();
+				//}
+			//if(trigger_8he != 1) Clear();
 		}
 		else Clear();
 		
 		tree_out->Fill();
 		Clear();
 	}
-	hEdE.Write();
+	//hEdE.Write();
 	hTrackID.Write();
 	hParentPDG.Write();
 	tree_out->Write();
-	hEdE.Draw();
-	if(hEdE.Integral()==0) printf("=======================================================\n  Graphical cut is not valid, Integral of EdE is zero\n=======================================================\n");
+	//hEdE.Draw();
+	//if(hEdE.Integral()==0) printf("=======================================================\n  Graphical cut is not valid, Integral of EdE is zero\n=======================================================\n");
 	f_sim->Close();
 	f_reco->Close();
 	
 	DrawEdE(inFilereco);
-	DrawEdE(outFile);
+	//DrawEdE(outFile);
 	DrawParentTrackID(outFile);
 	DrawParentPDG(outFile);
 }
@@ -121,7 +121,7 @@ void AfterReco(){
 
 
 void Clear(){
-	arr_reco_8he->Clear();
+	//arr_reco_8he->Clear();
 	arr_reco_p->Clear();
 	arr_reco_track8he->Clear();
 	arr_reco_trackp->Clear();

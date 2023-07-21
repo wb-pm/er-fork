@@ -7,7 +7,6 @@
 #include "FairGenericParRootFileIo.h"
 #include "FairParAsciiFileIo.h"
 #include "FairParRootFileIo.h"
-#include<iostream>
 
 #include "TString.h"
 #include "TMath.h"

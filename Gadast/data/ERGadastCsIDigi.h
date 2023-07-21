@@ -20,7 +20,9 @@ class ERGadastCsIDigi : public FairMultiLinkedData
   
   /** Constructor with arguments
    **/
-  ERGadastCsIDigi(Int_t id, Float_t Edep, Int_t wall, Int_t block, Int_t cell);
+  ERGadastCsIDigi(Int_t id, Float_t Edep,Int_t wall, Int_t block, Int_t cell, 
+Int_t Events_Poisson_Cs, Int_t Events_Poisson_Co, Int_t CsGammas_Before, Int_t CsGammas_After,
+Int_t Co1Gammas_Before, Int_t Co1Gammas_After, Int_t Co2Gammas_Before, Int_t Co2Gammas_After);
                    
   /** Copy constructor **/
   ERGadastCsIDigi(const ERGadastCsIDigi&);
@@ -41,6 +43,8 @@ class ERGadastCsIDigi : public FairMultiLinkedData
   Int_t fID;
   Float_t fEdep;
   Int_t fWall, fBlock, fCell;
+  Int_t fEvents_Poisson_Cs, fEvents_Poisson_Co, fCsGammas_Before, fCsGammas_After;
+  Int_t fCo1Gammas_Before, fCo1Gammas_After, fCo2Gammas_Before, fCo2Gammas_After;
   
   ClassDef(ERGadastCsIDigi,1)
 };

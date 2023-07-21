@@ -10,6 +10,7 @@
 #include "ERGadastCsIPoint.h"
 #include "ERGadastLaBrPoint.h"
 
+#include "TH1.h"
 using namespace std;
 
 // ----------------------------------------------------------------------------
@@ -224,7 +225,250 @@ InitStatus ERGadastDigitizer::Init()
 // -------------------------------------------------------------------------
 
 // -----   Public method Exec   --------------------------------------------
+//----------------------------------------------------------------------------
+//New Implementation with pile-up algorithm and Poisson distribution
 void ERGadastDigitizer::Exec(Option_t* opt)
+{
+  // Reset entries in output arrays
+  Reset();
+
+  // Sort points by sensentive volumes
+  // Map points by cells: pointsCsI[iWall][iBlock][iCell]
+  map<Int_t, map<Int_t, map <Int_t, vector<Int_t> > > > pointsCsI;
+  for (Int_t iPoint = 0; iPoint < fGadastCsIPoints->GetEntriesFast(); iPoint++){
+    ERGadastCsIPoint* point = (ERGadastCsIPoint*)fGadastCsIPoints->At(iPoint);
+    pointsCsI[point->GetWall()][point->GetBlock()][point->GetCell()].push_back(iPoint);
+  }
+
+  // Map points by cells: pointsLaBr[iCell]
+  map<Int_t, vector<Int_t> > pointsLaBr;
+  for (Int_t iPoint = 0; iPoint < fGadastLaBrPoints->GetEntriesFast(); iPoint++){
+    ERGadastLaBrPoint* point = (ERGadastLaBrPoint*)fGadastLaBrPoints->At(iPoint);
+    pointsLaBr[point->GetCell()].push_back(iPoint);
+  }
+  
+Int_t multiplicity_check = 6; // Multiplicity of the gammas, taken from the sim_digi
+//Generating Poisson distribution numbers, to determine quantity of gammas left 
+std::random_device dev_pos;
+std::mt19937 rng_pos(dev_pos());
+std::poisson_distribution<int> distribution_Cs(2.);
+std::poisson_distribution<int> distribution_Co(4.);
+int events_poisson_Cs = distribution_Cs(rng_pos);
+//int events_poisson_Cs = 1;
+int events_poisson_Co = distribution_Co(rng_pos);
+//int events_poisson_Co = 1;
+
+ for (const auto &itWall : pointsCsI){
+    for (const auto &itBlock : itWall.second){
+      BlockAddress address = std::make_pair(itWall.first, itBlock.first);
+      for (const auto &itCell : itBlock.second){
+        Double_t edep = 0.; // sum edep in cell
+        Float_t edepSigma = 0.; // sum edep in cell
+        Double_t energydep = 0.;
+        size_t x_countsLCA, y_countsLCA, z_countsLCA;
+        std::tie(x_countsLCA, y_countsLCA, z_countsLCA) = fCsILCAGrid(address);
+        std::vector<std::vector<std::vector<std::vector<float> > > > separatedenergydeps(x_countsLCA, std::vector<std::vector<std::vector<float> > >(y_countsLCA, std::vector<std::vector<float> >(z_countsLCA, vector<float>(multiplicity_check*3,0))));
+        std::cout << "x_countsLCA: " << x_countsLCA << " y_countsLCA: " << y_countsLCA << " z_countsLCA: " << z_countsLCA << endl;
+		std::vector<Double_t> energydeps(multiplicity_check*3, 0.0);
+		std::vector<Double_t> changedenergydeps(multiplicity_check*3, 0.0);
+		std::vector<Double_t> poissonenergydeps(multiplicity_check*2, 0.0);
+		std::vector<Double_t> finalenergydeps(multiplicity_check*2, 0.0);
+        Float_t time = std::numeric_limits<float>::max(); // first time in cell
+
+        for (const auto iPoint : itCell.second){
+          ERGadastCsIPoint* point = (ERGadastCsIPoint*)fGadastCsIPoints->At(iPoint);
+          if (point->GetTime() < time)
+            time = point->GetTime();
+          TVector3 pos;
+          point->PositionIn(pos);
+		  
+		  
+		  size_t x_countsLC, y_countsLC, z_countsLC;
+          std::tie(x_countsLC, y_countsLC, z_countsLC) = fCsILCGrid(address);
+          cout << "x_countsLC: " << x_countsLC << " y_countsLC: " << y_countsLC << " z_countsLC: " << z_countsLC << endl;
+          size_t x_binLC, y_binLC, z_binLC;
+          std::tie(x_binLC, y_binLC, z_binLC) = fSetup->GetCsIMeshElement(&pos, x_countsLC, y_countsLC, z_countsLC);
+          cout << "x_binLC: " << x_binLC << " y_binLC: " << y_binLC << " z_binLC: " << z_binLC << endl;
+          
+          size_t x_binLCA, y_binLCA, z_binLCA;
+          std::tie(x_binLCA, y_binLCA, z_binLCA) = fSetup->GetCsIMeshElement(&pos, x_countsLCA, y_countsLCA, z_countsLCA);
+          cout << "x_binLCA: " << x_binLCA << " y_binLCA: " << y_binLCA << " z_binLCA: " << z_binLCA << endl;
+          const float A = fCsILCAFun(address, x_binLCA, y_binLCA, z_binLCA);
+          
+          separatedenergydeps.at(x_binLCA).at(y_binLCA).at(z_binLCA).at(point->GetParentGammaTrackID()) += fCsILCFun(address, x_binLC, y_binLC, z_binLC)*point->GetEnergyLoss();
+
+		  size_t x_countsLCB, y_countsLCB, z_countsLCB;
+          std::tie(x_countsLCB, y_countsLCB, z_countsLCB) = fCsILCBGrid(address);
+          size_t x_binLCB, y_binLCB, z_binLCB;
+          std::tie(x_binLCB, y_binLCB, z_binLCB) = fSetup->GetCsIMeshElement(&pos, x_countsLCB, y_countsLCB, z_countsLCB);
+          const float B = fCsILCBFun(address, x_binLCB, y_binLCB, z_binLCB);
+
+		  size_t x_countsLCC, y_countsLCC, z_countsLCC;
+          std::tie(x_countsLCC, y_countsLCC, z_countsLCC) = fCsILCCGrid(address);
+          size_t x_binLCC, y_binLCC, z_binLCC;
+          std::tie(x_binLCC, y_binLCC, z_binLCC) = fSetup->GetCsIMeshElement(&pos, x_countsLCC, y_countsLCC, z_countsLCC);
+          const float C = fCsILCCFun(address, x_binLCC, y_binLCC, z_binLCC);
+          
+          //energydep = fCsILCFun(address, x_binLC, y_binLC, z_binLC) * point->GetEnergyLoss();
+          //changedenergydeps[point->GetParentGammaTrackID()] += gRandom->Gaus(energydep, sqrt(pow(A, 2) + pow(B * TMath::Sqrt(energydep), 2) + pow(C * energydep, 2)));
+		  //energydeps[point->GetParentGammaTrackID()] += fCsILCFun(address, x_binLC, y_binLC, z_binLC) * point->GetEnergyLoss();
+		  
+		  //Energy depositions, altered by the Gauss distribution
+		  /*for(int i = 0; i < multiplicity_check*3; i++){
+			  if (energydeps[i] <= 0.0001)
+				{;}
+			  else
+		  {
+			  changedenergydeps[i] = gRandom->Gaus(energydeps[i], sqrt(pow(A, 2) + pow(B * TMath::Sqrt(energydeps[i]), 2) + pow(C * energydeps[i], 2)));
+			  //changedenergydeps[i] = gRandom->Gaus(energydeps[i], 0.11*energydeps[i]);
+		  }
+			  }   */
+	    }
+		for(auto ix = separatedenergydeps.begin(); ix != separatedenergydeps.end(); ++ix){
+			for(auto iy = ix->begin(); iy != ix->end(); ++iy){
+				for(auto iz = iy->begin(); iz != iy->end(); ++iz){
+					for(auto imult = iz->begin(); imult != iz->end(); ++imult){
+					if(*imult <= 0.0001){
+						continue;
+					}
+					else{
+					*imult = gRandom->Gaus(*imult, sqrt(pow(fCsILCAFun(address, std::distance(separatedenergydeps.begin(),ix), std::distance(ix->begin(), iy), std::distance(iy->begin(),iz)), 2) + pow(fCsILCBFun(address, std::distance(separatedenergydeps.begin(),ix), std::distance(ix->begin(), iy), std::distance(iy->begin(),iz)) * TMath::Sqrt(*imult), 2) + pow(fCsILCCFun(address, std::distance(separatedenergydeps.begin(),ix), std::distance(ix->begin(), iy), std::distance(iy->begin(),iz)) * *imult, 2)));
+					changedenergydeps[std::distance(iz->begin(),imult)] += *imult;}
+					}
+				}
+			}
+		}
+		  //Counters for gammas of each type, arriving to detector before applying Poisson algorithm
+			int CsGammas_Before = 0;
+			for(int i = 0; i < multiplicity_check; i++)
+			{
+				if (changedenergydeps[i] >=0.0001)
+				{
+					CsGammas_Before++;
+				}	
+			}
+			
+			int Co1Gammas_Before = 0;
+			for(int i = multiplicity_check; i < multiplicity_check*2; i++)
+			{
+				if (changedenergydeps[i] >=0.0001)
+				{
+					Co1Gammas_Before++;
+				}	
+			}
+						
+			int Co2Gammas_Before = 0;
+			for(int i = multiplicity_check*2; i < multiplicity_check*3; i++)
+			{
+				if (changedenergydeps[i] >=0.0001)
+				{
+					Co2Gammas_Before++;
+				}	
+			}
+			//Setting to 0 respective quantity of energy depositions (according to previously generated Poisson numbers)
+			for(int i = 0; i < multiplicity_check - events_poisson_Cs; i++)
+			{
+				changedenergydeps[i] = 0.;
+			}
+			for(int i = 0; i < multiplicity_check - events_poisson_Co; i++)
+			{
+				  changedenergydeps[multiplicity_check+i] = 0.;
+				  changedenergydeps[multiplicity_check*2+i] = 0.;
+			}		
+					  
+			int CsGammas_After = 0;  
+			for(int i = 0; i < multiplicity_check; i++)
+			{
+				if (changedenergydeps[i] >=0.0001)
+				{
+					CsGammas_After++;
+				}
+				else{;}	
+			}
+		//Counters for gammas of each type, left in the detector after applying Poisson algorithm
+			int Co1Gammas_After = 0;  
+			for(int i = multiplicity_check; i < multiplicity_check*2; i++)
+			{
+				if (changedenergydeps[i] >=0.0001)
+				{
+					Co1Gammas_After++;
+				}
+				else{;}	
+			}
+		
+			int Co2Gammas_After = 0;  
+			for(int i = multiplicity_check*2; i < multiplicity_check*3; i++)
+			{
+				if (changedenergydeps[i] >=0.0001)
+				{
+					Co2Gammas_After++;
+				}
+				else{;}	
+			}
+			//Considering here the fact that gammas from cobalt-60 are co-dependent, they are created simultaneously
+		  for(int i = 0; i < multiplicity_check; i++){
+			  poissonenergydeps[i] = changedenergydeps[i];
+			  poissonenergydeps[multiplicity_check+i] = changedenergydeps[multiplicity_check+i] + changedenergydeps[multiplicity_check*2+i];
+		  }	  
+		//Creating a vector of times passed between energy depositions registered by the detector		  		  
+	    std::random_device dev;
+		std::mt19937 rng(dev());
+		std::uniform_int_distribution<> distime(0,1000); //interval of time in which the numbers are generated
+		std::vector<Int_t> rndtime(multiplicity_check*2, 0);
+		for(auto &i: rndtime)
+		  {
+			  i = distime(rng);
+			  }
+		rndtime.front() = 0; //one of the energy depositions is set to take place at the beginning
+		std::sort(rndtime.begin(),rndtime.end());
+		   
+		Double_t shaping_time = 960.0; //shaping time constant
+		//Random shuffle of energy depositions (so that the order is not always Cs, Co1, Co2)
+	    std::random_device rd;
+		std::mt19937 gen(rd());
+		std::shuffle(poissonenergydeps.begin(),poissonenergydeps.end(), gen);
+		//Changing the energy depositions according to the exponential decay based on "rndtime" vector and "shaping_time" constant
+		for(int i = 0; i < multiplicity_check*2; i++){
+			finalenergydeps[i] = poissonenergydeps[i];
+		}
+		for(int i = 1; i < multiplicity_check*2; i++){
+			for(int j = 0; j < i; j++){
+				finalenergydeps[i] += poissonenergydeps[j]*exp(-(rndtime[i]-rndtime[j])/shaping_time);
+		}}
+		edep = *std::max_element(finalenergydeps.begin(),finalenergydeps.end());
+        if (edep <= 0.0001)
+          continue;
+        Float_t timeSigma = TMath::Sqrt(fCsITimeErrorA/edep);
+        time = gRandom->Gaus(time, timeSigma);
+
+        AddCsIDigi(edep, itWall.first, itBlock.first, itCell.first, events_poisson_Cs, events_poisson_Co, CsGammas_Before, CsGammas_After,
+        Co1Gammas_Before, Co1Gammas_After, Co2Gammas_Before, Co2Gammas_After);
+	  }
+	    }
+      }
+  for (const auto &itCell : pointsLaBr){
+    Float_t edep = 0; // sum edep in cell
+    Float_t time = std::numeric_limits<float>::max(); // first time in cell
+    for (const auto iPoint : itCell.second){
+      ERGadastLaBrPoint* point = (ERGadastLaBrPoint*)fGadastLaBrPoints->At(iPoint);
+      edep += point->GetEnergyLoss();
+      if (point->GetTime() < time)
+        time = point->GetTime();
+    }
+    Float_t edepSigma = sqrt(pow(fLaBrEdepErrorA,2) + pow(fLaBrEdepErrorB*TMath::Sqrt(edep),2) + pow(fLaBrEdepErrorC*edep,2));
+    edep = gRandom->Gaus(fLaBrLC*edep, edepSigma);
+    if (edep < fLaBrElossThreshold)
+      continue;
+    Float_t timeSigma = TMath::Sqrt(fLaBrTimeErrorA/edep);
+    time = gRandom->Gaus(time, timeSigma);
+
+    AddLaBrDigi(edep,itCell.first);
+  }
+}
+//----------------------------------------------------------------------------
+//The basic digitizer
+/*void ERGadastDigitizer::Exec(Option_t* opt)
+
 {
   // Reset entries in output arrays
   Reset();
@@ -276,7 +520,7 @@ void ERGadastDigitizer::Exec(Option_t* opt)
           std::tie(x_bin, y_bin, z_bin) = fSetup->GetCsIMeshElement(&pos, x_counts, y_counts, z_counts);
           const float C = fCsILCCFun(address, x_bin, y_bin, z_bin);
           
-          edepSigma += sqrt(pow(A, 2) + pow(B * TMath::Sqrt(edep), 2) + pow(C * edep, 2));
+          edepSigma = sqrt(pow(A, 2) + pow(B * TMath::Sqrt(edep), 2) + pow(C * edep, 2));
         }
         
         edep = gRandom->Gaus(edep, edepSigma);
@@ -308,9 +552,7 @@ void ERGadastDigitizer::Exec(Option_t* opt)
 
     AddLaBrDigi(edep,itCell.first);
   }
-}
-//----------------------------------------------------------------------------
-
+}*/
 //----------------------------------------------------------------------------
 void ERGadastDigitizer::Reset()
 {
@@ -331,10 +573,14 @@ void ERGadastDigitizer::Finish()
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-ERGadastCsIDigi* ERGadastDigitizer::AddCsIDigi(Float_t Edep,Int_t wall,Int_t block, Int_t cell)
+ERGadastCsIDigi* ERGadastDigitizer::AddCsIDigi(Float_t Edep,Int_t wall,Int_t block, Int_t cell, Int_t Events_Poisson_Cs, 
+  Int_t Events_Poisson_Co, Int_t CsGammas_Before, Int_t CsGammas_After, Int_t Co1Gammas_Before, Int_t Co1Gammas_After, 
+  Int_t Co2Gammas_Before, Int_t Co2Gammas_After)
 {
   ERGadastCsIDigi *digi = new((*fGadastCsIDigi)[fGadastCsIDigi->GetEntriesFast()])
-							ERGadastCsIDigi(fGadastCsIDigi->GetEntriesFast(), Edep, wall, block, cell);
+							ERGadastCsIDigi(fGadastCsIDigi->GetEntriesFast(), Edep, wall, block, cell, Events_Poisson_Cs,
+							Events_Poisson_Co, CsGammas_Before, CsGammas_After, Co1Gammas_Before, Co1Gammas_After, Co2Gammas_Before,
+							Co2Gammas_After);
   return digi;
 }
 // ----------------------------------------------------------------------------

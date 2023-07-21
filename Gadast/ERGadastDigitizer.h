@@ -127,7 +127,9 @@ protected:
       [](BlockAddress)  {return std::make_tuple(1,1,1);};
 protected:
   
-  ERGadastCsIDigi* AddCsIDigi(Float_t Edep,Int_t wall,Int_t block, Int_t cell);
+  ERGadastCsIDigi* AddCsIDigi(Float_t Edep,Int_t wall,Int_t block, Int_t cell, Int_t Events_Poisson_Cs, 
+  Int_t Events_Poisson_Co, Int_t CsGammas_Before, Int_t CsGammas_After, Int_t Co1Gammas_Before, Int_t Co1Gammas_After, 
+  Int_t Co2Gammas_Before, Int_t Co2Gammas_After);
   ERGadastLaBrDigi* AddLaBrDigi(Float_t Edep, Int_t cell);
   
 private:

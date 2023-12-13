@@ -93,7 +93,7 @@ std::tuple<size_t, size_t, size_t> ERGadastSetup::GetCsIMeshElement(TVector3* po
 	return std::make_tuple(x, y, z);
 }
 //----------------------------------------------------------------------------
-int ERGadastSetup::GetMeshElement(TVector3* pos, SensetiveType detType){
+int ERGadastSetup::GetMeshElement(TVector3* pos, SensitiveType detType){
 	TGeoNode* node = gGeoManager->FindNode(pos->X(), pos->Y(), pos->Z());
 	TGeoMatrix* gm = node->GetMatrix();
 

@@ -52,8 +52,8 @@ public:
 
   /* Modifiers */
 
-  /** @brief Method for switch on storing of all geant steps in sensetive volume. It is necessary 
-   ** to determine geant4 processes in sensetive volume
+  /** @brief Method for switch on storing of all geant steps in sensitive volume. It is necessary 
+   ** to determine geant4 processes in sensitive volume
   **/
   void SetStoreSteps() {fStoreSteps = kTRUE;}
 
@@ -149,7 +149,7 @@ private:
   TClonesArray*  fGadastSteps = nullptr;                ///< The all steps collection
   TClonesArray*  fMCTracks = nullptr;                   ///< The all steps collection
   
-  Bool_t fStoreSteps;                         ///< Flag to storing all steps in sensetive volume
+  Bool_t fStoreSteps;                         ///< Flag to storing all steps in sensitive volume
 
   /* current point information*/
 
@@ -167,7 +167,7 @@ private:
   Double32_t     fELoss;                      ///< energy loss
   Int_t fPDG;                                 ///< particle PDG
   Int_t  fStepNr;                             ///< current step numb in this active volumes
-  SensetiveType  fDetectorType;               ///< CsI or LaBr point
+  SensitiveType  fDetectorType;               ///< CsI or LaBr point
   Int_t fCsIWall;                             ///< CsI Wall number
   Int_t fCsIBlock;                            ///< CsI Block number
   Int_t fCsICell;                             ///< CsI Cell number

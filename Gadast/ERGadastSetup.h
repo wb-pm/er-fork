@@ -28,7 +28,7 @@ public:
     static Float_t CsIDispB(TVector3* pos);
     static Float_t LaBrDispB(TVector3* pos);
 
-	int GetMeshElement(TVector3* pos, SensetiveType detType);
+	int GetMeshElement(TVector3* pos, SensitiveType detType);
 	std::tuple<size_t, size_t, size_t> GetCsIMeshElement(TVector3* pos, size_t x_counts,
 	 													 size_t y_counts, size_t z_counts);
 private:

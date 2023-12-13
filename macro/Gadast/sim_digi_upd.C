@@ -1,3 +1,5 @@
+#if !defined(__CLING__)
+
 #include <iostream>
 
 #include "TStopwatch.h"
@@ -13,7 +15,9 @@
 #include "ERGadast.h"
 #include "ERGadastDigitizer.h"
 
-void sim_digi_upd(int nEvents = 1,TString geometry_file_name = "gadast_test.gdml", Double32_t theta_min = 0, 
+#endif
+
+void sim_digi_upd(int nEvents = 1,TString geometry_file_name = "gadast_test2021.gdml", Double32_t theta_min = 0, 
 Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TString file_name = "sim_digi_upd.root"){
   //---------------------Files-----------------------------------------------
   TString outFile= file_name;

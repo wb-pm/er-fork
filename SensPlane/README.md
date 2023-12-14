@@ -1,4 +1,4 @@
-# Sensetive plane
+# Sensitive plane
 
 Sensitive plane is a detector for debug purposes.
 It is a simple box with size, material and position defined in macro.

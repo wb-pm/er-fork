@@ -22,9 +22,9 @@ protected:
   virtual void ParseXmlParameters();
   Double_t fRMin = 0.;
   Double_t fRMax = 0.;
-  Double_t fSensetiveRMin = 0;
-  Double_t fSensetiveRMax = 0;
-  Double_t fSensetiveZ = 0;
+  Double_t fSensitiveRMin = 0;
+  Double_t fSensitiveRMax = 0;
+  Double_t fSensitiveZ = 0;
   ClassDef(ERRTelescopeGeoComponentSingleSi,1)
 };
 #endif

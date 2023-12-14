@@ -41,23 +41,23 @@ void ERRTelescopeGeoComponentSingleSi::ConstructGeometryVolume(void) {
     return gGeoManager->MakeSphere(name, material, sphere_r_min, sphere_r_max, 
                                    sphere_theta_min, sphere_theta_max, phi_min, phi_max);
   };
-  const auto fullZ = fSensetiveZ + fDeadLayerThicknessFrontSide + fDeadLayerThicknessBackSide;
+  const auto fullZ = fSensitiveZ + fDeadLayerThicknessFrontSide + fDeadLayerThicknessBackSide;
   fVolume = new TGeoVolumeAssembly(this->GetVolumeName());
   auto* station = make_tubes("r_station", media, fRMin, fRMax, fullZ, 0., 360.);
   fVolume->AddNode(station, 0, new TGeoCombiTrans(0, 0., -sphere_r_min, new TGeoRotation()));
   if (fOrientAroundZ == OrientationAroundZ::Y) {
-    const Double_t stripDR = (fSensetiveRMax-fSensetiveRMin) / fStripCount;
+    const Double_t stripDR = (fSensitiveRMax-fSensitiveRMin) / fStripCount;
     for (Int_t iStrip = 0; iStrip < fStripCount; iStrip++) {
-      TGeoVolume* strip = make_tubes("Sensitivestrip", media, fSensetiveRMin + iStrip * stripDR, 
-                                     fSensetiveRMin + (iStrip + 1) * stripDR, fSensetiveZ,
+      TGeoVolume* strip = make_tubes("Sensitivestrip", media, fSensitiveRMin + iStrip * stripDR, 
+                                     fSensitiveRMin + (iStrip + 1) * stripDR, fSensitiveZ,
                                      0., 360.);
       const Double_t zTranslation = (fDeadLayerThicknessFrontSide  - fDeadLayerThicknessBackSide) / 2.;
       station->AddNode(strip, iStrip, new TGeoCombiTrans(0, 0., zTranslation, new TGeoRotation()));
     }
   } else {
     const Double_t stripPhi = 360. / fStripCount;
-    TGeoVolume* strip = make_tubes("Sensitivestrip", media, fSensetiveRMin, fSensetiveRMax, 
-                                   fSensetiveZ, -stripPhi/2., stripPhi/2.);
+    TGeoVolume* strip = make_tubes("Sensitivestrip", media, fSensitiveRMin, fSensitiveRMax, 
+                                   fSensitiveZ, -stripPhi/2., stripPhi/2.);
     for (Int_t iStrip = 0; iStrip < fStripCount; iStrip++) {
       auto* rotation = new TGeoRotation();
       rotation->RotateZ(stripPhi * iStrip);
@@ -118,19 +118,19 @@ void ERRTelescopeGeoComponentSingleSi::ParseXmlParameters() {
                     }
                   }
                 }
-                if(!strcasecmp(curNode2->GetNodeName(), "sensetive_size")) {
+                if(!strcasecmp(curNode2->GetNodeName(), "sensitive_size")) {
                   attrList = curNode2->GetAttributes();
                   attr = 0;
                   TIter nextSensSizeAttr(attrList);
                   while ((attr=(TXMLAttr*)nextSensSizeAttr())) {
                     if (!strcasecmp("r_min", attr->GetName())) {
-                      fSensetiveRMin = atof(attr->GetValue());
+                      fSensitiveRMin = atof(attr->GetValue());
                     }
                     if (!strcasecmp("r_max", attr->GetName())) {
-                      fSensetiveRMax = atof(attr->GetValue());
+                      fSensitiveRMax = atof(attr->GetValue());
                     }
                     if (!strcasecmp("z", attr->GetName())) {
-                      fSensetiveZ = atof(attr->GetValue());
+                      fSensitiveZ = atof(attr->GetValue());
                     }
                   }
                 }

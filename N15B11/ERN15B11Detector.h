@@ -71,7 +71,7 @@ private:
     TLorentzVector fPosIn;            ///< point start  position
     TLorentzVector fPosOut;           ///< point finish  position
     TLorentzVector fCurPosIn;         ///< current step position
-    TVector3 fPosInLocal;             ///< point position in sensetive volume CS
+    TVector3 fPosInLocal;             ///< point position in sensitive volume CS
     TLorentzVector fMomIn;            ///< point start momentum
     TLorentzVector fMomOut;           ///< point start momentum
     TLorentzVector fCurMomIn;         ///< current step momentum

@@ -111,7 +111,7 @@
 		<singleSiTypes>
 			<singleSi id="SingleSi_R1">
 				<size r_min="1" r_max="5" />
-				<sensetive_size r_min="1" r_max="5" z="0.2"/>
+				<sensitive_size r_min="1" r_max="5" z="0.2"/>
 				<dead_layer_front>0.0002</dead_layer_front>
 				<dead_layer_back>0.0001</dead_layer_back>
 				<strip_count>16</strip_count>
@@ -119,7 +119,7 @@
 			</singleSi>
 			<singleSi id="SingleSi_Phi1">
 				<size r_min="1" r_max="5" />
-				<sensetive_size r_min="1" r_max="5" z="0.2"/>
+				<sensitive_size r_min="1" r_max="5" z="0.2"/>
 				<dead_layer_front>0.0002</dead_layer_front>
 				<dead_layer_back>0.0001</dead_layer_back>
 				<strip_count>16</strip_count>
@@ -129,7 +129,7 @@
 		<doubleSiTypes>
 			<doubleSi id="DoubleSi_R">
 				<size r_min="1" r_max="5" />
-				<sensetive_size r_min="1" r_max="5" z="0.2"/>
+				<sensitive_size r_min="1" r_max="5" z="0.2"/>
 				<dead_layer_front>0.0002</dead_layer_front>
 				<dead_layer_back>0.0001</dead_layer_back>
 				<strip_count_phi>16</strip_count_phi>

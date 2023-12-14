@@ -58,17 +58,17 @@ public:
 
     /* Modifiers */
 
-    /** @brief Method for switch on storing of first geant steps in sensetive volume. It is necessary
+    /** @brief Method for switch on storing of first geant steps in sensitive volume. It is necessary
      ** to determine the coordinate of the input to the sensitive volume
     **/
     void SetStorePrimarySteps() {fStorePrimarySteps = kTRUE;}
 
-    /** @brief Method for switch on storing of all geant steps in sensetive volume. It is necessary 
-     ** to determine geant4 processes in sensetive volume
+    /** @brief Method for switch on storing of all geant steps in sensitive volume. It is necessary 
+     ** to determine geant4 processes in sensitive volume
     **/
     void SetStoreAllSteps() {fStoreAllSteps = kTRUE;}
 
-    /** @brief Set propagation step in sensetive volumes.
+    /** @brief Set propagation step in sensitive volumes.
      ** Special process stepLimiter must be in TG4RunConfiguration
     **/
     void SetMaxStep(Double_t step) {fStep = step;}
@@ -164,14 +164,14 @@ private:
     TClonesArray*  fNeuRadFirstStep;  ///< The first step collection
     TClonesArray*  fNeuRadSteps;      ///< The steps collection
 
-    Bool_t fStorePrimarySteps;        ///< Flag to storing firs step in sensetive volume
-    Bool_t fStoreAllSteps;            ///< Flag to storing all steps in sensetive volume
+    Bool_t fStorePrimarySteps;        ///< Flag to storing firs step in sensitive volume
+    Bool_t fStoreAllSteps;            ///< Flag to storing all steps in sensitive volume
     Int_t   fVerbose;                 ///< Verbosity level                
 
-    Float_t fFullEnergy;              ///< Sum Edep in event in sensetive volume
-    Float_t fFullLY;                  ///< Sum Light Yield in event in sensetive volume
+    Float_t fFullEnergy;              ///< Sum Edep in event in sensitive volume
+    Float_t fFullLY;                  ///< Sum Light Yield in event in sensitive volume
 
-    Float_t fStep;                    ///< Step length in sensetive volumes
+    Float_t fStep;                    ///< Step length in sensitive volumes
 
     /* current step information*/
 
@@ -182,7 +182,7 @@ private:
     TLorentzVector fPosIn;            ///< point start  position
     TLorentzVector fPosOut;           ///< point finish  position
     TLorentzVector fCurPosIn;         ///< current step position
-    TVector3       fPosInLocal;       ///< point position in sensetive volume CS
+    TVector3       fPosInLocal;       ///< point position in sensitive volume CS
     TLorentzVector fMomIn;            ///< point start momentum
     TLorentzVector fMomOut;           ///< point start momentum
     TLorentzVector fCurMomIn;         ///< current step momentum

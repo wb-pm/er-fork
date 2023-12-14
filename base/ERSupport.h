@@ -39,14 +39,14 @@ inline TString ERDataObjectTypeStr(ERDataObjectType object) {
     return "";
 }
 enum ChannelSide {First, Second, None};
-enum SensetiveType {Si, CsI, LaBr};
+enum SensitiveType {Si, CsI, LaBr};
 enum OrientationAroundZ {X, Y, Default};
-inline TString SensetiveTypeStr(SensetiveType type) {
+inline TString SensitiveTypeStr(SensitiveType type) {
   switch(type) {
     case Si : return "Si";
     case CsI : return "CsI";
     case LaBr : return "LaBr";
-    default : LOG(FATAL) << "Unknown telescope sensetive type\n"; 
+    default : LOG(FATAL) << "Unknown telescope sensitive type\n"; 
   }
   return "";
 }

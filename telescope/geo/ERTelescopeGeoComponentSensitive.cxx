@@ -1,14 +1,14 @@
-#include "ERTelescopeGeoComponentSensetive.h"
+#include "ERTelescopeGeoComponentSensitive.h"
 
 #include <TXMLAttr.h>
 
 //--------------------------------------------------------------------------------------------------
-TString ERTelescopeGeoComponentSensetive::GetBranchNamePrefix(
-    SensetiveType sensetiveType, ERDataObjectType objectType) const {
+TString ERTelescopeGeoComponentSensitive::GetBranchNamePrefix(
+    SensitiveType sensitiveType, ERDataObjectType objectType) const {
   return TString("Telescope") + ERDataObjectTypeStr(objectType) + "_" + GetVolumeName();
 }
 //--------------------------------------------------------------------------------------------------
-std::list<TString> ERTelescopeGeoComponentSensetive::GetBranchNames(ERDataObjectType objectType) const {
+std::list<TString> ERTelescopeGeoComponentSensitive::GetBranchNames(ERDataObjectType objectType) const {
   std::list<TString> branchNames;
   for (const auto orientation : GetOrientationsAroundZ()) {
     for (const auto channelSide : GetChannelSides()) {
@@ -18,7 +18,7 @@ std::list<TString> ERTelescopeGeoComponentSensetive::GetBranchNames(ERDataObject
   return branchNames;
 }
 //--------------------------------------------------------------------------------------------------
-void ERTelescopeGeoComponentSensetive::FillTwoSidedChannelAttribute(const TList* attributes) {
+void ERTelescopeGeoComponentSensitive::FillTwoSidedChannelAttribute(const TList* attributes) {
   TIter next(attributes);
   while (auto* attr = static_cast<TXMLAttr*>(next())) {
     if (!strcasecmp("twoSidedChannel", attr->GetName()) && !strcasecmp("yes", attr->GetValue())) { 
@@ -27,4 +27,4 @@ void ERTelescopeGeoComponentSensetive::FillTwoSidedChannelAttribute(const TList*
   }
 }
 //--------------------------------------------------------------------------------------------------
-ClassImp(ERTelescopeGeoComponentSensetive)
+ClassImp(ERTelescopeGeoComponentSensitive)

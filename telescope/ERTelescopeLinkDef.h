@@ -13,7 +13,7 @@
 #pragma link C++ class ERTelescopeTrack+;
 #pragma link C++ class ERTelescopeParticle+;
 
-#pragma link C++ class ERTelescopeGeoComponentSensetive+;
+#pragma link C++ class ERTelescopeGeoComponentSensitive+;
 #pragma link C++ class ERTelescopeGeoComponentPassive+;
 #pragma link C++ class ERTelescopeGeoComponentSingleSi+;
 #pragma link C++ class ERRTelescopeGeoComponentSingleSi+;

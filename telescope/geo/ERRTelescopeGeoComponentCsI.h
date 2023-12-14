@@ -9,19 +9,19 @@
 #ifndef ERRTelescopeGeoComponentCsI_H
 #define ERRTelescopeGeoComponentCsI_H
 
-#include "ERTelescopeGeoComponentSensetive.h"
+#include "ERTelescopeGeoComponentSensitive.h"
 
 #include "TString.h"
 #include "TVector3.h"
 
-class ERRTelescopeGeoComponentCsI : public ERTelescopeGeoComponentSensetive {
+class ERRTelescopeGeoComponentCsI : public ERTelescopeGeoComponentSensitive {
 public:
   ERRTelescopeGeoComponentCsI() = default;
   ERRTelescopeGeoComponentCsI(const TString& typeFromXML, const TString& id)
-    : ERTelescopeGeoComponentSensetive(typeFromXML, id) {}
+    : ERTelescopeGeoComponentSensitive(typeFromXML, id) {}
   ERRTelescopeGeoComponentCsI(const TString& typeFromXML, const TString& id, 
                               const TVector3& position, const TVector3& rotation)
-    : ERTelescopeGeoComponentSensetive(typeFromXML, id, position, rotation) {}
+    : ERTelescopeGeoComponentSensitive(typeFromXML, id, position, rotation) {}
   virtual ~ERRTelescopeGeoComponentCsI() = default;
   virtual void ConstructGeometryVolume(void);
   virtual TString GetBranchName(ERDataObjectType object, 
@@ -29,7 +29,7 @@ public:
                                 ChannelSide side = ChannelSide::None) const;
   virtual std::list<OrientationAroundZ> GetOrientationsAroundZ() const;
   virtual std::list<ChannelSide> GetChannelSides() const;
-  virtual Int_t GetChannelFromSensetiveNodePath(
+  virtual Int_t GetChannelFromSensitiveNodePath(
     const TString& path, OrientationAroundZ orientation = OrientationAroundZ::Default) const;
 private:
   virtual void ParseXmlParameters();

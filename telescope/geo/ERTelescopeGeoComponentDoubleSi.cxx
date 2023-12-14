@@ -20,7 +20,7 @@
 //--------------------------------------------------------------------------------------------------
 ERTelescopeGeoComponentDoubleSi::ERTelescopeGeoComponentDoubleSi(
     const TString& typeFromXML, const TString& id, const TString& orientAroundZ) 
-: ERTelescopeGeoComponentSensetive(typeFromXML, id)
+: ERTelescopeGeoComponentSensitive(typeFromXML, id)
 {
   TString volumeNameInd = (orientAroundZ == "X") ? "_XY" : "_YX";  
   fOrientAroundZ = volumeNameInd;
@@ -30,7 +30,7 @@ ERTelescopeGeoComponentDoubleSi::ERTelescopeGeoComponentDoubleSi(
 ERTelescopeGeoComponentDoubleSi::ERTelescopeGeoComponentDoubleSi(
     const TString& typeFromXML, const TString& id, const TVector3& position, 
     const TVector3& rotation, const TString& orientAroundZ)
-: ERTelescopeGeoComponentSensetive(typeFromXML, id, position, rotation)
+: ERTelescopeGeoComponentSensitive(typeFromXML, id, position, rotation)
 {
   TString volumeNameInd = (orientAroundZ == "X") ? "_XY" : "_YX";  
   fOrientAroundZ = volumeNameInd;
@@ -40,7 +40,7 @@ ERTelescopeGeoComponentDoubleSi::ERTelescopeGeoComponentDoubleSi(
 TString ERTelescopeGeoComponentDoubleSi::GetBranchName(
     ERDataObjectType objectType, OrientationAroundZ orientationAroundZ /*= OrientationAroundZ::Default*/,
     ChannelSide channelSide /*= ChannelSide::None*/) const {
-  return GetBranchNamePrefix(SensetiveType::Si, objectType)
+  return GetBranchNamePrefix(SensitiveType::Si, objectType)
          + "_" + OrientationAroundZStr(orientationAroundZ)
          + (channelSide != ChannelSide::None ? TString("_") + ChannelSideStr(channelSide) : "");
 }
@@ -56,7 +56,7 @@ std::list<ChannelSide> ERTelescopeGeoComponentDoubleSi::GetChannelSides() const 
   return {ChannelSide::None};
 }
 //--------------------------------------------------------------------------------------------------
-Int_t ERTelescopeGeoComponentDoubleSi::GetChannelFromSensetiveNodePath(
+Int_t ERTelescopeGeoComponentDoubleSi::GetChannelFromSensitiveNodePath(
     const TString& path, OrientationAroundZ orientation /*= OrientationAroundZ::Default*/) const {
   TString pathWithChannelPostfix = path;
   if (orientation == OrientationAroundZ::X)

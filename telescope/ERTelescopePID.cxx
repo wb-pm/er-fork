@@ -194,8 +194,8 @@ AddParticle(const TLorentzVector& lvInteraction, const Double_t kinetic_energy, 
 }
 //--------------------------------------------------------------------------------------------------
 TVector3 ERTelescopePID::FindBackPropagationStartPoint(const ERTelescopeTrack& track) {
-  // Return geometry point at which the track exit last sensetive volume
-  // on its direct propagation. If sensetive volume was not found, return 
+  // Return geometry point at which the track exit last sensitive volume
+  // on its direct propagation. If sensitive volume was not found, return 
   // track telescope vertex.
   const TVector3 telescopeVertex = track.GetXStationVertex();
   TVector3 back_propagation_start_point = telescopeVertex;
@@ -203,31 +203,31 @@ TVector3 ERTelescopePID::FindBackPropagationStartPoint(const ERTelescopeTrack& t
   TGeoNode* currentNode = gGeoManager->InitTrack(
                               telescopeVertex.X(), telescopeVertex.Y(), telescopeVertex.Z(),
                               direction.X(), direction.Y(), direction.Z());
-  TGeoNode* lastSensetiveNode = nullptr;
-  TString lastSensetivePath;
-  TVector3 lastSensetivePosition;
+  TGeoNode* lastSensitiveNode = nullptr;
+  TString lastSensitivePath;
+  TVector3 lastSensitivePosition;
   while(!gGeoManager->IsOutside()) {
-    bool inSensetiveVolume = false;
+    bool inSensitiveVolume = false;
     const TString path = gGeoManager->GetPath();
     if (path.Contains("Sensitive")) { 
-      // Enter sensetive volume. Next step will be in sensetive volume.
-      inSensetiveVolume = true;
-      lastSensetiveNode = currentNode;
-      lastSensetivePath = path; 
+      // Enter sensitive volume. Next step will be in sensitive volume.
+      inSensitiveVolume = true;
+      lastSensitiveNode = currentNode;
+      lastSensitivePath = path; 
     }
     currentNode = gGeoManager->FindNextBoundary();
     currentNode = gGeoManager->Step();
-    if (inSensetiveVolume) {
+    if (inSensitiveVolume) {
       // position, when track exit sensetve volume
-      lastSensetivePosition = TVector3(gGeoManager->GetCurrentPoint());
+      lastSensitivePosition = TVector3(gGeoManager->GetCurrentPoint());
     }
   }
-  if (lastSensetiveNode) {
-    back_propagation_start_point = lastSensetivePosition;
-    LOG(DEBUG) << "[FindBackPropagationStartPoint] Last sensetive volume for track "
-               << lastSensetivePath << FairLogger::endl;
+  if (lastSensitiveNode) {
+    back_propagation_start_point = lastSensitivePosition;
+    LOG(DEBUG) << "[FindBackPropagationStartPoint] Last sensitive volume for track "
+               << lastSensitivePath << FairLogger::endl;
   } else {
-    LOG(DEBUG) << "[FindBackPropagationStartPoint] Last sensetive volume for track not found. "
+    LOG(DEBUG) << "[FindBackPropagationStartPoint] Last sensitive volume for track not found. "
                << "Track telescope vertex will be used as start point for back propagation\n";
   }
   LOG(DEBUG) << "[FindBackPropagationStartPoint] Back propagation start point " 
@@ -243,12 +243,12 @@ CalcEnergyDeposites(const ERTelescopeTrack& track, const TVector3& start_point,
                     const std::vector<TString>& stations_to_use_em_calculator_for_de_e,
                     const std::vector<TString>& stations_to_use_em_calculator_for_kinetic_energy) {
   // Calc paritcle energy deposites in setup using back track propagation from start point.
-  // Return pair: first - sum of energy deposites in digi(sensetive volumes); 
+  // Return pair: first - sum of energy deposites in digi(sensitive volumes); 
   //              second - sum of energy deposites in passive volumes (or dead energy deposite).
   Double_t digiDepositesSum = 0.;
   Double_t deadDepositesSum = 0.;
   // We start with kinetic energy equal zero, because we assume
-  // that start point is an exit point of the last sensetive volume,
+  // that start point is an exit point of the last sensitive volume,
   // which track has passed in setup. If the track stopped earlier, 
   // it will be taken into account automatically, because particle 
   // with zero kinetic energy can not loss energy ;)
@@ -280,7 +280,7 @@ CalcEnergyDeposites(const ERTelescopeTrack& track, const TVector3& start_point,
                << current_position.Y() << ", " << current_position.Z() << ")" << FairLogger::endl;
     LOG(DEBUG) << log_prefix << "path  = " 
                << gGeoManager->GetPath() << FairLogger::endl;
-    // If track in sensetive volume, try to find digi
+    // If track in sensitive volume, try to find digi
     const TString nodePath = TString(gGeoManager->GetPath());
     bool is_last_step = false;
     if (nodePath.Contains("Sensitive")){
@@ -377,7 +377,7 @@ std::map<TString, ERDigi*> ERTelescopePID::FindDigisByNode(const TGeoNode& node,
                << " not found." << FairLogger::endl;
     return resultDigis;
   }
-  //@TODO here component->GetChannelFromSensetiveNode() interface should be used in future.
+  //@TODO here component->GetChannelFromSensitiveNode() interface should be used in future.
   const auto getChannels = [&node, &nodePath, nodeOfDoubleSiStation]() -> std::vector<Int_t> {
     TString pathWithChannelPostfix = nodePath;
     if (nodePath.Contains("CsI") || nodePath.Contains("pseudo"))
@@ -466,13 +466,13 @@ void ERTelescopePID::FindEnergiesForDeEAnalysis(const TString& trackBranch,
     return;
   }
   edepInThinStation = ApplyEdepAccountingStrategy(deDigisOnTrack);
-  const auto deSensetiveThickness = deDigisOnTrack.front().fSensetiveThickness;
+  const auto deSensitiveThickness = deDigisOnTrack.front().fSensitiveThickness;
   // de and E correction
-  edepInThinStationCorrected = edepInThinStation * normalizedThickness / deSensetiveThickness;
+  edepInThinStationCorrected = edepInThinStation * normalizedThickness / deSensitiveThickness;
   LOG(DEBUG) << log_prefix <<  "Digi from station " << deStation 
             << " with edep = " << edepInThinStation << " [MeV] corrected to edep = " 
             << edepInThinStationCorrected << ". Normalized thickness = " 
-            << normalizedThickness << ", step in sensetive volume = " << deSensetiveThickness
+            << normalizedThickness << ", step in sensitive volume = " << deSensitiveThickness
             << FairLogger::endl;
   edepInThickStationCorrected = edepInThickStation + edepInThinStation - edepInThinStationCorrected;
   LOG(DEBUG) << log_prefix << "Digis from stations " << eStations_string 

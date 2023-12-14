@@ -61,10 +61,10 @@ public:
     **/
     virtual TClonesArray* GetCollection(Int_t iColl) const;
 
-    /** @brief Add sensetive volume name.
+    /** @brief Add sensitive volume name.
      ** Create new points collection
     **/
-	void AddSensetive(TString name);
+	void AddSensitive(TString name);
 public:
     /** @brief Initialisation
      ** class method FairDetector::Initialize() is called.
@@ -129,15 +129,15 @@ private:
     /** @brief Adds a Point to the Point Collection **/
     ERPoint* AddPoint(TClonesArray* points);
 protected:
-	//map of sensetive volumes points collection collection, fSenVolumes[senVol] = points
+	//map of sensitive volumes points collection collection, fSenVolumes[senVol] = points
 	std::map<TString,TClonesArray*> fSenVolumes;
 
-    std::vector<TString> fSenNames;   ///< Sensetive volumes sustring, that user set 
+    std::vector<TString> fSenNames;   ///< Sensitive volumes sustring, that user set 
 
 	Int_t   fVerbose;                 ///< Verbosity level                
 
-    Float_t fFullEnergy;              ///< Sum Edep in event in sensetive volume
-    Float_t fFullLY;                  ///< Sum Light Yield in event in sensetive volume
+    Float_t fFullEnergy;              ///< Sum Edep in event in sensitive volume
+    Float_t fFullLY;                  ///< Sum Light Yield in event in sensitive volume
 
     /* current step information*/
     Int_t fEventID;                   ///< event index
@@ -147,7 +147,7 @@ protected:
     TLorentzVector fPosIn;            ///< point start  position
     TLorentzVector fPosOut;           ///< point finish  position
     TLorentzVector fCurPosIn;         ///< current step position
-    TVector3 fPosInLocal;             ///< point position in sensetive volume CS
+    TVector3 fPosInLocal;             ///< point position in sensitive volume CS
     TLorentzVector fMomIn;            ///< point start momentum
     TLorentzVector fMomOut;           ///< point start momentum
     TLorentzVector fCurMomIn;         ///< current step momentum

@@ -55,10 +55,10 @@ public:
   struct DigiOnTrack {
     const TString fBranch;
     ERDigi* fDigi = nullptr;
-    const Double_t fSensetiveThickness = 0.;
+    const Double_t fSensitiveThickness = 0.;
     DigiOnTrack() = default;
-    DigiOnTrack(const TString& branch, ERDigi* digi, Double_t sensetiveThickness) :
-        fBranch(branch), fDigi(digi), fSensetiveThickness(sensetiveThickness) {}
+    DigiOnTrack(const TString& branch, ERDigi* digi, Double_t sensitiveThickness) :
+        fBranch(branch), fDigi(digi), fSensitiveThickness(sensitiveThickness) {}
     bool IsFound() const { return fDigi != nullptr; }
   };
                                                      

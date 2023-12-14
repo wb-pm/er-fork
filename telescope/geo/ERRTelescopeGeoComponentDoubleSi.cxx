@@ -43,23 +43,23 @@ void ERRTelescopeGeoComponentDoubleSi::ConstructGeometryVolume(void) {
     return gGeoManager->MakeSphere(name, material, sphere_r_min, sphere_r_max, 
                                    sphere_theta_min, sphere_theta_max, phi_min, phi_max);
   };
-   const auto Zplus = fSensetiveZ/2 + fDeadLayerThicknessBackSide;		
-   const auto Zminus = fSensetiveZ/2 + fDeadLayerThicknessFrontSide;
+   const auto Zplus = fSensitiveZ/2 + fDeadLayerThicknessBackSide;		
+   const auto Zminus = fSensitiveZ/2 + fDeadLayerThicknessFrontSide;
    fVolume = new TGeoVolumeAssembly(this->GetVolumeName());
    auto* station = make_tubes("r_station", media, fRMin*sphere_r/(sphere_r-Zminus), 
                              fRMax*sphere_r/(sphere_r+Zplus), Zplus, Zminus, 0., 360.);
   fVolume->AddNode(station, 0, new TGeoCombiTrans(0, 0., -(sphere_r), new TGeoRotation()));
   const Double_t segmentDPhi = 360. / fStripCountX;
-  const Double_t segmentDR = (fSensetiveRMax-fSensetiveRMin) / fStripCountY;
-  TGeoVolume* segment = make_tubes("Sector", media, fSensetiveRMin, fSensetiveRMax, Zplus, Zminus,
+  const Double_t segmentDR = (fSensitiveRMax-fSensitiveRMin) / fStripCountY;
+  TGeoVolume* segment = make_tubes("Sector", media, fSensitiveRMin, fSensitiveRMax, Zplus, Zminus,
                                    -segmentDPhi/2., segmentDPhi/2.);
   for (Int_t iRing = 0; iRing < fStripCountY; iRing++) {
-    const Double_t r_min = fSensetiveRMin + iRing * segmentDR;
-    const Double_t r_max = fSensetiveRMin + (iRing + 1) * segmentDR;
-    TGeoVolume* sensetive_segment = make_tubes("SensitiveSegment", media, r_min, r_max, 
-                                               fSensetiveZ/2, fSensetiveZ/2,
+    const Double_t r_min = fSensitiveRMin + iRing * segmentDR;
+    const Double_t r_max = fSensitiveRMin + (iRing + 1) * segmentDR;
+    TGeoVolume* sensitive_segment = make_tubes("SensitiveSegment", media, r_min, r_max, 
+                                               fSensitiveZ/2, fSensitiveZ/2,
                                                -segmentDPhi/2., segmentDPhi/2.);
-    segment->AddNode(sensetive_segment, iRing, new TGeoCombiTrans(0, 0., 0, new TGeoRotation()));
+    segment->AddNode(sensitive_segment, iRing, new TGeoCombiTrans(0, 0., 0, new TGeoRotation()));
   }
   for (Int_t iSegment = 0; iSegment < fStripCountX; iSegment++) {
     auto* rotation = new TGeoRotation();
@@ -119,19 +119,19 @@ void ERRTelescopeGeoComponentDoubleSi::ParseXmlParameters() {
                     }
                   }
                 }
-                if(!strcasecmp(curNode2->GetNodeName(), "sensetive_size")) {
+                if(!strcasecmp(curNode2->GetNodeName(), "sensitive_size")) {
                   attrList = curNode2->GetAttributes();
                   attr = 0;
                   TIter nextSensSizeAttr(attrList);
                   while ((attr=(TXMLAttr*)nextSensSizeAttr())) {
                     if (!strcasecmp("r_min", attr->GetName())) {
-                      fSensetiveRMin = atof(attr->GetValue());
+                      fSensitiveRMin = atof(attr->GetValue());
                     }
                     if (!strcasecmp("r_max", attr->GetName())) {
-                      fSensetiveRMax = atof(attr->GetValue());
+                      fSensitiveRMax = atof(attr->GetValue());
                     }
                     if (!strcasecmp("z", attr->GetName())) {
-                      fSensetiveZ = atof(attr->GetValue());
+                      fSensitiveZ = atof(attr->GetValue());
                     }
                   }
                 }

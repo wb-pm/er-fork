@@ -19,7 +19,7 @@
 #include "FairRuntimeDb.h"
 #include "FairLogger.h"
 
-#include "ERTelescopeGeoComponentSensetive.h"
+#include "ERTelescopeGeoComponentSensitive.h"
 #include "ERPoint.h"
 //-------------------------------------------------------------------------------------------------
 ERTelescope::ERTelescope() :
@@ -104,13 +104,13 @@ Bool_t ERTelescope::ProcessHits(FairVolume* vol) {
     gMC->TrackPosition(fPosOut);
     gMC->TrackMomentum(fMomOut);
     const TString path = gMC->CurrentVolPath();
-    const auto* component = dynamic_cast<ERTelescopeGeoComponentSensetive*>(fQTelescopeSetup->GetComponent(path));
+    const auto* component = dynamic_cast<ERTelescopeGeoComponentSensitive*>(fQTelescopeSetup->GetComponent(path));
     if (!component)
-      LOG(FATAL) << "[ERTelescope] Not found setup component for sensetive volume path" 
+      LOG(FATAL) << "[ERTelescope] Not found setup component for sensitive volume path" 
                   << path << FairLogger::endl;
     for (const auto orientation : component->GetOrientationsAroundZ()) {
       for (const auto channelSide : component->GetChannelSides()) {
-        fChannel = component->GetChannelFromSensetiveNodePath(path, orientation);
+        fChannel = component->GetChannelFromSensitiveNodePath(path, orientation);
         auto* pointCollection = 
             fPoints[component->GetVolumeName()][component->GetBranchName(ERDataObjectType::Point, orientation, channelSide)];
         AddPoint(*pointCollection);
@@ -135,7 +135,7 @@ void ERTelescope::Register() {
   if (!ioman)
     Fatal("Init", "IO manager is not set");
   for (const auto* component : fQTelescopeSetup->GetAllComponents()) {
-    if (!dynamic_cast<const ERTelescopeGeoComponentSensetive*>(component))
+    if (!dynamic_cast<const ERTelescopeGeoComponentSensitive*>(component))
       continue;
     for (const auto branchName : component->GetBranchNames(ERDataObjectType::Point)) {
       LOG(DEBUG) << "[ERTelescope] Register branch " << branchName 

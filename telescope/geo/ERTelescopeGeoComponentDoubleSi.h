@@ -10,12 +10,12 @@
 #ifndef ERTelescopeGeoComponentDoubleSi_H
 #define ERTelescopeGeoComponentDoubleSi_H
 
-#include "ERTelescopeGeoComponentSensetive.h"
+#include "ERTelescopeGeoComponentSensitive.h"
 
 #include "TString.h"
 #include "TVector3.h"
 
-class ERTelescopeGeoComponentDoubleSi : public ERTelescopeGeoComponentSensetive {
+class ERTelescopeGeoComponentDoubleSi : public ERTelescopeGeoComponentSensitive {
 public:
   ERTelescopeGeoComponentDoubleSi() = default;
   ERTelescopeGeoComponentDoubleSi(const TString& typeFromXML, const TString& id,
@@ -29,7 +29,7 @@ public:
                                 ChannelSide side = ChannelSide::None) const;
   virtual std::list<OrientationAroundZ> GetOrientationsAroundZ() const;
   virtual std::list<ChannelSide> GetChannelSides() const;
-  virtual Int_t GetChannelFromSensetiveNodePath(
+  virtual Int_t GetChannelFromSensitiveNodePath(
     const TString& path, OrientationAroundZ orientation = OrientationAroundZ::Default) const;
 protected:
   TString  fOrientAroundZ = "X";

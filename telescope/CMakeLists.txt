@@ -27,7 +27,7 @@ link_directories( ${LINK_DIRECTORIES})
 
 set(SRCS
 
-geo/ERTelescopeGeoComponentSensetive.cxx
+geo/ERTelescopeGeoComponentSensitive.cxx
 geo/ERTelescopeGeoComponentPassive.cxx
 geo/ERTelescopeGeoComponentSingleSi.cxx
 geo/ERQTelescopeGeoComponentSingleSi.cxx

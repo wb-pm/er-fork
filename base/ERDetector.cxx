@@ -53,7 +53,7 @@ void ERDetector::ConstructGeometry() {
   }
 }
 //-------------------------------------------------------------------------------------------------
-void ERDetector::AddSensetive(TString name){
+void ERDetector::AddSensitive(TString name){
   fSenNames.push_back(name);
 }
 //-------------------------------------------------------------------------------------------------

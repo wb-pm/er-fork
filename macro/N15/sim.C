@@ -52,8 +52,8 @@ void sim(Int_t nEvents = 1000, Int_t index = 0)
 
   ERDetector* detector = new ERDetector("TestDetector1", kTRUE, verbose);
   detector->SetGeometryFileName("all.det.geo.root");
-  detector->AddSensetive("vDetGasPart");
-  detector->AddSensetive("vSemi");
+  detector->AddSensitive("vDetGasPart");
+  detector->AddSensitive("vSemi");
   run->AddModule(detector);
 
   //------    ER Decayer   -------------------------------------------------

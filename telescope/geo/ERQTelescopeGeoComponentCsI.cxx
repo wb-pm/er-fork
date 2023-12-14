@@ -131,7 +131,7 @@ void ERQTelescopeGeoComponentCsI::ParseXmlParameters() {
 TString ERQTelescopeGeoComponentCsI::GetBranchName(
     ERDataObjectType objectType, OrientationAroundZ orientationAroundZ /*= OrientationAroundZ::Default*/,
     ChannelSide side /*= ChannelSide::None*/) const {
-  return GetBranchNamePrefix(SensetiveType::CsI, objectType);
+  return GetBranchNamePrefix(SensitiveType::CsI, objectType);
 }
 //--------------------------------------------------------------------------------------------------
 std::list<OrientationAroundZ> ERQTelescopeGeoComponentCsI::GetOrientationsAroundZ() const {
@@ -142,7 +142,7 @@ std::list<ChannelSide> ERQTelescopeGeoComponentCsI::GetChannelSides() const {
   return {ChannelSide::None};
 }
 //--------------------------------------------------------------------------------------------------
-Int_t ERQTelescopeGeoComponentCsI::GetChannelFromSensetiveNodePath(
+Int_t ERQTelescopeGeoComponentCsI::GetChannelFromSensitiveNodePath(
     const TString& path, OrientationAroundZ orientation /*= OrientationAroundZ::Default*/) const {
   TString pathWithChannelPostfix = path;
   pathWithChannelPostfix.Remove(pathWithChannelPostfix.Last('/'), pathWithChannelPostfix.Length());

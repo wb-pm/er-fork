@@ -60,14 +60,14 @@ void ERQTelescopeGeoNonUniformSingleSi::ConstructGeometryVolume(void) {
       const Double_t fullThickness = (fComponentId.Contains("SSD20_3") || fComponentId.Contains("SSD20_4")) 
          ? fThicknessMap->GetBinContent(iStripX + 1, iStripY + 1) * 1e-4 /* mkm to cm */
          : fThicknessMap->GetBinContent(fXPseudoStripCount - iStripX, fYPseudoStripCount - iStripY) * 1e-4 /* mkm to cm */;
-      const auto sensetiveThickness = fullThickness - fDeadLayerThicknessFrontSide - fDeadLayerThicknessBackSide;
+      const auto sensitiveThickness = fullThickness - fDeadLayerThicknessFrontSide - fDeadLayerThicknessBackSide;
       LOG(DEBUG) << "[ERQTelescopeGeoNonUniformSingleSi] Create box " << iStripY 
-                 << " with full thickness = " << fullThickness << " and sensetive thickness = " 
-                 << sensetiveThickness << FairLogger::endl;
+                 << " with full thickness = " << fullThickness << " and sensitive thickness = " 
+                 << sensitiveThickness << FairLogger::endl;
       const TString boxNamePostfix = "_X" + TString::Itoa(iStripX, 10) + "_Y" + TString::Itoa(iStripY, 10);
-      auto* sensetiveBox = gGeoManager->MakeBox("SensitivePixelSiBox" + boxNamePostfix, media,
-                                                 boxX / 2, boxY / 2, sensetiveThickness / 2);
-      sensetiveBox->SetTransparency(60);
+      auto* sensitiveBox = gGeoManager->MakeBox("SensitivePixelSiBox" + boxNamePostfix, media,
+                                                 boxX / 2, boxY / 2, sensitiveThickness / 2);
+      sensitiveBox->SetTransparency(60);
       auto* frontDeadBox = gGeoManager->MakeBox("DeadFrontPixelSiBox" + boxNamePostfix, media, 
                                                  boxX / 2, boxY / 2, fDeadLayerThicknessFrontSide / 2);
       frontDeadBox->SetLineColor(kRed);
@@ -77,10 +77,10 @@ void ERQTelescopeGeoNonUniformSingleSi::ConstructGeometryVolume(void) {
       backDeadBox->SetLineColor(kGreen);
       backDeadBox->SetTransparency(60);
       const Double_t translationInStripY = -(fSensY / 2) + boxY / 2 + boxY * iStripY;
-      strip->AddNode(sensetiveBox, 0, new TGeoCombiTrans(0, translationInStripY, 0, zeroRotation));
-      const Double_t transFrontDeadZ = - (fDeadLayerThicknessFrontSide + sensetiveThickness) / 2;
+      strip->AddNode(sensitiveBox, 0, new TGeoCombiTrans(0, translationInStripY, 0, zeroRotation));
+      const Double_t transFrontDeadZ = - (fDeadLayerThicknessFrontSide + sensitiveThickness) / 2;
       strip->AddNode(frontDeadBox, 0, new TGeoCombiTrans(0, translationInStripY, transFrontDeadZ, zeroRotation));
-      const Double_t transBackDeadZ = (fDeadLayerThicknessBackSide + sensetiveThickness) / 2;
+      const Double_t transBackDeadZ = (fDeadLayerThicknessBackSide + sensitiveThickness) / 2;
       strip->AddNode(backDeadBox, 0, new TGeoCombiTrans(0, translationInStripY, transBackDeadZ, zeroRotation));
     }
   }
@@ -89,7 +89,7 @@ void ERQTelescopeGeoNonUniformSingleSi::ConstructGeometryVolume(void) {
   }
 }
 //--------------------------------------------------------------------------------------------------
-Int_t ERQTelescopeGeoNonUniformSingleSi::GetChannelFromSensetiveNodePath(
+Int_t ERQTelescopeGeoNonUniformSingleSi::GetChannelFromSensitiveNodePath(
     const TString& path, OrientationAroundZ /*orientation = OrientationAroundZ::Default*/) const {
   TString pathWithChannelPostfix = path;
   pathWithChannelPostfix.Remove(pathWithChannelPostfix.Last('/'), pathWithChannelPostfix.Length());

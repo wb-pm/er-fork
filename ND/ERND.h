@@ -32,7 +32,7 @@ public:
   ERND(const char* name, Bool_t active, Int_t verbose);
   /** Destructor **/
   virtual ~ERND();
-  /** @brief Set propagation step in sensetive volumes.
+  /** @brief Set propagation step in sensitive volumes.
    ** Special process stepLimiter must be in TG4RunConfiguration **/
   void SetMaxStep(Double_t step) {fStep = step;}
 
@@ -74,7 +74,7 @@ public:
 private:
   TClonesArray* fNDPoints = nullptr; //!  The point collection
   TClonesArray*  fMCTracks = nullptr;
-  Double_t fStep = 1.; //! Max lengt of step of track propagetion in sensetive volume
+  Double_t fStep = 1.; //! Max lengt of step of track propagetion in sensitive volume
   std::set<Int_t> fCandidatesForParentPdgs = {22, 2112};
 private:
   void FindParentParticle(int track_id, int& parentTrackId, int& parentPdg);

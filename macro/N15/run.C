@@ -44,8 +44,8 @@ void run(Int_t nEvents = 1000)
 
   ERDetector* detector= new ERDetector("TestDetector1", kTRUE, verbose);
   detector->SetGeometryFileName("N15.base.geo_1.root");
-  detector->AddSensetive("gas1");
-  detector->AddSensetive("plastic1");
+  detector->AddSensitive("gas1");
+  detector->AddSensitive("plastic1");
   run->AddModule(detector);
   
   //------    ER Decayer   -------------------------------------------------

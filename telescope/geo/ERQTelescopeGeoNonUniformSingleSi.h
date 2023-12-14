@@ -51,7 +51,7 @@ public:
                                     const TVector3& position, const TVector3& rotation,
                                     const TString& orientAroundZ, const TString& thicknessMapFileName);
   virtual void ConstructGeometryVolume(void);
-  virtual Int_t GetChannelFromSensetiveNodePath(
+  virtual Int_t GetChannelFromSensitiveNodePath(
     const TString& path, OrientationAroundZ orientation = OrientationAroundZ::Default) const;
 private:
   TH2D* fThicknessMap = nullptr; // root file with full thickness of the pseudo-pixel including thickness of the dead layer in thick detector

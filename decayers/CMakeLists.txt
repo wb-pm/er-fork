@@ -36,6 +36,9 @@ ERElasticScattering.cxx
 EREXP1811EventHeader.cxx
 ERDecay10Heto8He.cxx
 ER10Heto8HeEventHeader.cxx
+ERDecay7CEventHeader.cxx;
+ERDecay7C.cxx;
+
 )
 
 # fill list of header files from list of source files

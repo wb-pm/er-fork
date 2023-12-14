@@ -215,7 +215,7 @@ add_subdirectory (BeamDet)
 add_subdirectory (field)
 add_subdirectory (SensPlane)
 add_subdirectory (N15B11)
-
+add_subdirectory (footMuSi)
 Execute_Process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --has-opengl
                 OUTPUT_VARIABLE EveIsBuild
                 OUTPUT_STRIP_TRAILING_WHITESPACE

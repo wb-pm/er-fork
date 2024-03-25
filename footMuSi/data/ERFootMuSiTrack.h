@@ -28,19 +28,39 @@ public:
     ERFootMuSiTrack() = default;
   /** @brief Constructor 
    **/
-    ERFootMuSiTrack(const TVector3& firstPairVector, const TVector3& secondPairVector,const TVector3& thirdPairVector);
-    ERFootMuSiTrack(const TVector3& firstHitPointVector, const TVector3& secondHitPointVector);
+/*     ERFootMuSiTrack(ERFootMuSiHit* firstHit, ERFootMuSiHit* secondHit,ERFootMuSiHit* thirdHit, Double_t HitsFitChi2 = 0.0); */
+    ERFootMuSiTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit);
 
-    TVector3 GetFirstPairVector() const {return fFirstPairVector;}
-    TVector3 GetSecondPairVector() const {return fSecondPairVector;}
-    TVector3 GetThirdPairVector() const {return fThirdPairVector;}
+/*     ERFootMuSiHit* GetFirstHit() const {return fFirstHit;}
+    ERFootMuSiHit* GetSecondHit() const {return fSecondHit;}
+    ERFootMuSiHit* GetThirdHit() const {return fThirdHit;} */
+
+    TVector3 GetFirstHit() const {return fFirstHit;}
+    TVector3 GetSecondHit() const {return fSecondHit;}
+    TVector3 GetThirdHit() const {return fThirdHit;}
+    void SetFirstHitRefIndex(Int_t firstHitRefIndex) {fFirstHitRefIndex = firstHitRefIndex;}
+    void SetSecondHitRefIndex(Int_t secondHitRefIndex) {fSecondHitRefIndex = secondHitRefIndex;}
+    void SetThirdHitRefIndex(Int_t thirdHitRefIndex) {fThirdHitRefIndex = thirdHitRefIndex;}
+    Int_t GetFirstHitRefIndex() const {return fFirstHitRefIndex;}
+    Int_t GetSecondHitRefIndex() const {return fSecondHitRefIndex;}
+    Int_t GetThirdHitRefIndex() const {return fThirdHitRefIndex;}
+    void SetAnglesWithInitialP(Double_t firstAngle, Double_t secondAngle) {
+        fFirstAngleComparison = firstAngle; fSecondAngleComparison = secondAngle;
+    };
+
 private:
-    std::vector<ERFootMuSiHit*> fFootMuSiHitsOfTrack;
-    TVector3 fFirstHitPoint;
-    TVector3 fSecondHitPoint;
-    TVector3 fFirstPairVector; 
-    TVector3 fSecondPairVector; 
-    TVector3 fThirdPairVector; 
+    TVector3 fFirstHit;
+    TVector3 fSecondHit;
+    TVector3 fThirdHit;
+    Int_t fFirstHitRefIndex;
+    Int_t fSecondHitRefIndex;
+    Int_t fThirdHitRefIndex;
+    Double_t fFirstAngleComparison;
+    Double_t fSecondAngleComparison;
+/*     ERFootMuSiHit* fFirstHit;
+    ERFootMuSiHit* fSecondHit;
+    ERFootMuSiHit* fThirdHit;
+    Double_t fHitsFitChi2; */
 
     ClassDef(ERFootMuSiTrack,1)
 };

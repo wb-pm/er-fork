@@ -55,7 +55,7 @@ protected:
   Int_t fWrongTracksNb;
   Int_t fMCTracksNb;
   Int_t fShortMCTracksNb;
-  Int_t fNotFoundedVerteciesNb;
+  Int_t fNotFoundVerteciesNb;
 
   //Histo
   TH1F* fHVertexDz;

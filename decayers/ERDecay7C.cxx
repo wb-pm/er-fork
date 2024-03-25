@@ -206,16 +206,16 @@ Bool_t ERDecay7C::Stepping() {
 
       C9TrackNb = gMC->GetStack()->GetCurrentTrackNumber();
 
-      gMC->GetStack()->PushTrack(1, -1, f9C->PdgCode(),
+/*       gMC->GetStack()->PushTrack(1, -1, f9C->PdgCode(),
                                  lv9C.Px(), lv9C.Py(), lv9C.Pz(),
                                  lv9C.E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, C9TrackNb, f9C->Mass(), 0);
-      gMC->GetStack()->PushTrack(1, C9TrackNb, f3He->PdgCode(),
+                                 kPDecay, C9TrackNb, f9C->Mass(), 0); */
+/*       gMC->GetStack()->PushTrack(0, C9TrackNb, f3He->PdgCode(),
                                  fLv3He->Px(), fLv3He->Py(), fLv3He->Pz(),
                                  fLv3He->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, He3TrackNb, f3He->Mass(), 0);
+                                 kPDecay, He3TrackNb, f3He->Mass(), 0); */
       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
                                  fLvp1->Px(),fLvp1->Py(),fLvp1->Pz(),
                                  fLvp1->E(), curPos.X(), curPos.Y(), curPos.Z(),
@@ -226,16 +226,16 @@ Bool_t ERDecay7C::Stepping() {
                                  fLvp2->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
                                  kPDecay, p2TrackNb, fp->Mass(), 0);
-      gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
+/*       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
                                  fLvp3->Px(),fLvp3->Py(),fLvp3->Pz(),
                                  fLvp3->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, p3TrackNb, fp->Mass(), 0);
-      gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
+                                 kPDecay, p3TrackNb, fp->Mass(), 0); */
+/*       gMC->GetStack()->PushTrack(0, C9TrackNb, fp->PdgCode(),
                                  fLvp4->Px(),fLvp4->Py(),fLvp4->Pz(),
                                  fLvp4->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, p4TrackNb, fp->Mass(), 0);
+                                 kPDecay, p4TrackNb, fp->Mass(), 0); */
       gMC->StopTrack();
       fTargetDecayFinish = kTRUE;
       gMC->SetMaxStep(100.);
@@ -245,7 +245,6 @@ Bool_t ERDecay7C::Stepping() {
         ERDecayMCEventHeader* header = (ERDecayMCEventHeader*)run->GetMCEventHeader();
         header->SetReactionPos(curPos.Vect());
         header->SetInputIon(C9TrackNb);
-        header->AddOutputParticle(C9TrackNb);
         header->AddOutputParticle(C7TrackNb);
         header->AddOutputParticle(He3TrackNb);
         header->AddOutputParticle(p1TrackNb);
@@ -258,7 +257,6 @@ Bool_t ERDecay7C::Stepping() {
         header->SetData(curPos.Vect(), lv9C, *fLv7C,  *fLv3He, *fLvp1, *fLvp2, *fLvp3, *fLvp4, gMC->TrackTime()*1e9);
         header->SetReactionPos(curPos.Vect());
         header->SetInputIon(C9TrackNb);
-        header->AddOutputParticle(C9TrackNb);
         header->AddOutputParticle(C7TrackNb);
         header->AddOutputParticle(He3TrackNb);
         header->AddOutputParticle(p1TrackNb);

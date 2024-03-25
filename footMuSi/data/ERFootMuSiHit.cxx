@@ -7,33 +7,14 @@
  ********************************************************************************/
 #include "ERFootMuSiHit.h"
 //--------------------------------------------------------------------------------------------------
-ERFootMuSiHit::ERFootMuSiHit(const TVector3& targetVertex, const TVector3& xStationVertex, 
-                                     const TVector3& yStationVertex, const TVector3& xStationLocalVertex,
-                                     const TVector3& yStationLocalVertex, const Int_t xChannel, const Int_t yChannel,
+ERFootMuSiHit::ERFootMuSiHit(const TVector3& xStationHit, 
+                                     const TVector3& yStationHit, const TVector3& xStationLocalHit,
+                                     const TVector3& yStationLocalHit, const Int_t xChannel, const Int_t yChannel,
                                      const Double_t xEdep, const Double_t yEdep)
-: fTargetVertex(targetVertex), fXStationVertex(xStationVertex), fYStationVertex(yStationVertex),
-  fXStationLocalVertex(xStationLocalVertex), fYStationLocalVertex(yStationLocalVertex),
+: fXStationHit(xStationHit), fYStationHit(yStationHit),
+  fXStationLocalHit(xStationLocalHit), fYStationLocalHit(yStationLocalHit),
   fXChannel(xChannel), fYChannel(yChannel), fXEdep(xEdep), fYEdep(yEdep)
 {
-}
-//--------------------------------------------------------------------------------------------------
-TVector3 ERFootMuSiHit::GetDirection() const {
-    auto direction = fXStationVertex - fTargetVertex;
-    direction.SetMag(1.);
-    return direction;
-}
-//--------------------------------------------------------------------------------------------------
-TVector3 ERFootMuSiHit::GetVertexInZPlane(const Double_t z) const {
-    const auto direction = fXStationVertex - fTargetVertex;
-    return fTargetVertex + direction * ((z - fTargetVertex.Z()) / (direction.Z()));
-}
-//--------------------------------------------------------------------------------------------------
-Double_t ERFootMuSiHit::GetXInZPlane(Double_t z) const {
-    return GetVertexInZPlane(z).X();
-}
-//--------------------------------------------------------------------------------------------------
-Double_t ERFootMuSiHit::GetYInZPlane(Double_t z) const {
-    return GetVertexInZPlane(z).Y();
 }
 //--------------------------------------------------------------------------------------------------
 ClassImp(ERFootMuSiHit)

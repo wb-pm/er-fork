@@ -7,12 +7,12 @@
  ********************************************************************************/
 #include "ERFootMuSiTrack.h"
 
-ERFootMuSiTrack::ERFootMuSiTrack(const TVector3& firstPairVector, const TVector3& secondPairVector,const TVector3& thirdPairVector):
-fFirstPairVector(firstPairVector), fSecondPairVector(secondPairVector), fThirdPairVector(thirdPairVector)
+/* ERFootMuSiTrack::ERFootMuSiTrack(ERFootMuSiHit* firstHit, ERFootMuSiHit* secondHit,ERFootMuSiHit* thirdHit, Double_t HitsFitChi2):
+fFirstHit(firstHit), fSecondHit(secondHit), fThirdHit(thirdHit),fHitsFitChi2(HitsFitChi2)
 {
-}
-ERFootMuSiTrack::ERFootMuSiTrack(const TVector3& firstHitPointVector, const TVector3& secondHitPointVector):fFirstHitPoint(firstHitPointVector),fSecondHitPoint(secondHitPointVector)
-{
-
+} */
+ERFootMuSiTrack::ERFootMuSiTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit):
+fFirstHit(firstHit), fSecondHit(secondHit), fThirdHit(thirdHit)
+{    
 }
 ClassImp(ERFootMuSiTrack)

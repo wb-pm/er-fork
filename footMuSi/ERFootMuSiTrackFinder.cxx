@@ -12,14 +12,22 @@
 
 #include "TVector3.h"
 #include "TMath.h"
+#include "TF1.h"
+#include "Fit/BinData.h"
+#include "Fit/Fitter.h"
+#include "Math/WrappedMultiTF1.h"
 
 #include "FairRootManager.h"
 #include "FairRuntimeDb.h"
 #include "FairLogger.h"
 #include "FairLink.h"
 
+
 #include "ERRunAna.h"
 #include "ERDigi.h"
+#include "ERDecay7CEventHeader.h"
+#include "ERDecayMCEventHeader.h"
+#include "ERMCTrack.h"
 
  //--------------------------------------------------------------------------------------------------
 ERFootMuSiTrackFinder::ERFootMuSiTrackFinder()
@@ -69,21 +77,13 @@ void ERFootMuSiTrackFinder::SetStripEdepRange(Double_t edepMin, Double_t edepMax
   fSiDigiEdepMax = edepMax;
 }
 //--------------------------------------------------------------------------------------------------
-void ERFootMuSiTrackFinder::SetInteractionPosition(double x, double y, double z)
-{
-  interaction_position_is_set_ = true;
-  interaction_x_ = x;
-  interaction_y_ = y;
-  interaction_z_ = z;
-}
-//--------------------------------------------------------------------------------------------------
 TVector3 ERFootMuSiTrackFinder::
 GetGlobalHitPositionByStrip(const TString& branch_name, const ERChannel channel) const
 {
   // Local position of strip center
   TVector3 local_position = fFootMuSiSetup->GetStripLocalPosition(branch_name, channel);
   const Double_t strip_width = fFootMuSiSetup->GetStripWidth(branch_name, channel);
-  // Apply user coorections
+  // Apply user corrections
   for (const auto& station_to_channels : hit_position_corrections_)
   {
     const TString station_name = station_to_channels.first;
@@ -125,6 +125,10 @@ InitStatus ERFootMuSiTrackFinder::Init()
       fFootMuSiDigi[brName] = (TClonesArray*)ioman->GetObject(bFullName);
     }
   }
+//For testing the idea with sending unchanged proton coordinates into the tracks
+  fMCTracks = (TClonesArray*)ioman->GetObject("MCTrack");
+  fMCEventHeader = (TClonesArray*)ioman->GetObject("MCEventHeader."); 
+
   // Register output track branches only for stations that are setted by interface SetStation(){
   for (const auto itSubassemblies : fSiHitStationsPair)
   {
@@ -137,7 +141,7 @@ InitStatus ERFootMuSiTrackFinder::Init()
 
   fFootMuSiTrack = new TClonesArray("ERFootMuSiTrack", 100);
   ioman->Register("FootMuSiTrack", "FootMuSi", fFootMuSiTrack, kTRUE);
-
+  ioman->Register("MCEventHeader.","FootMuSi",fMCEventHeader,kTRUE);
   fFootMuSiSetup->ERFootMuSiSetup::ReadGeoParamsFromParContainer();
 
   //@TODO check setup and digi branch names
@@ -217,6 +221,7 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
           continue;
         const ERChannel xChannel = xStrip->Channel();
         const ERChannel yChannel = yStrip->Channel();
+        LOG(DEBUG) << "[ERFootMuSiTrackFinder] The X channel of the hit: " << xChannel << " The Y channel of the hit: " << yChannel << FairLogger::endl;
         if (fFootMuSiSetup->GetStationType(xDigiBranchName) == ERFootMuSiSetup::StationType::QStation)
         {
           CreateHitInFootMuSi(xChannelIndex, yChannelIndex, xChannel, yChannel,
@@ -225,13 +230,148 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
         }
         else
         {
-          CreateHitInRFootMuSi(xChannelIndex, yChannelIndex, xChannel, yChannel,
-            xStrip->Edep(), yStrip->Edep(), xDigiBranchName, yDigiBranchName,
-            itComponent.first);
+          LOG(ERROR) << "[ERFootMuSiTrackFinder] The station is not a Q type" << FairLogger::endl;
         }
       }
     }
   }
+  //Test by putting coordinates of protons' continued trajectories from reaction position into the track finder
+ERDecay7CEventHeader *decayEventHeader = (ERDecay7CEventHeader*)fMCEventHeader;
+ERDecayMCEventHeader *decayMCEventHeader = (ERDecayMCEventHeader*)fMCEventHeader;
+TVector3 initialPosition = decayMCEventHeader->GetReactionPos();
+TLorentzVector firstProton = decayEventHeader->Getp1();
+TLorentzVector secondProton = decayEventHeader->Getp2();
+//Having four different combinations of protons' X and Y coordinates correspondence
+std::vector<TVector3> p1Xp1YHits(3);
+
+std::vector<TVector3> p1Xp2YHits(3);
+
+std::vector<TVector3> p1Yp2XHits(3);
+
+std::vector<TVector3> p2Xp2YHits(3);
+//In order to check the granularity let's make an arbitrary strips division. The size of one strip is t = 0.015 cm
+// We should take the existing coordinate and turn it to the nearest multiple of t
+// The zero of the axis is located in strip number 300
+// The 1st strip center should be located at -5 + t/2
+// So if the strip is inside the region of -5 + t, it should go to the first strip and so on
+// the formula should look something like this: -5 + t/2(1 + floor((5 + y)/(t))) 
+// Now we should modify the X coordinate at each station and only then imply this formula
+//Left and right coordinates of the detectors
+Bool_t isGranularityAccounted = true;
+Double_t detectorNegativeEdge = -5.;
+Double_t detectorPositiveEdge = 5.;
+Double_t stripSize = 0.015;
+std::vector<Double_t> detectorsZ = {20.,21.,36.,37.,52.,53.};
+// Testing the algorithm for projecting the coordinate from X detector to Y detector at each pairs
+
+//First proton coordinates at respective detectors
+Double_t p1FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
+Double_t p1SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
+Double_t p1ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
+Double_t p1FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
+Double_t p1FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
+Double_t p1SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y(); 
+
+//Accounting the granularity of the detectors for the first proton coordinates
+Double_t p1FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FirstDetectorX)/(stripSize));
+Double_t p1SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SecondDetectorY)/(stripSize));
+Double_t p1ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1ThirdDetectorX)/(stripSize));
+Double_t p1FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FourthDetectorY)/(stripSize));
+Double_t p1FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FifthDetectorX)/(stripSize));
+Double_t p1SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SixthDetectorY)/(stripSize));
+
+//Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
+Double_t p1Slope = (p1FifthDetectorX - p1FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
+Double_t p1SlopeCentered = (p1FifthDetectorXCentered - p1FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
+Double_t p1Intercept = (p1FirstDetectorX + p1FifthDetectorX - p1Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
+Double_t p1InterceptCentered = (p1FirstDetectorXCentered + p1FifthDetectorXCentered - p1SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
+
+//Second proton coordinates at respective detectors
+
+Double_t p2FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
+Double_t p2SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
+Double_t p2ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
+Double_t p2FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
+Double_t p2FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
+Double_t p2SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y(); 
+
+//Accounting the granularity of the detectors for the second proton coordinates
+Double_t p2FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FirstDetectorX)/(stripSize));
+Double_t p2SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SecondDetectorY)/(stripSize));
+Double_t p2ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2ThirdDetectorX)/(stripSize));
+Double_t p2FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FourthDetectorY)/(stripSize));
+Double_t p2FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FifthDetectorX)/(stripSize));
+Double_t p2SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SixthDetectorY)/(stripSize));
+
+//Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
+Double_t p2Slope = (p2FifthDetectorX - p2FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
+Double_t p2SlopeCentered = (p2FifthDetectorXCentered - p2FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
+Double_t p2Intercept = (p2FirstDetectorX + p2FifthDetectorX - p2Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
+Double_t p2InterceptCentered = (p2FirstDetectorXCentered + p2FifthDetectorXCentered - p2SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
+
+//Setting the vectors of each protons combination, depending on whether the granularity is taken into account
+if(isGranularityAccounted){
+  p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
+  p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
+  p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
+
+  p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
+  p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
+  p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
+
+  p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
+  p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
+  p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
+
+  p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
+  p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
+  p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
+}
+else{
+  p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p1SecondDetectorY,detectorsZ.at(1));
+  p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p1FourthDetectorY,detectorsZ.at(3));
+  p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p1SixthDetectorY,detectorsZ.at(5));
+
+  p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p2SecondDetectorY,detectorsZ.at(1));
+  p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p2FourthDetectorY,detectorsZ.at(3));
+  p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p2SixthDetectorY,detectorsZ.at(5));
+
+  p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p1SecondDetectorY,detectorsZ.at(1));
+  p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p1FourthDetectorY,detectorsZ.at(3));
+  p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p1SixthDetectorY,detectorsZ.at(5));
+
+  p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p2SecondDetectorY,detectorsZ.at(1));
+  p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p2FourthDetectorY,detectorsZ.at(3));
+  p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p2SixthDetectorY,detectorsZ.at(5));
+}
+
+
+// Conditions for accounting the size of detectors
+Bool_t p1Xp1YCondition = (fabs(p1Xp1YHits.at(0).X()) <= 5) && (fabs(p1Xp1YHits.at(0).Y()) <= 5) && (fabs(p1Xp1YHits.at(1).X()) <= 5) && (fabs(p1Xp1YHits.at(1).Y()) <= 5) && (fabs(p1Xp1YHits.at(2).X()) <= 5) && (fabs(p1Xp1YHits.at(2).Y()) <= 5);
+
+Bool_t p1Xp2YCondition = (fabs(p1Xp2YHits.at(0).X()) <= 5) && (fabs(p1Xp2YHits.at(0).Y()) <= 5) && (fabs(p1Xp2YHits.at(1).X()) <= 5) && (fabs(p1Xp2YHits.at(1).Y()) <= 5) && (fabs(p1Xp2YHits.at(2).X()) <= 5) && (fabs(p1Xp2YHits.at(2).Y()) <= 5);
+
+Bool_t p1Yp2XCondition = (fabs(p1Yp2XHits.at(0).X()) <= 5) && (fabs(p1Yp2XHits.at(0).Y()) <= 5) && (fabs(p1Yp2XHits.at(1).X()) <= 5) && (fabs(p1Yp2XHits.at(1).Y()) <= 5) && (fabs(p1Yp2XHits.at(2).X()) <= 5) && (fabs(p1Yp2XHits.at(2).Y()) <= 5);
+
+Bool_t p2Xp2YCondition = (fabs(p2Xp2YHits.at(0).X()) <= 5) && (fabs(p2Xp2YHits.at(0).Y()) <= 5) && (fabs(p2Xp2YHits.at(1).X()) <= 5) && (fabs(p2Xp2YHits.at(1).Y()) <= 5) && (fabs(p2Xp2YHits.at(2).X()) <= 5) && (fabs(p2Xp2YHits.at(2).Y()) <= 5);
+
+if(p2Xp2YCondition)
+{
+  ERFootMuSiTrack *track = AddTrack(p2Xp2YHits.at(0),p2Xp2YHits.at(1),p2Xp2YHits.at(2));
+}
+if(p1Yp2XCondition)
+{
+  ERFootMuSiTrack *track = AddTrack(p1Yp2XHits.at(0),p1Yp2XHits.at(1),p1Yp2XHits.at(2));
+}
+if(p1Xp2YCondition)
+{
+  ERFootMuSiTrack *track = AddTrack(p1Xp2YHits.at(0),p1Xp2YHits.at(1),p1Xp2YHits.at(2));
+}
+if(p1Xp1YCondition)
+{
+  ERFootMuSiTrack *track = AddTrack(p1Xp1YHits.at(0),p1Xp1YHits.at(1),p1Xp1YHits.at(2));
+}
+//..........................
   Int_t numberOfPairs = std::distance(fFootMuSiHit.begin(), fFootMuSiHit.end());
   //TODO: for now the rest part of the code, responsible for track recreation, will be hardcoded to 3 pairs of stations
   TClonesArray* hitsFirstStationPair = fFootMuSiHit.begin()->second;
@@ -246,39 +386,71 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
     for (int iHitSecondPair = 0; iHitSecondPair < hitsSecondStationPair->GetEntriesFast(); ++iHitSecondPair)
     {
         ERFootMuSiHit* hitSecondPair = (ERFootMuSiHit*)hitsSecondStationPair->At(iHitSecondPair);
-      for (int iHitThirdPair = 0; iHitThirdPair < hitsThirdStationPair->GetEntriesFast(); ++iHitThirdPair)
-      {
-        ERFootMuSiHit* hitThirdPair = (ERFootMuSiHit*)hitsThirdStationPair->At(iHitThirdPair);
-        TVector3 vectorFirstPairX = hitFirstPair->GetXStationVertex();
-        TVector3 vectorFirstPairY = hitFirstPair->GetYStationVertex();
-        TVector3 vectorSecondPairX = hitSecondPair->GetXStationVertex();
-        TVector3 vectorSecondPairY = hitSecondPair->GetYStationVertex();
-        TVector3 vectorThirdPairX = hitThirdPair->GetXStationVertex();
-        TVector3 vectorThirdPairY = hitThirdPair->GetYStationVertex();
-
+        TVector3 vectorFirstPairX = hitFirstPair->GetXStationHit();
+        TVector3 vectorFirstPairY = hitFirstPair->GetYStationHit();
+        TVector3 vectorSecondPairX = hitSecondPair->GetXStationHit();
+        TVector3 vectorSecondPairY = hitSecondPair->GetYStationHit();
         const Double_t kxFirst = (vectorSecondPairX.X() - vectorFirstPairX.X())/(vectorSecondPairX.Z()-vectorFirstPairX.Z());
-        const Double_t bxFirst = vectorSecondPairX.X() - kxFirst*vectorSecondPairX.Z(); 
+        const Double_t bxFirst = (vectorFirstPairX.X() + vectorSecondPairX.X() - kxFirst*(vectorFirstPairX.Z()+vectorSecondPairX.Z()))/2; 
 
         vectorFirstPairY.SetX(kxFirst*vectorFirstPairY.Z()+bxFirst);
         vectorSecondPairY.SetX(kxFirst*vectorSecondPairY.Z()+bxFirst);
-        const TVector3& firstHitPoint = vectorSecondPairY - vectorFirstPairY;
-        
-        const Double_t kxSecond = (vectorThirdPairX.X()-vectorSecondPairX.X())/(vectorThirdPairX.Z()-vectorSecondPairX.Z());
-        const Double_t bxSecond = vectorThirdPairX.X() - kxSecond*vectorThirdPairX.Z();
-        vectorSecondPairY.SetX(kxSecond*vectorSecondPairY.Z() + bxSecond);
-        vectorThirdPairY.SetX(kxSecond*vectorThirdPairY.Z() + bxSecond);
-        const TVector3& secondHitPoint = vectorThirdPairY - vectorSecondPairY;
+        TVector3 firstSegment = vectorSecondPairY - vectorFirstPairY;
+      for (int iHitThirdPair = 0; iHitThirdPair < hitsThirdStationPair->GetEntriesFast(); ++iHitThirdPair)
+      {
+        ERFootMuSiHit* hitThirdPair = (ERFootMuSiHit*)hitsThirdStationPair->At(iHitThirdPair);
+        TVector3 vectorThirdPairX = hitThirdPair->GetXStationHit();
+        TVector3 vectorThirdPairY = hitThirdPair->GetYStationHit();
 
-        LOG(DEBUG) << "X coordinate reconstruction at first station: " << kxFirst*vectorFirstPairY.Z()+bxFirst << ", at the second station: " << kxFirst*vectorSecondPairY.Z()+bxFirst << FairLogger::endl << ", at the second station (another pair): " << kxSecond*vectorSecondPairY.Z() + bxSecond << ", at the third station: " << kxSecond*vectorThirdPairY.Z() + bxSecond << FairLogger::endl;
-        if(fabs((kxFirst*vectorSecondPairY.Z()+bxFirst) - (kxSecond*vectorSecondPairY.Z() + bxSecond)) > 0.001)
+        const Double_t kxSecond = (vectorThirdPairX.X()-vectorSecondPairX.X())/(vectorThirdPairX.Z()-vectorSecondPairX.Z());
+        const Double_t bxSecond = (vectorSecondPairX.X() + vectorThirdPairX.X() - kxSecond*(vectorSecondPairX.Z()+vectorThirdPairX.Z()))/2;
+        vectorThirdPairY.SetX(kxSecond*vectorThirdPairY.Z() + bxSecond);
+        TVector3 secondSegment = vectorThirdPairY - vectorSecondPairY;
+// Let's implement a new condition getting rid of fake hits and other unwanted hits, by continuing the momentum from the initial protons and comparing the angle between this prolonged tracks and hits 
+        TVector3 p1FirstSegmentComparison = p1Xp1YHits[1] - p1Xp1YHits[0];
+        TVector3 p1SecondSegmentComparison = p1Xp1YHits[2] - p1Xp1YHits[1];
+        Double_t p1FirstAngleComparison = p1FirstSegmentComparison.Angle(firstSegment);
+        Double_t p1SecondAngleComparison = p1SecondSegmentComparison.Angle(secondSegment);
+        TVector3 p2FirstSegmentComparison = p2Xp2YHits[1] - p2Xp2YHits[0];
+        TVector3 p2SecondSegmentComparison = p2Xp2YHits[2] - p2Xp2YHits[1];
+        Double_t p2FirstAngleComparison = p2FirstSegmentComparison.Angle(firstSegment);
+        Double_t p2SecondAngleComparison = p2SecondSegmentComparison.Angle(secondSegment);
+        if ( secondSegment.Angle(firstSegment) < fAngleBetweenHitsCut && p1FirstAngleComparison < 0.035 && p2FirstAngleComparison < 0.035)
         {
-          continue;
+          ERFootMuSiTrack* track = AddTrack(vectorFirstPairY,vectorSecondPairY,vectorThirdPairY);
+          track->SetFirstHitRefIndex(hitFirstPair->GetRefIndex());
+          track->SetSecondHitRefIndex(hitSecondPair->GetRefIndex());
+          track->SetThirdHitRefIndex(hitThirdPair->GetRefIndex());
+          track->SetAnglesWithInitialP(p1FirstAngleComparison,p1SecondAngleComparison);
         }
-        if ( secondHitPoint.Angle(firstHitPoint) < fAngleBetweenHitsCut)
-        {
-          ERFootMuSiTrack* track = AddTrack(vectorFirstPairY, vectorSecondPairY, vectorThirdPairY);
-          //ERFootMuSiTrack* track = AddTrack(firstHitPoint,secondHitPoint);
-        }
+      //Fitting the X coordinates of the hits in order to project them to Y detectors
+/*       Double_t xFirst = hitFirstPair->GetXStationHit().X();
+      Double_t xSecond = hitSecondPair->GetXStationHit().X();
+      Double_t xThird = hitThirdPair->GetXStationHit().X();
+      Double_t zFirst = hitFirstPair->GetXStationHit().Z();
+      Double_t zSecond = hitSecondPair->GetXStationHit().Z();
+      Double_t zThird = hitThirdPair->GetXStationHit().Z();
+      ROOT::Fit::BinData hitsData(3,1);
+      hitsData.Add(xFirst,zFirst);
+      hitsData.Add(xSecond,zSecond);
+      hitsData.Add(xThird,zThird);
+      TF1 *hitsFitFunc = new TF1("hitsFitFunc","[0]+[1]*x");
+      hitsFitFunc->SetParameters(2.,2.);
+      ROOT::Fit::Fitter hitsFitter;
+      ROOT::Math::WrappedMultiTF1 hitsWrapper(*hitsFitFunc,1);
+      hitsFitter.SetFunction(hitsWrapper);
+      hitsFitter.Fit(hitsData);
+      const ROOT::Fit::FitResult &hitsFitRes = hitsFitter.Result(); 
+      hitsFitFunc->SetFitResult(hitsFitRes);
+      Double_t hitsChi2 = hitsFitRes.Chi2();
+      const Double_t *fitParameters = hitsFitRes.GetParams();
+      Double_t xFirstProj = hitFirstPair->GetXStationHit().X() + (hitFirstPair->GetYStationHit().Z()-hitFirstPair->GetXStationHit().Z()/fitParameters[0]);
+      Double_t xSecondProj = hitSecondPair->GetXStationHit().X() + (hitSecondPair->GetYStationHit().Z()-hitSecondPair->GetXStationHit().Z()/fitParameters[0]);
+      Double_t xThirdProj = hitThirdPair->GetXStationHit().X() + (hitThirdPair->GetYStationHit().Z()-hitThirdPair->GetXStationHit().Z()/fitParameters[0]);
+      hitFirstPair->GetYStationHit().SetX(xFirstProj);
+      hitSecondPair->GetYStationHit().SetX(xSecondProj);
+      hitThirdPair->GetYStationHit().SetX(xThirdProj);
+        ERFootMuSiTrack* track = AddTrack(hitFirstPair,hitSecondPair,hitThirdPair,hitsChi2); */
       }
     }
   }
@@ -296,9 +468,7 @@ void ERFootMuSiTrackFinder::CreateHitInFootMuSi(
     << " Y: " << yDigiBranchName << FairLogger::endl;
   LOG(DEBUG) << "[ERFootMuSiTrackFinder] Strips pair numbers " << xChannel << " "
     << yChannel << FairLogger::endl;
-  // Calc unknown coordinated using condition: target, hit on first station(closest) and
-  // hit on second station lie on line :
-  // {x2, y2, z2} = {interaction_x_, interaction_y_, interaction_z_} + k * ({x1, y1, z1} - {interaction_x_, interaction_y_, interaction_z_}).
+  // Let's remove calculation of an unknown coordinate here, so we can use the projection later, when we have multiple pairs of stations
   const bool xStationIsClosest = fFootMuSiSetup->GetStripGlobalZ(xDigiBranchName, xChannel) < fFootMuSiSetup->GetStripGlobalZ(yDigiBranchName, yChannel);
   // We know all about z coordinate, so
   const double z1 = xStationIsClosest
@@ -307,110 +477,51 @@ void ERFootMuSiTrackFinder::CreateHitInFootMuSi(
   const double z2 = xStationIsClosest
     ? fFootMuSiSetup->GetStripGlobalZ(yDigiBranchName, yChannel)
     : fFootMuSiSetup->GetStripGlobalZ(xDigiBranchName, xChannel);
-  assert(z1 != interaction_z_);
-  const double k = (z2 - interaction_z_) / (z1 - interaction_z_);
-  double x1 = 0., x2 = 0., y1 = 0., y2 = 0.;
+  double x1 = 0.,y1 = 0., x2 = 0., y2 = 0.;  
   if (xStationIsClosest)
-  { // find y1, x2 from equation
-    x1 = GetGlobalHitPositionByStrip(xDigiBranchName, xChannel)[0];
-    y2 = GetGlobalHitPositionByStrip(yDigiBranchName, yChannel)[1];
-    LOG(DEBUG) << "[ERFootMuSiTrackFinder] Coordinates from strips. x1 = " << x1
-      << " y2 = " << y2 << " z1 = " << z1 << " z2 = " << z2 << FairLogger::endl;
-    y1 = (-1. / k) * ((1. - k) * interaction_y_ - y2);
-    x2 = (1. - k) * interaction_x_ + k * x1;
+  { 
+/*     TVector3 xDetectorGlobalHit = GetGlobalHitPositionByStrip(xDigiBranchName, xChannel);
+    TVector3 yDetectorGlobalHit = GetGlobalHitPositionByStrip(yDigiBranchName, yChannel); */
+
+/*     x1 = xDetectorGlobalHit.X();
+    y1 = xDetectorGlobalHit.Y();
+    x2 = yDetectorGlobalHit.X();
+    y2 = yDetectorGlobalHit.Y(); */
+    x1 = fFootMuSiSetup->GetStripGlobalX(xDigiBranchName, xChannel);
+/*     y1 = fFootMuSiSetup->GetStripGlobalY(xDigiBranchName, xChannel);
+    x2 = fFootMuSiSetup->GetStripGlobalX(yDigiBranchName, yChannel); */
+    y2 = fFootMuSiSetup->GetStripGlobalY(yDigiBranchName, yChannel);
+
   }
   else
-  { // find x1, y2 from equation
-    x2 = GetGlobalHitPositionByStrip(xDigiBranchName, xChannel)[0];
-    y1 = GetGlobalHitPositionByStrip(yDigiBranchName, yChannel)[1];
-    LOG(DEBUG) << "[ERFootMuSiTrackFinder] Coordinates from strips. x2 = " << x2
-      << " y1 = " << y1 << " z1 = " << z1 << " z2 = " << z2 << FairLogger::endl;
-    x1 = (-1. / k) * ((1. - k) * interaction_x_ - x2);
-    y2 = (1. - k) * interaction_y_ + k * y1;
+  { 
+/*     TVector3 xDetectorGlobalHit = GetGlobalHitPositionByStrip(xDigiBranchName, xChannel);
+    TVector3 yDetectorGlobalHit = GetGlobalHitPositionByStrip(yDigiBranchName, yChannel); */
+/*     x1 = yDetectorGlobalHit.X();
+    y1 = yDetectorGlobalHit.Y();
+    x2 = xDetectorGlobalHit.X();
+    y2 = xDetectorGlobalHit.Y(); */
+/*     x1 = fFootMuSiSetup->GetStripGlobalX(yDigiBranchName, yChannel); */
+    y1 = fFootMuSiSetup->GetStripGlobalY(yDigiBranchName, yChannel);
+    x2 = fFootMuSiSetup->GetStripGlobalX(xDigiBranchName, xChannel);
+/*     y2 = fFootMuSiSetup->GetStripGlobalY(xDigiBranchName, xChannel); */
   }
-  const TVector3& xStationVertex = xStationIsClosest ? TVector3(x1, y1, z1) : TVector3(x2, y2, z2);
-  const TVector3& yStationVertex = xStationIsClosest ? TVector3(x2, y2, z2) : TVector3(x1, y1, z1);
-  const TVector3& xStationLocalVertex = fFootMuSiSetup->ToStationCoordinateSystem(xDigiBranchName, xStationVertex);
-  const TVector3& yStationLocalVertex = fFootMuSiSetup->ToStationCoordinateSystem(yDigiBranchName, yStationVertex);
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] X Station Vertex (" << xStationVertex.x() << " " << xStationVertex.y()
-    << " " << xStationVertex.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Y Station Vertex (" << yStationVertex.x() << " " << yStationVertex.y()
-    << " " << yStationVertex.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] X Station Vertex in station CS (" << xStationLocalVertex.x() << " " << xStationLocalVertex.y()
-    << " " << xStationLocalVertex.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Y Station Vertex in station CS (" << yStationLocalVertex.x() << " " << yStationLocalVertex.y()
-    << " " << yStationLocalVertex.z() << ")" << FairLogger::endl;
-  ERFootMuSiHit* hit = AddHit(TVector3(interaction_x_, interaction_y_, interaction_z_), xStationVertex, yStationVertex,
-    xStationLocalVertex, yStationLocalVertex, xChannel, yChannel, xEdep, yEdep,
+  const TVector3& xStationHit = xStationIsClosest ? TVector3(x1, y1, z1) : TVector3(x2, y2, z2);
+  const TVector3& yStationHit = xStationIsClosest ? TVector3(x2, y2, z2) : TVector3(x1, y1, z1);
+  const TVector3& xStationLocalHit = fFootMuSiSetup->ToStationCoordinateSystem(xDigiBranchName, xStationHit);
+  const TVector3& yStationLocalHit = fFootMuSiSetup->ToStationCoordinateSystem(yDigiBranchName, yStationHit);
+  LOG(DEBUG) << "[ERFootMuSiTrackFinder] X Station Vertex (" << xStationHit.x() << " " << xStationHit.y()
+    << " " << xStationHit.z() << ")" << FairLogger::endl;
+  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Y Station Vertex (" << yStationHit.x() << " " << yStationHit.y()
+    << " " << yStationHit.z() << ")" << FairLogger::endl;
+  LOG(DEBUG) << "[ERFootMuSiTrackFinder] X Station Vertex in station CS (" << xStationLocalHit.x() << " " << xStationLocalHit.y()
+    << " " << xStationLocalHit.z() << ")" << FairLogger::endl;
+  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Y Station Vertex in station CS (" << yStationLocalHit.x() << " " << yStationLocalHit.y()
+    << " " << yStationLocalHit.z() << ")" << FairLogger::endl;
+  ERFootMuSiHit* hit = AddHit(xStationHit, yStationHit,
+    xStationLocalHit, yStationLocalHit, xChannel, yChannel, xEdep, yEdep,
     hitBranchName);
-  // track->AddLink(FairLink(xDigiBranchName, xChannelIndex));
-  // track->AddLink(FairLink(yDigiBranchName, yChannelIndex));
 }
-//--------------------------------------------------------------------------------------------------
-void ERFootMuSiTrackFinder::CreateHitInRFootMuSi(
-  const Int_t phiChannelIndex, const Int_t rChannelIndex, const Int_t phiChannel, const Int_t rChannel,
-  const Double_t phiEdep, const Double_t rEdep, const TString& phiDigiBranchName, const TString& rDigiBranchName,
-  const TString& trackBranchName)
-{
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Branch names phi:" << phiDigiBranchName
-    << " R: " << rDigiBranchName << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] phi channel = " << phiChannel << " r channel = "
-    << rChannel << FairLogger::endl;
-  // Calc unknown coordinated using condition: target, hit on first station(closest) and
-  // hit on second station lie on line :
-  // {x2, y2, z2} = {interaction_x_, interaction_y_, interaction_z_} + k * ({x1, y1, z1} - {interaction_x_, interaction_y_, interaction_z_}).
-  // x = x_station + r * cos(phi); y = y_station + r * sin(phi)
-  // Lets 1 - phi station(we know phi1), 2 - r station (we know r2)
-  // r2 cos(phi2) = interaction_x_ - x_station2 + k(x_station1 + r1 cos(phi1) - interaction_x_)
-  // r2 sin(phi2) = interaction_y_ - y_station2 + k(y_station1 + r1 sin(phi1) - interaction_x_)
-  // k = (z2 - interaction_z_) / (z1 - interaction_z_)
-  // ----
-  // r1: r2^2 = (interaction_x_ - x_station2 + k(x_station1 + r1 cos(phi1) - interaction_x_))^2
-  //            + (interaction_y_ - y_station2 + k(y_station1 + r1 sin(phi1) - interaction_y_))^2
-  // A = interaction_x_ - x_station2 + k(x_station1 - interaction_x_)
-  // B = k cos(phi1)
-  // C = interaction_y_ - y_station2 + k(y_station1 - interaction_y_)
-  // D = k sin(phi1)
-  // r2^2 = (A + Br1)^2 + (C + Dr1)^2
-  // r1 = -/+(sqrt(D^2(r2^2 - A^2)+2ABCD +B^2(r2^2 - C^2)) +- AB +/- CD) / (B^2 +D^2)
-  // r1 = -/+(sqrt(D^2(r2^2 - A^2)+2ABCD +B^2(r2^2 - C^2)) +- AB +/- CD) / k^2
-  const TVector3 station1 = fFootMuSiSetup->GetStationTranslation(phiDigiBranchName);
-  const TVector3 station2 = fFootMuSiSetup->GetStationTranslation(rDigiBranchName);
-  const TVector3 target(interaction_x_, interaction_y_, interaction_z_);
-  const Double_t phi1 = fFootMuSiSetup->GetStripPhi(phiDigiBranchName, phiChannel);
-  const Double_t r2 = fFootMuSiSetup->GetStripR(rDigiBranchName, rChannel);
-  const Double_t k = (station2.Z() - interaction_z_) / (station1.Z() - interaction_z_);
-  const Double_t A = interaction_x_ - station2.X() + k * (station1.X() - interaction_x_);
-  const Double_t B = k * TMath::Cos(phi1 * TMath::RadToDeg());
-  const Double_t C = interaction_y_ - station2.Y() + k * (station1.Y() - interaction_y_);
-  const Double_t D = k * TMath::Sin(phi1 * TMath::RadToDeg());
-  const Double_t r1 = (TMath::Sqrt(D * D * (r2 * r2 - A * A) + 2 * A * B * C * D + B * B * (r2 * r2 - C * C)) - A * B - C * D) / (k * k);
-  const TVector3 local_vertex1(r1 * TMath::Cos(phi1 * TMath::DegToRad()), r1 * TMath::Sin(phi1 * TMath::DegToRad()), 0.);
-  const TVector3 global_vertex1 = station1 + local_vertex1;
-  const TVector3 global_vertex2 = target + k * (global_vertex1 - target);
-  const TVector3 local_vertex2 = global_vertex2 - station2;
-  const Double_t phi2 = TMath::ACos(local_vertex2.X() / r2) * TMath::RadToDeg();
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] phi station: phi = " << phi1 << " r = " << r1 << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] r station: phi = " << phi2 << " r = " << r2 << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] phi station: local vertex = (" << local_vertex1.x() << " " << local_vertex1.y()
-    << " " << local_vertex1.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] r station: local vertex = (" << local_vertex2.x() << " " << local_vertex2.y()
-    << " " << local_vertex2.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] phi station: global vertex = (" << global_vertex1.x() << " " << global_vertex1.y()
-    << " " << global_vertex1.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] r station: global vertex = (" << global_vertex2.x() << " " << global_vertex2.y()
-    << " " << global_vertex2.z() << ")" << FairLogger::endl;
-  ERFootMuSiHit* hit = AddHit(TVector3(interaction_x_, interaction_y_, interaction_z_), global_vertex1, global_vertex2,
-    local_vertex1, local_vertex2, phiChannel, rChannel, phiEdep, rEdep,
-    trackBranchName);
-  // track->AddLink(FairLink(phiDigiBranchName, phiChannelIndex));
-  // track->AddLink(FairLink(rDigiBranchName, rChannelIndex));
-}
-//--------------------------------------------------------------------------------------------------
-/* std::vector<const TVector3&> ERFootMuSiTrackFinder::ProjectOntoYPlane(ERFootMuSiHit* firstHit, ERFootMuSiHit* secondHit)
-{
-
-}  */
 //--------------------------------------------------------------------------------------------------
 void ERFootMuSiTrackFinder::Reset()
 {
@@ -422,29 +533,33 @@ void ERFootMuSiTrackFinder::Reset()
       itHitBranches.second->Delete();
     }
   }
+   if(fFootMuSiTrack)
+  {
+    fFootMuSiTrack->Delete();
+  } 
 }
 //--------------------------------------------------------------------------------------------------
 ERFootMuSiHit* ERFootMuSiTrackFinder::AddHit(
-  const TVector3& targetVertex, const TVector3& xStationVertex, const TVector3& yStationVertex,
-  const TVector3& xStationLocalVertex, const TVector3& yStationLocalVertex,
+  const TVector3& xStationHit, const TVector3& yStationHit,
+  const TVector3& xStationLocalHit, const TVector3& yStationLocalHit,
   const Int_t xChannel, const Int_t yChannel, const Double_t xEdep, const Double_t yEdep,
   const TString& digiBranchName)
 {
   return new ((*fFootMuSiHit[digiBranchName])[fFootMuSiHit[digiBranchName]->GetEntriesFast()])
-    ERFootMuSiHit(targetVertex, xStationVertex, yStationVertex, xStationLocalVertex,
-      yStationLocalVertex, xChannel, yChannel, xEdep, yEdep);
+    ERFootMuSiHit(xStationHit, yStationHit, xStationLocalHit,
+      yStationLocalHit, xChannel, yChannel, xEdep, yEdep);
 }
 //--------------------------------------------------------------------------------------------------
-ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(const TVector3& firstPairVector, const TVector3& secondPairVector, const TVector3& thirdPairVector)
+/* ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(ERFootMuSiHit* firstHit,ERFootMuSiHit* secondHit,ERFootMuSiHit* thirdHit,Double_t hitsFitChi2)
 {
   return new ((*fFootMuSiTrack)[fFootMuSiTrack->GetEntriesFast()])
-    ERFootMuSiTrack(firstPairVector, secondPairVector, thirdPairVector);
-}
+    ERFootMuSiTrack(firstHit, secondHit, thirdHit,hitsFitChi2);
+} */
 //--------------------------------------------------------------------------------------------------
-ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(const TVector3& firstHitPointVector, const TVector3& secondHitPointVector)
+ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit)
 {
   return new ((*fFootMuSiTrack)[fFootMuSiTrack->GetEntriesFast()])
-    ERFootMuSiTrack(firstHitPointVector,secondHitPointVector);
+    ERFootMuSiTrack(firstHit,secondHit,thirdHit);
 }
 //--------------------------------------------------------------------------------------------------
 ClassImp(ERFootMuSiTrackFinder)

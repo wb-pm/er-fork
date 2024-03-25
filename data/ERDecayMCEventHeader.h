@@ -36,6 +36,7 @@ public:
                                     fOutputTrackID.Set(fOutputsTracksNb);
                                     fOutputTrackID[fOutputsTracksNb-1]=oID;}
 
+  TVector3 GetReactionPos() const {return fReactionPos;}
   Int_t GetTrigger() const {return fTrigger;}
   Int_t GetTriggerPriority() const {return fTriggerPriority;}
   TArrayI GetOutputTrackID() const {return fOutputTrackID;}

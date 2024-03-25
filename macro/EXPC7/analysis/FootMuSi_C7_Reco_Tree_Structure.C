@@ -1,17 +1,14 @@
-#define C9_Sim_Digi_Tree_Structure_cxx
-#include "C9_Sim_Digi_Tree_Structure.h"
-
-#if !defined(__CLING__)
+#define FootMuSi_C7_Reco_Tree_Structure_cxx
+#include "FootMuSi_C7_Reco_Tree_Structure.h"
 #include <TH2.h>
 #include <TStyle.h>
 #include <TCanvas.h>
-#endif
 
-void C9_Sim_Digi_Tree_Structure::Loop()
+void FootMuSi_C7_Reco_Tree_Structure::Loop()
 {
 //   In a ROOT session, you can do:
-//      root> .L C9_Sim_Digi_Tree_Structure.C
-//      root> C9_Sim_Digi_Tree_Structure t
+//      root> .L FootMuSi_C7_Reco_Tree_Structure.C
+//      root> FootMuSi_C7_Reco_Tree_Structure t
 //      root> t.GetEntry(12); // Fill t data members with entry number 12
 //      root> t.Show();       // Show values of entry 12
 //      root> t.Show(16);     // Read and show values of entry 16

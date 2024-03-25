@@ -9,6 +9,7 @@ ${Boost_INCLUDE_DIRS}
 ${GEANT4_INCLUDE_DIR}
 ${CMAKE_SOURCE_DIR}/base/
 ${CMAKE_SOURCE_DIR}/data
+${CMAKE_SOURCE_DIR}/decayers
 ${CMAKE_SOURCE_DIR}/footMuSi
 ${CMAKE_SOURCE_DIR}/footMuSi/data
 ${CMAKE_SOURCE_DIR}/footMuSi/geo
@@ -37,6 +38,7 @@ data/ERFootMuSiVertex.cxx
 
 ERFootMuSi.cxx
 ERFootMuSiDigitizer.cxx
+#ERFootMuSiMatcher.cxx
 ERFootMuSiPID.cxx
 ERFootMuSiSetup.cxx
 ERFootMuSiTrackFinder.cxx

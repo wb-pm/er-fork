@@ -9,28 +9,34 @@
 #define ERFootMuSiVertex_H
 
 #include "TObject.h"
+#include "ERFootMuSiTrack.h"
 
 class ERFootMuSiVertex : public TObject{
 public:
 	ERFootMuSiVertex();
-	ERFootMuSiVertex(Float_t x, Float_t y, Float_t z);
+	ERFootMuSiVertex(Double_t x, Double_t y, Double_t z);
 	
 	void AddTrack(Int_t id);
+/* 	void AddTrack(ERFootMuSiTrack track); */
 
 	Int_t TrackNb() const {return fTracksNb;}
 	Int_t Track(Int_t id) const;
-	Float_t X() const {return fX;}
-	Float_t Y() const {return fY;}
-	Float_t Z() const {return fZ;}
+	Double_t X() const {return fX;}
+	Double_t Y() const {return fY;}
+	Double_t Z() const {return fZ;}
 
-	void SetX(Float_t x){fX = x;}
-	void SetY(Float_t y){fY = y;}
-	void SetZ(Float_t z){fZ = z;}
-
+	void SetX(Double_t x){fX = x;}
+	void SetY(Double_t y){fY = y;}
+	void SetZ(Double_t z){fZ = z;}
+	void AddTrackDistance(Double_t trackDistance){fTrackDistance = trackDistance;}
+	void AddDistanceBetweenVertices(Double_t distanceBetweenVertices){fDistanceBetweenVertices = distanceBetweenVertices;}
 private:
+/* 	std::vector<ERFootMuSiTrack> fTracks; */
 	Int_t fTracksID[3];
 	Int_t fTracksNb;
-	Float_t fX, fY, fZ;
+	Double_t fX, fY, fZ;
+	Double_t fTrackDistance;
+	Double_t fDistanceBetweenVertices;
 
 	ClassDef(ERFootMuSiVertex, 1)
 };

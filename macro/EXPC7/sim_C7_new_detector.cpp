@@ -19,10 +19,11 @@
 
 #endif
 
-void sim_C7_new_detector(Int_t nEvents = 100)
+void sim_C7_new_detector(Int_t nEvents = 10000)
 {
   Double_t beamStartPosition = -10.; // [cm]
-  TString appendName = "tracks_into_single_branch.root";
+  //now should create a simulation with spread beam
+  TString appendName = "spread_beam_tracks_into_single_branch_twoprotons_1mm_cuts.root";
   TString outFile = "outputFootMuSi/" + appendName;
   TString decayDatFile = "input/PureDecay7C.txt";
   TString parFile = "parametersFootMuSi/par_" + appendName;
@@ -122,10 +123,10 @@ void sim_C7_new_detector(Int_t nEvents = 100)
   Double32_t kin_energy = kinE_MevPerNucleon * 1e-3 * A; // GeV
   generator->SetKinE(kin_energy);
   generator->SetPSigmaOverP(0.);
-  //generator->SetThetaSigma(0., 2.); //for now there is a fixed 0 degree angle in the ERIonGenerator
-   generator->SetThetaRange(0.,0.);
+  generator->SetThetaSigma(0., 0.5); //for now there is a fixed 0 degree angle in the ERIonGenerator
   // generator->SetPhiRange(0, 45);
-  generator->SetBoxXYZ(0, 0, 0., 0., beamStartPosition); // задает ограничение размытия пятна пучка на мишени
+  //generator->SetBoxXYZ(0, 0, 0., 0., beamStartPosition);
+  generator->SetRoundXY(2.); // задает ограничение размытия пятна пучка на мишени
 
   // generator->SpreadingOnTarget(); 				//Sets spreading of x and y coordinates on target (where z-position is zero) and
   // reconstruct them to the beam start position (to settes z-coordinate) along momentum vector.
@@ -159,8 +160,8 @@ void sim_C7_new_detector(Int_t nEvents = 100)
   run->SetStoreTraj(kTRUE);
 
   //-------Set LOG verbosity  -----------------------------------------------
-  FairLogger::GetLogger()->SetLogScreenLevel("INFO");
-  //FairLogger::GetLogger()->SetLogScreenLevel("DEBUG"); // для отладки
+  //FairLogger::GetLogger()->SetLogScreenLevel("INFO");
+  FairLogger::GetLogger()->SetLogScreenLevel("DEBUG"); // для отладки
 
   // -----   Initialize simulation run   ------------------------------------
   run->Init();

@@ -41,7 +41,6 @@ public:
   void SetStripEdepRange(Double_t edepMin, Double_t edepMax);
   void SetEdepMaxDiffXY(Double_t edepDiff) {fEdepDiffXY = edepDiff;}
   void SetAngleBetweenHitsCut(Double_t angleCut) {fAngleBetweenHitsCut = angleCut;}
-  void SetInteractionPosition(double x, double y, double z);
 public:
   /** @brief Defines all input and output object colletions participating
    ** in track finding. **/
@@ -59,30 +58,26 @@ protected:
   //Output arrays
   std::map<TString, TClonesArray*> fFootMuSiHit;
   TClonesArray* fFootMuSiTrack = nullptr;
+  TClonesArray* fMCTracks;
+  TClonesArray* fMCEventHeader;
   //// map<subassembly,map<component, pair<xBranch, yBranch>>> 
   std::map<TString, std::map<TString, std::pair<TString, TString>>> fSiHitStationsPair;
   std::map<TString, std::map<ERChannel, float>> hit_position_corrections_; 
   Double_t fSiDigiEdepMin = std::numeric_limits<double>::min();
   Double_t fSiDigiEdepMax = std::numeric_limits<double>::max();
   Double_t fEdepDiffXY = std::numeric_limits<double>::max();
-  double interaction_x_ = 0.;
-  double interaction_y_ = 0.;
-  double interaction_z_ = 0.;
-  bool interaction_position_is_set_ = false;
 private:
   Double_t fAngleBetweenHitsCut;
   /** @brief Adds a ERFootMuSiHit to the output Collection **/
-  ERFootMuSiHit* AddHit(const TVector3& targetVertex, const TVector3& xStationVertex, const TVector3& yStationVertex,
-                              const TVector3& xStationLocalVertex, const TVector3& yStationLocalVertex, 
+  ERFootMuSiHit* AddHit(const TVector3& xStationHit, const TVector3& yStationHit,
+                              const TVector3& xStationLocalHit, const TVector3& yStationLocalHit, 
                               Int_t xChannel, Int_t yChannel, Double_t xEdep, Double_t yEdep,
                               const TString& digiBranchName);
   /** @brief Adds a ERFootMuSiTrack to the output Collection **/
-  ERFootMuSiTrack* AddTrack(const TVector3& firstPairVector, const TVector3& secondPairVector,const TVector3& thirdPairVector);
-  ERFootMuSiTrack* AddTrack(const TVector3& firstHitPointVector, const TVector3& secondHitPointVector);
+/*   ERFootMuSiTrack* AddTrack(ERFootMuSiHit* firstHit,ERFootMuSiHit* secondHit,ERFootMuSiHit* thirdHit,Double_t hitsFitChi2); */
+  ERFootMuSiTrack* AddTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit);
   void CreateHitInFootMuSi(Int_t xChannelIndex, Int_t yChannelIndex, Int_t xChannel, Int_t yChannel, Double_t xEdep, Double_t yEdep,
                                const TString& xBranchName, const TString& yBranchName, const TString& trackBranchName);
-  void CreateHitInRFootMuSi(Int_t xChannelIndex, Int_t yChannelIndex, Int_t phiChannel, Int_t RChannel, Double_t phiEdep, Double_t rEdep,
-                               const TString& phiBranchName, const TString& rBranchName, const TString& trackBranchName);
   TVector3 GetGlobalHitPositionByStrip(const TString& branch_name, ERChannel channel) const;
   ClassDef(ERFootMuSiTrackFinder, 1)
 };

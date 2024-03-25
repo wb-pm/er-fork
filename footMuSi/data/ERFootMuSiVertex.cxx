@@ -7,7 +7,7 @@
  ********************************************************************************/
 #include "ERFootMuSiVertex.h"
 
-#include<iostream>
+#include <iostream>
 
 
 ERFootMuSiVertex::ERFootMuSiVertex():
@@ -16,7 +16,7 @@ ERFootMuSiVertex::ERFootMuSiVertex():
 
 }
 
-ERFootMuSiVertex::ERFootMuSiVertex(Float_t x, Float_t y, Float_t z):
+ERFootMuSiVertex::ERFootMuSiVertex(Double_t x, Double_t y, Double_t z):
 	fTracksNb(0), fX(x), fY(y), fZ(z)
 {
 
@@ -38,6 +38,10 @@ void ERFootMuSiVertex::AddTrack(Int_t id){
 		std::cerr << "Big track count in vertex!" << std::endl;
 	}
 }
+
+/* void ERFootMuSiVertex::AddTrack(ERFootMuSiTrack track){
+	fTracks.push_back(track);
+} */
 
 Int_t ERFootMuSiVertex::Track(Int_t id) const{
 	if (id >= fTracksNb){

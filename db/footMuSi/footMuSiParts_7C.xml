@@ -11,7 +11,7 @@
 				<singleSiMedia>silicon</singleSiMedia>
 			</singleSi>
 			<singleSi id="SingleSi_SSD150_2">
-				<singleSiSize singleSiX="6" singleSiY="6" singleSiZ="0.015"/>
+				<singleSiSize singleSiX="10" singleSiY="10" singleSiZ="0.015"/>
 				<singleSiSensAreaSize singleSiSensX="10" singleSiSensY="10" singleSiSensZ="0.015"/>
 				<deadLayerThicknessFrontSide>0.0001</deadLayerThicknessFrontSide>
 				<deadLayerThicknessBackSide>0.0001</deadLayerThicknessBackSide>
@@ -19,7 +19,7 @@
 				<singleSiMedia>silicon</singleSiMedia>
 			</singleSi>
 			<singleSi id="SingleSi_SSD150_3">
-				<singleSiSize singleSiX="6" singleSiY="6" singleSiZ="0.015"/>
+				<singleSiSize singleSiX="10" singleSiY="10" singleSiZ="0.015"/>
 				<singleSiSensAreaSize singleSiSensX="10" singleSiSensY="10" singleSiSensZ="0.015"/>
 				<deadLayerThicknessFrontSide>0.0001</deadLayerThicknessFrontSide>
 				<deadLayerThicknessBackSide>0.0001</deadLayerThicknessBackSide>
@@ -27,7 +27,7 @@
 				<singleSiMedia>silicon</singleSiMedia>
 			</singleSi>
 			<singleSi id="SingleSi_SSD150_4">
-				<singleSiSize singleSiX="6" singleSiY="6" singleSiZ="0.015"/>
+				<singleSiSize singleSiX="10" singleSiY="10" singleSiZ="0.015"/>
 				<singleSiSensAreaSize singleSiSensX="10" singleSiSensY="10" singleSiSensZ="0.015"/>
 				<deadLayerThicknessFrontSide>0.0001</deadLayerThicknessFrontSide>
 				<deadLayerThicknessBackSide>0.0001</deadLayerThicknessBackSide>
@@ -35,7 +35,7 @@
 				<singleSiMedia>silicon</singleSiMedia>
 			</singleSi>
 			<singleSi id="SingleSi_SSD150_5">
-				<singleSiSize singleSiX="6" singleSiY="6" singleSiZ="0.015"/>
+				<singleSiSize singleSiX="10" singleSiY="10" singleSiZ="0.015"/>
 				<singleSiSensAreaSize singleSiSensX="10" singleSiSensY="10" singleSiSensZ="0.015"/>
 				<deadLayerThicknessFrontSide>0.0001</deadLayerThicknessFrontSide>
 				<deadLayerThicknessBackSide>0.0001</deadLayerThicknessBackSide>
@@ -43,7 +43,7 @@
 				<singleSiMedia>silicon</singleSiMedia>
 			</singleSi>	
 			<singleSi id="SingleSi_SSD150_6">
-				<singleSiSize singleSiX="6" singleSiY="6" singleSiZ="0.015"/>
+				<singleSiSize singleSiX="10" singleSiY="10" singleSiZ="0.015"/>
 				<singleSiSensAreaSize singleSiSensX="10" singleSiSensY="10" singleSiSensZ="0.015"/>
 				<deadLayerThicknessFrontSide>0.0001</deadLayerThicknessFrontSide>
 				<deadLayerThicknessBackSide>0.0001</deadLayerThicknessBackSide>

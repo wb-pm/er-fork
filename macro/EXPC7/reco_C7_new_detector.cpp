@@ -10,14 +10,16 @@
 #include "ERFootMuSiTrackFinder.h"
 #include "ERFootMuSiVertexFinder.h"
 #include "ERFootMuSiPID.h"
+#include "ERFootMuSiMatcher.h"
 
 #endif
 void reco_C7_new_detector()
 {
   //---------------------Files-----------------------------------------------
-  TString appendName = "tracks_into_single_branch.root";
+  TString appendName = "spread_beam_tracks_into_single_branch_twoprotons.root";
   TString inFile = "outputFootMuSi/" + appendName;
-  TString outFile = "outputFootMuSi/reco_protonhelium_" + appendName;
+  TString outFile = "outputFootMuSi/reco__fit_hits_smallanglecut_inmomentum_comparison_anglecondition_" + appendName;
+  //TString outFile ="outputFootMuSi/reco_to_delete.root";
   TString parFile = "parametersFootMuSi/par_" + appendName;
 
   TFile *file = TFile::Open(inFile.Data());
@@ -45,18 +47,20 @@ void reco_C7_new_detector()
   // ------- FootMuSi TrackFinder -------------------------------------------
 Int_t verbose = 1; // 1 - only standard log print, 2 - print digi information 
 ERFootMuSiTrackFinder* FootMuSiTrackFinder = new ERFootMuSiTrackFinder(verbose);
-FootMuSiTrackFinder->SetInteractionPosition(0.,0.,0.);
-FootMuSiTrackFinder->SetAngleBetweenHitsCut(0.03);
+FootMuSiTrackFinder->SetAngleBetweenHitsCut(0.002);
 FootMuSiTrackFinder->SetHitStation("C7_first_pair", "C7_first_pair_SingleSi_SSD150_1_X", "C7_first_pair_SingleSi_SSD150_2_Y");
 FootMuSiTrackFinder->SetHitStation("C7_second_pair", "C7_second_pair_SingleSi_SSD150_3_X", "C7_second_pair_SingleSi_SSD150_4_Y");
 FootMuSiTrackFinder->SetHitStation("C7_third_pair", "C7_third_pair_SingleSi_SSD150_5_X", "C7_third_pair_SingleSi_SSD150_6_Y");
-//FootMuSiTrackFinder->SetHitStation("FootMuSi_proton", "FootMuSi_proton_DoubleSi_R_XY");
 run->AddTask(FootMuSiTrackFinder);
 // ------   FootMuSi VertexFinder -----------------------------------------
 ERFootMuSiVertexFinder* FootMuSiVertexFinder = new ERFootMuSiVertexFinder(verbose);
-FootMuSiVertexFinder->SetTrackDistanceCut(0.01);
-FootMuSiVertexFinder->SetVerticesMergeDistanceCut(0.01);
+FootMuSiVertexFinder->SetTrackDistanceCut(0.001);
+FootMuSiVertexFinder->SetVerticesMergeDistanceCut(0.0);
 run->AddTask(FootMuSiVertexFinder);
+  // ------------------------------------------------------------------------
+// ------   FootMuSi Matcher -----------------------------------------
+/* ERFootMuSiMatcher* FootMuSiMatcher = new ERFootMuSiMatcher(verbose);
+run->AddTask(FootMuSiMatcher); */
   // ------   FootMuSi TrackPID -----------------------------------------
 /* ERFootMuSiPID* FootMuSiPID = new ERFootMuSiPID(verbose);
 Double_t normalizedThickness = 0.015; // [cm]
@@ -74,7 +78,7 @@ parIO->open(parFile.Data(), "UPDATE");
 rtdb->print();
   
 run->Init();
-run->Run(0,5);
+run->Run(0,nEvents);
 
 
   // -----   Finish   -------------------------------------------------------

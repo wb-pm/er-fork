@@ -52,7 +52,7 @@ protected:
   TClonesArray *fFootMuSiVertices;
   
 
-  ERFootMuSiVertex* AddVertex(Float_t x, Float_t y, Float_t z);
+  ERFootMuSiVertex* AddVertex(Double_t x, Double_t y, Double_t z);
 protected:
 
 private:

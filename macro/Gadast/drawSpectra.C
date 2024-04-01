@@ -20,7 +20,7 @@ void OpenTree(Int_t treeID, TString filename, EColor color, Int_t lineWidth = 2)
 void DrawingSimExp(Int_t treeID, TString filename, TH1D* histExperment);
 void DrawingTwoSimOneExp(Int_t treeID1,Int_t treeID2, TString filename);
 
-void DrawSpectraUpd()
+void drawSpectra()
 { 
 	gROOT->SetStyle("Pub");
 	gStyle->SetOptTitle(kTRUE);

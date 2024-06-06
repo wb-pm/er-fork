@@ -85,6 +85,8 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
   LOG(DEBUG) << "[ERFootMuSiVertexFinder]------------Started--------------------------------------"
     << FairLogger::endl;
   Reset();
+      //temporary for storing the previously found vertex
+      ERFootMuSiVertex* tempVertex = new ERFootMuSiVertex(-10000.,-10000.,-10000.);
   //Searching for a common perpendicular for a pair of tracks
   for(Int_t iTrack = 0; iTrack < fFootMuSiTracks->GetEntriesFast(); iTrack++){
     ERFootMuSiTrack* track1 = (ERFootMuSiTrack*)fFootMuSiTracks->At(iTrack);
@@ -176,11 +178,27 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
       TVector3 vertex = orig + lambda(0,0)*directTrack1;
       TVector3 vertex2 = orig2 + lambda(1,0)*directTrack2;
       if ((fabs(lambda(2,0)) < fTrackDistanceCut) && (fabs(vertex2.Z()) < 2.5 )){
-        ERFootMuSiVertex* vert = AddVertex((vertex.X() + vertex2.X())/2., (vertex.Y() + vertex2.Y())/2.,(vertex.Z() + vertex2.Z())/2.);
+        ERFootMuSiVertex* vert = new ERFootMuSiVertex((vertex.X() + vertex2.X())/2., (vertex.Y() + vertex2.Y())/2.,(vertex.Z() + vertex2.Z())/2.);
+        //ERFootMuSiVertex* vert = AddVertex((vertex.X() + vertex2.X())/2., (vertex.Y() + vertex2.Y())/2.,(vertex.Z() + vertex2.Z())/2.);
         vert->AddTrackDistance(lambda(2,0));
         vert->AddTrack(iTrack);
         vert->AddTrack(jTrack);
-      }
+          //Adding functionality to merge verticies right in the tracks loop 
+        Double_t dist = TMath::Sqrt((tempVertex->X()-vert->X())*(tempVertex->X()-vert->X()) + (tempVertex->Y()-vert->Y())*(tempVertex->Y()-vert->Y()) + (tempVertex->Z()-vert->Z())*(tempVertex->Z()-vert->Z()));
+        //vert->AddDistanceBetweenVertices(dist);
+        if(dist < fVerticesMergeDistanceCut ){
+          std::cout << "Vertices merging! (first iteration)" << std::endl;
+          vert->SetX((vert->X()+tempVertex->X())/2.);
+          vert->SetY((vert->Y()+tempVertex->Y())/2.);
+          vert->SetZ((vert->Z()+tempVertex->Z())/2.);
+/*           for (Int_t kTrack = 0; kTrack < tempVertex->TrackNb(); kTrack++){
+            vert->AddTrack(tempVertex->Track(kTrack));
+          } */
+          continue;
+        }
+        AddVertex(*vert);
+        tempVertex = vert;
+        }
     }
   }
   Int_t rems = 0;
@@ -198,7 +216,7 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
                                   (vert2->Z()-vert1->Z())*(vert2->Z()-vert1->Z()));
       vert1->AddDistanceBetweenVertices(dist);
       if(dist < fVerticesMergeDistanceCut ){
-        std::cout << "Vertices merging!" << std::endl;
+        std::cout << "Vertices merging! (second iteration)" << std::endl;
         vert1->SetX((vert1->X()+vert2->X())/2.);
         vert1->SetY((vert1->Y()+vert2->Y())/2.);
         vert1->SetZ((vert1->Z()+vert2->Z())/2.);
@@ -211,8 +229,7 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
         }
         fFootMuSiVertices->RemoveAt(jVert);
       }
-      fFootMuSiVertices->Compress();
-    }
+    } fFootMuSiVertices->Compress(); //Delete empty spaces after going through all of the comparisons of vertices, so that not to skip some of them 
   }
   std::cout << "Vertices count: " << fFootMuSiVertices->GetEntriesFast() << std::endl;
   for(Int_t iVert=0; iVert < fFootMuSiVertices->GetEntriesFast(); iVert++){
@@ -245,6 +262,10 @@ ERFootMuSiVertex* ERFootMuSiVertexFinder::AddVertex(Double_t x, Double_t y, Doub
   return vertex;
 }
 //----------------------------------------------------------------------------
-
+ERFootMuSiVertex* ERFootMuSiVertexFinder::AddVertex(ERFootMuSiVertex& oldVertex){
+  ERFootMuSiVertex *vertex = new((*fFootMuSiVertices)[fFootMuSiVertices->GetEntriesFast()])
+                              ERFootMuSiVertex(oldVertex);
+  return vertex;
+}
 //-----------------------------------------------------------------------------
 ClassImp(ERFootMuSiVertexFinder)

@@ -53,6 +53,7 @@ protected:
   
 
   ERFootMuSiVertex* AddVertex(Double_t x, Double_t y, Double_t z);
+  ERFootMuSiVertex* AddVertex(ERFootMuSiVertex& oldVertex);
 protected:
 
 private:

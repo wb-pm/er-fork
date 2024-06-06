@@ -22,6 +22,18 @@ ERFootMuSiVertex::ERFootMuSiVertex(Double_t x, Double_t y, Double_t z):
 
 }
 
+ERFootMuSiVertex::ERFootMuSiVertex(const ERFootMuSiVertex& right):
+	fTracksNb(right.fTracksNb), fX(right.fX), fY(right.fY), fZ(right.fZ)
+{
+
+}
+
+// -----   Destructor   ----------------------------------------------------
+ERFootMuSiVertex::~ERFootMuSiVertex()
+{
+}
+// -------------------------------------------------------------------------
+
 void ERFootMuSiVertex::AddTrack(Int_t id){
 	Bool_t founded = kFALSE;
 	for (Int_t iTrack = 0; iTrack < fTracksNb; iTrack++){
@@ -38,10 +50,6 @@ void ERFootMuSiVertex::AddTrack(Int_t id){
 		std::cerr << "Big track count in vertex!" << std::endl;
 	}
 }
-
-/* void ERFootMuSiVertex::AddTrack(ERFootMuSiTrack track){
-	fTracks.push_back(track);
-} */
 
 Int_t ERFootMuSiVertex::Track(Int_t id) const{
 	if (id >= fTracksNb){

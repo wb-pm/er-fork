@@ -235,20 +235,21 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
       }
     }
   }
+Bool_t isProtonDebug = false;  
+std::vector<TVector3> p1Xp1YHits(3);
+std::vector<TVector3> p1Xp2YHits(3);
+std::vector<TVector3> p1Yp2XHits(3);
+std::vector<TVector3> p2Xp2YHits(3);
+
   //Test by putting coordinates of protons' continued trajectories from reaction position into the track finder
+if(isProtonDebug)
+{
 ERDecay7CEventHeader *decayEventHeader = (ERDecay7CEventHeader*)fMCEventHeader;
 ERDecayMCEventHeader *decayMCEventHeader = (ERDecayMCEventHeader*)fMCEventHeader;
 TVector3 initialPosition = decayMCEventHeader->GetReactionPos();
 TLorentzVector firstProton = decayEventHeader->Getp1();
 TLorentzVector secondProton = decayEventHeader->Getp2();
 //Having four different combinations of protons' X and Y coordinates correspondence
-std::vector<TVector3> p1Xp1YHits(3);
-
-std::vector<TVector3> p1Xp2YHits(3);
-
-std::vector<TVector3> p1Yp2XHits(3);
-
-std::vector<TVector3> p2Xp2YHits(3);
 //In order to check the granularity let's make an arbitrary strips division. The size of one strip is t = 0.015 cm
 // We should take the existing coordinate and turn it to the nearest multiple of t
 // The zero of the axis is located in strip number 300
@@ -257,7 +258,7 @@ std::vector<TVector3> p2Xp2YHits(3);
 // the formula should look something like this: -5 + t/2(1 + floor((5 + y)/(t))) 
 // Now we should modify the X coordinate at each station and only then imply this formula
 //Left and right coordinates of the detectors
-Bool_t isGranularityAccounted = true;
+Bool_t isGranularity = true;
 Double_t detectorNegativeEdge = -5.;
 Double_t detectorPositiveEdge = 5.;
 Double_t stripSize = 0.015;
@@ -310,7 +311,7 @@ Double_t p2Intercept = (p2FirstDetectorX + p2FifthDetectorX - p2Slope*(detectors
 Double_t p2InterceptCentered = (p2FirstDetectorXCentered + p2FifthDetectorXCentered - p2SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
 
 //Setting the vectors of each protons combination, depending on whether the granularity is taken into account
-if(isGranularityAccounted){
+if(isGranularity){
   p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
   p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
   p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
@@ -371,6 +372,7 @@ if(p1Xp1YCondition)
 {
   ERFootMuSiTrack *track = AddTrack(p1Xp1YHits.at(0),p1Xp1YHits.at(1),p1Xp1YHits.at(2));
 }
+}
 //..........................
   Int_t numberOfPairs = std::distance(fFootMuSiHit.begin(), fFootMuSiHit.end());
   //TODO: for now the rest part of the code, responsible for track recreation, will be hardcoded to 3 pairs of stations
@@ -406,51 +408,30 @@ if(p1Xp1YCondition)
         const Double_t bxSecond = (vectorSecondPairX.X() + vectorThirdPairX.X() - kxSecond*(vectorSecondPairX.Z()+vectorThirdPairX.Z()))/2;
         vectorThirdPairY.SetX(kxSecond*vectorThirdPairY.Z() + bxSecond);
         TVector3 secondSegment = vectorThirdPairY - vectorSecondPairY;
-// Let's implement a new condition getting rid of fake hits and other unwanted hits, by continuing the momentum from the initial protons and comparing the angle between this prolonged tracks and hits 
-        TVector3 p1FirstSegmentComparison = p1Xp1YHits[1] - p1Xp1YHits[0];
-        TVector3 p1SecondSegmentComparison = p1Xp1YHits[2] - p1Xp1YHits[1];
-        Double_t p1FirstAngleComparison = p1FirstSegmentComparison.Angle(firstSegment);
-        Double_t p1SecondAngleComparison = p1SecondSegmentComparison.Angle(secondSegment);
-        TVector3 p2FirstSegmentComparison = p2Xp2YHits[1] - p2Xp2YHits[0];
-        TVector3 p2SecondSegmentComparison = p2Xp2YHits[2] - p2Xp2YHits[1];
-        Double_t p2FirstAngleComparison = p2FirstSegmentComparison.Angle(firstSegment);
-        Double_t p2SecondAngleComparison = p2SecondSegmentComparison.Angle(secondSegment);
-        if ( secondSegment.Angle(firstSegment) < fAngleBetweenHitsCut && p1FirstAngleComparison < 0.035 && p2FirstAngleComparison < 0.035)
-        {
-          ERFootMuSiTrack* track = AddTrack(vectorFirstPairY,vectorSecondPairY,vectorThirdPairY);
-          track->SetFirstHitRefIndex(hitFirstPair->GetRefIndex());
-          track->SetSecondHitRefIndex(hitSecondPair->GetRefIndex());
-          track->SetThirdHitRefIndex(hitThirdPair->GetRefIndex());
-          track->SetAnglesWithInitialP(p1FirstAngleComparison,p1SecondAngleComparison);
+        if (secondSegment.Angle(firstSegment) < fAngleBetweenHitsCut) {
+            ERFootMuSiTrack* track = AddTrack(vectorFirstPairY,vectorSecondPairY,vectorThirdPairY);
+            track->SetAnglesWithInitialP(secondSegment.Angle(firstSegment),0.);
         }
-      //Fitting the X coordinates of the hits in order to project them to Y detectors
-/*       Double_t xFirst = hitFirstPair->GetXStationHit().X();
-      Double_t xSecond = hitSecondPair->GetXStationHit().X();
-      Double_t xThird = hitThirdPair->GetXStationHit().X();
-      Double_t zFirst = hitFirstPair->GetXStationHit().Z();
-      Double_t zSecond = hitSecondPair->GetXStationHit().Z();
-      Double_t zThird = hitThirdPair->GetXStationHit().Z();
-      ROOT::Fit::BinData hitsData(3,1);
-      hitsData.Add(xFirst,zFirst);
-      hitsData.Add(xSecond,zSecond);
-      hitsData.Add(xThird,zThird);
-      TF1 *hitsFitFunc = new TF1("hitsFitFunc","[0]+[1]*x");
-      hitsFitFunc->SetParameters(2.,2.);
-      ROOT::Fit::Fitter hitsFitter;
-      ROOT::Math::WrappedMultiTF1 hitsWrapper(*hitsFitFunc,1);
-      hitsFitter.SetFunction(hitsWrapper);
-      hitsFitter.Fit(hitsData);
-      const ROOT::Fit::FitResult &hitsFitRes = hitsFitter.Result(); 
-      hitsFitFunc->SetFitResult(hitsFitRes);
-      Double_t hitsChi2 = hitsFitRes.Chi2();
-      const Double_t *fitParameters = hitsFitRes.GetParams();
-      Double_t xFirstProj = hitFirstPair->GetXStationHit().X() + (hitFirstPair->GetYStationHit().Z()-hitFirstPair->GetXStationHit().Z()/fitParameters[0]);
-      Double_t xSecondProj = hitSecondPair->GetXStationHit().X() + (hitSecondPair->GetYStationHit().Z()-hitSecondPair->GetXStationHit().Z()/fitParameters[0]);
-      Double_t xThirdProj = hitThirdPair->GetXStationHit().X() + (hitThirdPair->GetYStationHit().Z()-hitThirdPair->GetXStationHit().Z()/fitParameters[0]);
-      hitFirstPair->GetYStationHit().SetX(xFirstProj);
-      hitSecondPair->GetYStationHit().SetX(xSecondProj);
-      hitThirdPair->GetYStationHit().SetX(xThirdProj);
-        ERFootMuSiTrack* track = AddTrack(hitFirstPair,hitSecondPair,hitThirdPair,hitsChi2); */
+// Let's implement a new condition getting rid of fake hits and other unwanted hits, by continuing the momentum from the initial protons and comparing the angle between this prolonged tracks and hits 
+        if(isProtonDebug)
+        {
+          TVector3 p1FirstSegmentComparison = p1Xp1YHits[1] - p1Xp1YHits[0];
+          TVector3 p1SecondSegmentComparison = p1Xp1YHits[2] - p1Xp1YHits[1];
+          Double_t p1FirstAngleComparison = p1FirstSegmentComparison.Angle(firstSegment);
+          Double_t p1SecondAngleComparison = p1SecondSegmentComparison.Angle(secondSegment);
+          TVector3 p2FirstSegmentComparison = p2Xp2YHits[1] - p2Xp2YHits[0];
+          TVector3 p2SecondSegmentComparison = p2Xp2YHits[2] - p2Xp2YHits[1];
+          Double_t p2FirstAngleComparison = p2FirstSegmentComparison.Angle(firstSegment);
+          Double_t p2SecondAngleComparison = p2SecondSegmentComparison.Angle(secondSegment);
+          if ( secondSegment.Angle(firstSegment) < fAngleBetweenHitsCut && p1FirstAngleComparison < 0.035 && p2FirstAngleComparison < 0.035)
+          {
+            ERFootMuSiTrack* track = AddTrack(vectorFirstPairY,vectorSecondPairY,vectorThirdPairY);
+            track->SetFirstHitRefIndex(hitFirstPair->GetRefIndex());
+            track->SetSecondHitRefIndex(hitSecondPair->GetRefIndex());
+            track->SetThirdHitRefIndex(hitThirdPair->GetRefIndex());
+            track->SetAnglesWithInitialP(p1FirstAngleComparison,p1SecondAngleComparison);
+          }
+        }
       }
     }
   }

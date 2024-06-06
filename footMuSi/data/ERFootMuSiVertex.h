@@ -13,9 +13,17 @@
 
 class ERFootMuSiVertex : public TObject{
 public:
+
+/* Default constructor */
 	ERFootMuSiVertex();
+/* Copy constructor */
+	ERFootMuSiVertex(const ERFootMuSiVertex&);
+/* Constructor with arguments */
 	ERFootMuSiVertex(Double_t x, Double_t y, Double_t z);
-	
+
+/* Destructor */
+	virtual ~ERFootMuSiVertex();
+
 	void AddTrack(Int_t id);
 /* 	void AddTrack(ERFootMuSiTrack track); */
 

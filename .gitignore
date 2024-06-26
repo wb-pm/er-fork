@@ -1,6 +1,7 @@
 build/
 docs/_build/
 *.root
+*.png
 core_dump*
 macro/h7_test/cuts
 macro/h7_test/parameters
@@ -9,3 +10,5 @@ macro/tests/parameters
 run.sh
 *.sw*
 core*
+.vscode/
+FairRoot-v-17.10_patches

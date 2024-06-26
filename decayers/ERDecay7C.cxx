@@ -20,7 +20,7 @@
 ERDecay7C::ERDecay7C():
   ERDecay("7C"),
   fTargetDecayFinish(kFALSE),
-  fTargetReactZ(0.),
+  //fTargetReactZ(0.),
   fMinStep(0.01),
   f9C(NULL),
   f7C(NULL),
@@ -31,9 +31,10 @@ ERDecay7C::ERDecay7C():
   fDecayFileCurrentEvent(0)
 {
   FairRunSim* run = FairRunSim::Instance();
+  //Value of He3 mass taken from LISE++ database. Maybe better change to using G4IonTable
   fIon3He = new FairIon("3He",2,3,2, 0., 2.808391);
+  //fIon3He = new FairIon("3He",2,3,2, 0., G4IonTable::GetIonTable()->GetIonMass(2,3));
   fUnstableIon7C = new FairIon("7C",  6, 7, 6, 0.,TDatabasePDG::Instance()->GetParticle("proton")->Mass()*4 + fIon3He->GetMass());
-  std::cout << fUnstableIon7C->GetMass();
   run->AddNewIon(fUnstableIon7C);
   run->AddNewIon(fIon3He);
 
@@ -57,30 +58,31 @@ ERDecay7C::~ERDecay7C() {
 //-------------------------------------------------------------------------------------------------
 Bool_t ERDecay7C::Init() {
 
-  std::cout << "Decayer Init." << std::endl;
+  LOG(INFO) << "Decayer Init." << FairLogger::endl;
 
 f9C = TDatabasePDG::Instance()->GetParticle("9C");
 if ( ! f9C ) {
-  std::cerr  << "-W- ERDecay7C: Ion 9C not found in database!" << std::endl;
+  LOG(ERROR)  << "-W- ERDecay7C: Ion 9C not found in database!" << FairLogger::endl;
   return kFALSE;
 }
 
   f7C = TDatabasePDG::Instance()->GetParticle("7C");
   if ( ! f7C ) {
-    std::cerr  << "-W- ERDecay7C: Ion 7C not found in database!" << std::endl;
-    f7C = TDatabasePDG::Instance()->AddParticle("7C","7C",6.5614830,0,1e-3,21.,"Baryon",1000060070);
+    LOG(ERROR)  << "-W- ERDecay7C: Ion 7C not found in database!" << FairLogger::endl;
+    Double_t mass7C = 6.5614830; // How was it calculated (sum of 4 protons and a helium-3)
+    f7C = TDatabasePDG::Instance()->AddParticle("7C","7C",mass7C,0,1e-3,21.,"Baryon",1000060070);
     return kTRUE;
   }
 
   f3He = TDatabasePDG::Instance()->GetParticle(fIon3He->GetName());
   if ( ! f3He ) {
-    std::cerr  << "-W- ERDecay7C: Ion 3He not found in database!" << std::endl;
+    LOG(ERROR)  << "-W- ERDecay7C: Ion 3He not found in database!" << FairLogger::endl;
     return kFALSE;
   }
 
   fp = TDatabasePDG::Instance()->GetParticle("proton");
   if ( ! fp ) {
-    std::cerr  << "-W- ERDecay7C: Particle proton not found in database!" << std::endl;
+    LOG(ERROR)  << "-W- ERDecay7C: Particle proton not found in database!" << FairLogger::endl;
     return kFALSE;
   }
 
@@ -106,6 +108,7 @@ CalculateTargetParameters();
 Bool_t ERDecay7C::DecayPhaseGenerator() {
   if (fDecayFilePath == ""){
     LOG(ERROR) << "Please enter the decay file name! Decay phase generator is turned off " << FairLogger::endl;
+    //Built-in decay phase generator is unreliable, therefore it is not used! 
 /*     Double_t decayMasses[5];
     decayMasses[0] = f3He->Mass();
     decayMasses[1] = fp->Mass(); 
@@ -186,7 +189,7 @@ Bool_t ERDecay7C::Stepping() {
     Double_t trackStep = gMC->TrackStep();
     fDistanceFromEntrance += trackStep;
     if (fDistanceFromEntrance > fDistanceToInteractPoint) {
-      std::cout << "Start reaction in target. Defined pos: " << fDistanceToInteractPoint << ", current pos: " << curPos.Z() << std::endl;
+      LOG(INFO) << "Start reaction in target. Defined pos: " << fDistanceToInteractPoint << ", current pos: " << curPos.Z() << FairLogger::endl;
       fLv7C->SetXYZM(0.,0.,0.,fUnstableIon7C->GetMass());
       TLorentzVector lv9C;
       gMC->TrackMomentum(lv9C);
@@ -211,11 +214,11 @@ Bool_t ERDecay7C::Stepping() {
                                  lv9C.E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
                                  kPDecay, C9TrackNb, f9C->Mass(), 0); */
-/*       gMC->GetStack()->PushTrack(0, C9TrackNb, f3He->PdgCode(),
+/*       gMC->GetStack()->PushTrack(1, C9TrackNb, f3He->PdgCode(),
                                  fLv3He->Px(), fLv3He->Py(), fLv3He->Pz(),
                                  fLv3He->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, He3TrackNb, f3He->Mass(), 0); */
+                                 kPDecay, He3TrackNb, f3He->Mass(), 0);
       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
                                  fLvp1->Px(),fLvp1->Py(),fLvp1->Pz(),
                                  fLvp1->E(), curPos.X(), curPos.Y(), curPos.Z(),
@@ -226,12 +229,12 @@ Bool_t ERDecay7C::Stepping() {
                                  fLvp2->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
                                  kPDecay, p2TrackNb, fp->Mass(), 0);
-/*       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
+      gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
                                  fLvp3->Px(),fLvp3->Py(),fLvp3->Pz(),
                                  fLvp3->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, p3TrackNb, fp->Mass(), 0); */
-/*       gMC->GetStack()->PushTrack(0, C9TrackNb, fp->PdgCode(),
+                                 kPDecay, p3TrackNb, fp->Mass(), 0);
+      gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
                                  fLvp4->Px(),fLvp4->Py(),fLvp4->Pz(),
                                  fLvp4->E(), curPos.X(), curPos.Y(), curPos.Z(),
                                  gMC->TrackTime(), 0., 0., 0.,
@@ -275,7 +278,7 @@ void ERDecay7C::BeginEvent() {
   fTargetDecayFinish = kFALSE;
   fIsInterationPointFound = kFALSE;
   //Seems like it is not used
-  fTargetReactZ = fRnd->Uniform(-fTargetThickness / 2, fTargetThickness / 2);
+  //fTargetReactZ = fRnd->Uniform(-fTargetThickness / 2, fTargetThickness / 2);
   FairRunSim* run = FairRunSim::Instance();
 }
 

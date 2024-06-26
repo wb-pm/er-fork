@@ -222,7 +222,13 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
         const ERChannel xChannel = xStrip->Channel();
         const ERChannel yChannel = yStrip->Channel();
         LOG(DEBUG) << "[ERFootMuSiTrackFinder] The X channel of the hit: " << xChannel << " The Y channel of the hit: " << yChannel << FairLogger::endl;
-        if (fFootMuSiSetup->GetStationType(xDigiBranchName) == ERFootMuSiSetup::StationType::QStation)
+        //Use the condition for energy deposition in order to choose a specific particle, proton or he3 in the case of 7C decay
+        if (fLowerEdepCut > xStrip->Edep() || fUpperEdepCut < xStrip->Edep() || fLowerEdepCut > yStrip->Edep() || fUpperEdepCut < yStrip->Edep())
+        {
+          LOG(INFO) << "[ERFootMuSiTrackFinder] Hit energy is not in the set energy deposition range, skipping the hit" << FairLogger::endl;
+          continue;
+        }
+        if (fFootMuSiSetup->GetStationType(xDigiBranchName) == ERFootMuSiSetup::StationType::QStation && fFootMuSiSetup->GetStationType(yDigiBranchName) == ERFootMuSiSetup::StationType::QStation)
         {
           CreateHitInFootMuSi(xChannelIndex, yChannelIndex, xChannel, yChannel,
             xStrip->Edep(), yStrip->Edep(), xDigiBranchName, yDigiBranchName,
@@ -244,134 +250,134 @@ std::vector<TVector3> p2Xp2YHits(3);
   //Test by putting coordinates of protons' continued trajectories from reaction position into the track finder
 if(isProtonDebug)
 {
-ERDecay7CEventHeader *decayEventHeader = (ERDecay7CEventHeader*)fMCEventHeader;
-ERDecayMCEventHeader *decayMCEventHeader = (ERDecayMCEventHeader*)fMCEventHeader;
-TVector3 initialPosition = decayMCEventHeader->GetReactionPos();
-TLorentzVector firstProton = decayEventHeader->Getp1();
-TLorentzVector secondProton = decayEventHeader->Getp2();
-//Having four different combinations of protons' X and Y coordinates correspondence
-//In order to check the granularity let's make an arbitrary strips division. The size of one strip is t = 0.015 cm
-// We should take the existing coordinate and turn it to the nearest multiple of t
-// The zero of the axis is located in strip number 300
-// The 1st strip center should be located at -5 + t/2
-// So if the strip is inside the region of -5 + t, it should go to the first strip and so on
-// the formula should look something like this: -5 + t/2(1 + floor((5 + y)/(t))) 
-// Now we should modify the X coordinate at each station and only then imply this formula
-//Left and right coordinates of the detectors
-Bool_t isGranularity = true;
-Double_t detectorNegativeEdge = -5.;
-Double_t detectorPositiveEdge = 5.;
-Double_t stripSize = 0.015;
-std::vector<Double_t> detectorsZ = {20.,21.,36.,37.,52.,53.};
-// Testing the algorithm for projecting the coordinate from X detector to Y detector at each pairs
+  ERDecay7CEventHeader *decayEventHeader = (ERDecay7CEventHeader*)fMCEventHeader;
+  ERDecayMCEventHeader *decayMCEventHeader = (ERDecayMCEventHeader*)fMCEventHeader;
+  TVector3 initialPosition = decayMCEventHeader->GetReactionPos();
+  TLorentzVector firstProton = decayEventHeader->Getp1();
+  TLorentzVector secondProton = decayEventHeader->Getp2();
+  //Having four different combinations of protons' X and Y coordinates correspondence
+  //In order to check the granularity let's make an arbitrary strips division. The size of one strip is t = 0.015 cm
+  // We should take the existing coordinate and turn it to the nearest multiple of t
+  // The zero of the axis is located in strip number 300
+  // The 1st strip center should be located at -5 + t/2
+  // So if the strip is inside the region of -5 + t, it should go to the first strip and so on
+  // the formula should look something like this: -5 + t/2(1 + floor((5 + y)/(t))) 
+  // Now we should modify the X coordinate at each station and only then imply this formula
+  //Left and right coordinates of the detectors
+  Bool_t isGranularity = true;
+  Double_t detectorNegativeEdge = -5.;
+  Double_t detectorPositiveEdge = 5.;
+  Double_t stripSize = 0.015;
+  std::vector<Double_t> detectorsZ = {20.,21.,36.,37.,52.,53.};
+  // Testing the algorithm for projecting the coordinate from X detector to Y detector at each pairs
 
-//First proton coordinates at respective detectors
-Double_t p1FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
-Double_t p1SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
-Double_t p1ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
-Double_t p1FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
-Double_t p1FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
-Double_t p1SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y(); 
+  //First proton coordinates at respective detectors
+  Double_t p1FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
+  Double_t p1SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
+  Double_t p1ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
+  Double_t p1FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
+  Double_t p1FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
+  Double_t p1SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y(); 
 
-//Accounting the granularity of the detectors for the first proton coordinates
-Double_t p1FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FirstDetectorX)/(stripSize));
-Double_t p1SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SecondDetectorY)/(stripSize));
-Double_t p1ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1ThirdDetectorX)/(stripSize));
-Double_t p1FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FourthDetectorY)/(stripSize));
-Double_t p1FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FifthDetectorX)/(stripSize));
-Double_t p1SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SixthDetectorY)/(stripSize));
+  //Accounting the granularity of the detectors for the first proton coordinates
+  Double_t p1FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FirstDetectorX)/(stripSize));
+  Double_t p1SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SecondDetectorY)/(stripSize));
+  Double_t p1ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1ThirdDetectorX)/(stripSize));
+  Double_t p1FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FourthDetectorY)/(stripSize));
+  Double_t p1FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FifthDetectorX)/(stripSize));
+  Double_t p1SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SixthDetectorY)/(stripSize));
 
-//Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
-Double_t p1Slope = (p1FifthDetectorX - p1FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
-Double_t p1SlopeCentered = (p1FifthDetectorXCentered - p1FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
-Double_t p1Intercept = (p1FirstDetectorX + p1FifthDetectorX - p1Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
-Double_t p1InterceptCentered = (p1FirstDetectorXCentered + p1FifthDetectorXCentered - p1SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
+  //Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
+  Double_t p1Slope = (p1FifthDetectorX - p1FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
+  Double_t p1SlopeCentered = (p1FifthDetectorXCentered - p1FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
+  Double_t p1Intercept = (p1FirstDetectorX + p1FifthDetectorX - p1Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
+  Double_t p1InterceptCentered = (p1FirstDetectorXCentered + p1FifthDetectorXCentered - p1SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
 
-//Second proton coordinates at respective detectors
+  //Second proton coordinates at respective detectors
 
-Double_t p2FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
-Double_t p2SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
-Double_t p2ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
-Double_t p2FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
-Double_t p2FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
-Double_t p2SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y(); 
+  Double_t p2FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
+  Double_t p2SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
+  Double_t p2ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
+  Double_t p2FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
+  Double_t p2FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
+  Double_t p2SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y(); 
 
-//Accounting the granularity of the detectors for the second proton coordinates
-Double_t p2FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FirstDetectorX)/(stripSize));
-Double_t p2SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SecondDetectorY)/(stripSize));
-Double_t p2ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2ThirdDetectorX)/(stripSize));
-Double_t p2FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FourthDetectorY)/(stripSize));
-Double_t p2FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FifthDetectorX)/(stripSize));
-Double_t p2SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SixthDetectorY)/(stripSize));
+  //Accounting the granularity of the detectors for the second proton coordinates
+  Double_t p2FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FirstDetectorX)/(stripSize));
+  Double_t p2SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SecondDetectorY)/(stripSize));
+  Double_t p2ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2ThirdDetectorX)/(stripSize));
+  Double_t p2FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FourthDetectorY)/(stripSize));
+  Double_t p2FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FifthDetectorX)/(stripSize));
+  Double_t p2SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SixthDetectorY)/(stripSize));
 
-//Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
-Double_t p2Slope = (p2FifthDetectorX - p2FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
-Double_t p2SlopeCentered = (p2FifthDetectorXCentered - p2FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
-Double_t p2Intercept = (p2FirstDetectorX + p2FifthDetectorX - p2Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
-Double_t p2InterceptCentered = (p2FirstDetectorXCentered + p2FifthDetectorXCentered - p2SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
+  //Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
+  Double_t p2Slope = (p2FifthDetectorX - p2FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
+  Double_t p2SlopeCentered = (p2FifthDetectorXCentered - p2FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
+  Double_t p2Intercept = (p2FirstDetectorX + p2FifthDetectorX - p2Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
+  Double_t p2InterceptCentered = (p2FirstDetectorXCentered + p2FifthDetectorXCentered - p2SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
 
-//Setting the vectors of each protons combination, depending on whether the granularity is taken into account
-if(isGranularity){
-  p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
-  p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
-  p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
+  //Setting the vectors of each protons combination, depending on whether the granularity is taken into account
+  if(isGranularity){
+    p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
+    p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
+    p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
 
-  p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
-  p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
-  p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
+    p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
+    p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
+    p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
 
-  p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
-  p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
-  p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
+    p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
+    p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
+    p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
 
-  p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
-  p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
-  p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
-}
-else{
-  p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p1SecondDetectorY,detectorsZ.at(1));
-  p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p1FourthDetectorY,detectorsZ.at(3));
-  p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p1SixthDetectorY,detectorsZ.at(5));
+    p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
+    p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
+    p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
+  }
+  else{
+    p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p1SecondDetectorY,detectorsZ.at(1));
+    p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p1FourthDetectorY,detectorsZ.at(3));
+    p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p1SixthDetectorY,detectorsZ.at(5));
 
-  p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p2SecondDetectorY,detectorsZ.at(1));
-  p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p2FourthDetectorY,detectorsZ.at(3));
-  p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p2SixthDetectorY,detectorsZ.at(5));
+    p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p2SecondDetectorY,detectorsZ.at(1));
+    p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p2FourthDetectorY,detectorsZ.at(3));
+    p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p2SixthDetectorY,detectorsZ.at(5));
 
-  p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p1SecondDetectorY,detectorsZ.at(1));
-  p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p1FourthDetectorY,detectorsZ.at(3));
-  p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p1SixthDetectorY,detectorsZ.at(5));
+    p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p1SecondDetectorY,detectorsZ.at(1));
+    p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p1FourthDetectorY,detectorsZ.at(3));
+    p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p1SixthDetectorY,detectorsZ.at(5));
 
-  p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p2SecondDetectorY,detectorsZ.at(1));
-  p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p2FourthDetectorY,detectorsZ.at(3));
-  p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p2SixthDetectorY,detectorsZ.at(5));
-}
+    p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p2SecondDetectorY,detectorsZ.at(1));
+    p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p2FourthDetectorY,detectorsZ.at(3));
+    p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p2SixthDetectorY,detectorsZ.at(5));
+  }
 
 
-// Conditions for accounting the size of detectors
-Bool_t p1Xp1YCondition = (fabs(p1Xp1YHits.at(0).X()) <= 5) && (fabs(p1Xp1YHits.at(0).Y()) <= 5) && (fabs(p1Xp1YHits.at(1).X()) <= 5) && (fabs(p1Xp1YHits.at(1).Y()) <= 5) && (fabs(p1Xp1YHits.at(2).X()) <= 5) && (fabs(p1Xp1YHits.at(2).Y()) <= 5);
+  // Conditions for accounting the size of detectors
+  Bool_t p1Xp1YCondition = (fabs(p1Xp1YHits.at(0).X()) <= 5) && (fabs(p1Xp1YHits.at(0).Y()) <= 5) && (fabs(p1Xp1YHits.at(1).X()) <= 5) && (fabs(p1Xp1YHits.at(1).Y()) <= 5) && (fabs(p1Xp1YHits.at(2).X()) <= 5) && (fabs(p1Xp1YHits.at(2).Y()) <= 5);
 
-Bool_t p1Xp2YCondition = (fabs(p1Xp2YHits.at(0).X()) <= 5) && (fabs(p1Xp2YHits.at(0).Y()) <= 5) && (fabs(p1Xp2YHits.at(1).X()) <= 5) && (fabs(p1Xp2YHits.at(1).Y()) <= 5) && (fabs(p1Xp2YHits.at(2).X()) <= 5) && (fabs(p1Xp2YHits.at(2).Y()) <= 5);
+  Bool_t p1Xp2YCondition = (fabs(p1Xp2YHits.at(0).X()) <= 5) && (fabs(p1Xp2YHits.at(0).Y()) <= 5) && (fabs(p1Xp2YHits.at(1).X()) <= 5) && (fabs(p1Xp2YHits.at(1).Y()) <= 5) && (fabs(p1Xp2YHits.at(2).X()) <= 5) && (fabs(p1Xp2YHits.at(2).Y()) <= 5);
 
-Bool_t p1Yp2XCondition = (fabs(p1Yp2XHits.at(0).X()) <= 5) && (fabs(p1Yp2XHits.at(0).Y()) <= 5) && (fabs(p1Yp2XHits.at(1).X()) <= 5) && (fabs(p1Yp2XHits.at(1).Y()) <= 5) && (fabs(p1Yp2XHits.at(2).X()) <= 5) && (fabs(p1Yp2XHits.at(2).Y()) <= 5);
+  Bool_t p1Yp2XCondition = (fabs(p1Yp2XHits.at(0).X()) <= 5) && (fabs(p1Yp2XHits.at(0).Y()) <= 5) && (fabs(p1Yp2XHits.at(1).X()) <= 5) && (fabs(p1Yp2XHits.at(1).Y()) <= 5) && (fabs(p1Yp2XHits.at(2).X()) <= 5) && (fabs(p1Yp2XHits.at(2).Y()) <= 5);
 
-Bool_t p2Xp2YCondition = (fabs(p2Xp2YHits.at(0).X()) <= 5) && (fabs(p2Xp2YHits.at(0).Y()) <= 5) && (fabs(p2Xp2YHits.at(1).X()) <= 5) && (fabs(p2Xp2YHits.at(1).Y()) <= 5) && (fabs(p2Xp2YHits.at(2).X()) <= 5) && (fabs(p2Xp2YHits.at(2).Y()) <= 5);
+  Bool_t p2Xp2YCondition = (fabs(p2Xp2YHits.at(0).X()) <= 5) && (fabs(p2Xp2YHits.at(0).Y()) <= 5) && (fabs(p2Xp2YHits.at(1).X()) <= 5) && (fabs(p2Xp2YHits.at(1).Y()) <= 5) && (fabs(p2Xp2YHits.at(2).X()) <= 5) && (fabs(p2Xp2YHits.at(2).Y()) <= 5);
 
-if(p2Xp2YCondition)
-{
-  ERFootMuSiTrack *track = AddTrack(p2Xp2YHits.at(0),p2Xp2YHits.at(1),p2Xp2YHits.at(2));
-}
-if(p1Yp2XCondition)
-{
-  ERFootMuSiTrack *track = AddTrack(p1Yp2XHits.at(0),p1Yp2XHits.at(1),p1Yp2XHits.at(2));
-}
-if(p1Xp2YCondition)
-{
-  ERFootMuSiTrack *track = AddTrack(p1Xp2YHits.at(0),p1Xp2YHits.at(1),p1Xp2YHits.at(2));
-}
-if(p1Xp1YCondition)
-{
-  ERFootMuSiTrack *track = AddTrack(p1Xp1YHits.at(0),p1Xp1YHits.at(1),p1Xp1YHits.at(2));
-}
+  if(p2Xp2YCondition)
+  {
+    ERFootMuSiTrack *track = AddTrack(p2Xp2YHits.at(0),p2Xp2YHits.at(1),p2Xp2YHits.at(2));
+  }
+  if(p1Yp2XCondition)
+  {
+    ERFootMuSiTrack *track = AddTrack(p1Yp2XHits.at(0),p1Yp2XHits.at(1),p1Yp2XHits.at(2));
+  }
+  if(p1Xp2YCondition)
+  {
+    ERFootMuSiTrack *track = AddTrack(p1Xp2YHits.at(0),p1Xp2YHits.at(1),p1Xp2YHits.at(2));
+  }
+  if(p1Xp1YCondition)
+  {
+    ERFootMuSiTrack *track = AddTrack(p1Xp1YHits.at(0),p1Xp1YHits.at(1),p1Xp1YHits.at(2));
+  }
 }
 //..........................
   Int_t numberOfPairs = std::distance(fFootMuSiHit.begin(), fFootMuSiHit.end());

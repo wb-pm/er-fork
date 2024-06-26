@@ -31,27 +31,51 @@ TF1* multipleScattering();
 
 void MakeClassAnalysis()
 {
-    TFile *input_root_twoprotons = new TFile("../outputFootMuSi/spread_beam_tracks_into_single_branch_twoprotons_100mm_cuts.root", "READ");
-    TTree *input_tree_twoprotons = (TTree*)input_root_twoprotons->Get("er");
-    //TFile *input_root_reco_twoprotons = new TFile("../outputFootMuSi/reco__fit_hits_smallanglecut_inmomentum_comparison_anglecondition_spread_beam_tracks_into_single_branch_twoprotons.root", "READ");
-    TFile *input_root_reco_twoprotons = new TFile("../outputFootMuSi/reco__fit_hits_smallanglecut_inmomentum_comparison_anglecondition_spread_beam_tracks_into_single_branch_twoprotons.root", "READ");
-    TTree *input_tree_reco_twoprotons = (TTree*)input_root_reco_twoprotons->Get("er");
-/*     simInfo(input_tree_twoprotons); */
-simRecoComparison(input_tree_twoprotons,input_tree_reco_twoprotons);
-/*     reconstructTrack(input_tree_reco_twoprotons); 
-    scatteringAnglesSim(input_tree_twoprotons); */
-/*     energyDepositions(input_tree_twoprotons);
-    singleEvent(input_tree_reco_twoprotons); */
+    TFile *two_protons = new TFile("../outputFootMuSi/CorrectedBeam/singleProton_cuts10meters_spreadBeam.root");
+    TFile *single_helium = new TFile("../outputFootMuSi/singleHelium_cuts1meter_spreadBeam.root");
 
-/*     TFile *input_root_decay_0p001mm = new TFile("../output/test_decay_e_range0p001mm.root", "READ");
-    TTree *input_tree_decay_0p001mm = (TTree*)input_root_decay_0p001mm->Get("er"); */
+    TTree *tree_two_protons = (TTree*)two_protons->Get("er");
+    TTree *tree_single_helium = (TTree*)single_helium->Get("er");
+    TCanvas *c1 = new TCanvas();
+    c1->Divide(3,2);
+/*     c1->cd(1);
+    tree_single_proton->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep>>hDigiProton(400,0.,1.)");
+    TH1D *hDigiProton = (TH1D*)gPad->GetPrimitive("hDigiProton");
+    hDigiProton->SetTitle("Digi proton");
+    gPad->SetLogy();
+    c1->cd(2);
+    tree_single_helium->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep>>hDigiHelium(400,0.,1.5)");
+    TH1D *hDigiHelium = (TH1D*)gPad->GetPrimitive("hDigiHelium");
+    hDigiHelium->SetTitle("Digi helium");
+    gPad->SetLogy();
+    c1->cd(3);
+    tree_single_proton->Draw("FootMuSiDigi_C7_second_pair_SingleSi_SSD150_3_X.fEdep>>hDigiProton2ndX(400,0.,1.)"); */
+/*     tree_single_proton->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fChannel:FootMuSiDigi_C7_first_pair_SingleSi_SSD150_2_Y.fChannel>>hStripsProton","","COLZ");
+    TH1D *hStripsProton = (TH1D*)gPad->GetPrimitive("hStripsProton");
+    hStripsProton->SetTitle("Strips proton"); */
+    c1->cd(1);
+    //tree_two_protons->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep:FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X@.GetEntries()>>hMult(400,0,12,400,0,2.)","","colz");
+    tree_two_protons->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep:FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X@.GetEntries()","FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep < 0.2","colz");
+    c1->cd(2);
+    tree_two_protons->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep","FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep < 0.2","");
+    c1->cd(3);
+    tree_two_protons->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep","FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X@.GetEntries() == 2 && FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fEdep < 0.2","");
+/*     tree_single_helium->Draw("FootMuSiDigi_C7_first_pair_SingleSi_SSD150_1_X.fChannel:FootMuSiDigi_C7_first_pair_SingleSi_SSD150_2_Y.fChannel>>hStripsHelium","","COLZ");
+    TH1D *hStripsHelium = (TH1D*)gPad->GetPrimitive("hStripsHelium");
+    hStripsHelium->SetTitle("Strips helium"); */
 
-/*     C9_Tree_Structure* analysis_class = new C9_Tree_Structure(input_tree);
-    analysis_class->Loop(); */
-    //reconstructTrack(input_tree);
-    //showChannels(input_tree);
-    //input_tree_decay->Scan("TelescopeDigi_Telescope_C9_SingleSi_SSD150_1_X.fChannel");
-    //energyDepositions(input_tree_decay);
+    TFile *reco_single_proton = new TFile("../outputFootMuSi/reco_edepCut_singleProton_cuts1meter_spreadBeam.root", "READ");
+    TFile *reco_twoProtons = new TFile("../outputFootMuSi/reco_edepCut_twoProtons_cuts1meter_spreadBeam.root","READ");
+    TTree *tree_reco_single_proton = (TTree*)reco_single_proton->Get("er");
+    TTree *tree_reco_twoProtons = (TTree*)reco_twoProtons->Get("er");
+/*     TCanvas *c2 = new TCanvas();
+    c2->Divide(2,2);
+    c2->cd(1);
+    tree_reco_single_proton->Draw("FootMuSiTrack.fFirstAngleComparison>>hProtonAngle(800,0.,0.009)");
+    c2->cd(2);
+    tree_reco_twoProtons->Draw("FootMuSiTrack.fFirstAngleComparison>>hTwoProtonsAngle(800,0.,0.009)");
+    c2->cd(4);
+    tree_reco_twoProtons->Draw("FootMuSiTrack.fFirstAngleComparison>>hTwoProtonsAngle2(800,0.,0.02)"); */
 /*     energyDepositions(input_tree_decay_0p01mm_oneproton);
     TCanvas *c2 = new TCanvas();
     c2->Divide(3,1);

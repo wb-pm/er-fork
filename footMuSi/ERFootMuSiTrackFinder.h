@@ -41,6 +41,10 @@ public:
   void SetStripEdepRange(Double_t edepMin, Double_t edepMax);
   void SetEdepMaxDiffXY(Double_t edepDiff) {fEdepDiffXY = edepDiff;}
   void SetAngleBetweenHitsCut(Double_t angleCut) {fAngleBetweenHitsCut = angleCut;}
+  void SetLowerEdepCut(Double_t lowerEdepCut)
+  {fLowerEdepCut = lowerEdepCut;}
+  void SetUpperEdepCut(Double_t upperEdepCut)
+  {fUpperEdepCut = upperEdepCut;}
 public:
   /** @brief Defines all input and output object colletions participating
    ** in track finding. **/
@@ -66,15 +70,16 @@ protected:
   Double_t fSiDigiEdepMin = std::numeric_limits<double>::min();
   Double_t fSiDigiEdepMax = std::numeric_limits<double>::max();
   Double_t fEdepDiffXY = std::numeric_limits<double>::max();
-private:
   Double_t fAngleBetweenHitsCut;
+  Double_t fLowerEdepCut;
+  Double_t fUpperEdepCut;
+private:
   /** @brief Adds a ERFootMuSiHit to the output Collection **/
   ERFootMuSiHit* AddHit(const TVector3& xStationHit, const TVector3& yStationHit,
                               const TVector3& xStationLocalHit, const TVector3& yStationLocalHit, 
                               Int_t xChannel, Int_t yChannel, Double_t xEdep, Double_t yEdep,
                               const TString& digiBranchName);
   /** @brief Adds a ERFootMuSiTrack to the output Collection **/
-/*   ERFootMuSiTrack* AddTrack(ERFootMuSiHit* firstHit,ERFootMuSiHit* secondHit,ERFootMuSiHit* thirdHit,Double_t hitsFitChi2); */
   ERFootMuSiTrack* AddTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit);
   void CreateHitInFootMuSi(Int_t xChannelIndex, Int_t yChannelIndex, Int_t xChannel, Int_t yChannel, Double_t xEdep, Double_t yEdep,
                                const TString& xBranchName, const TString& yBranchName, const TString& trackBranchName);

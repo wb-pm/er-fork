@@ -110,7 +110,7 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
     fitter.SetFunction(wf);
     bool ret = fitter.Fit(track1Data);
     const ROOT::Fit::FitResult & res = fitter.Result();
-    //res.Print(std::cout);
+    //res.Print(LOG(DEBUG));
     f->SetFitResult(res);
     //The fit results are used for the direction of the first track
     TVector3 directTrack1(track1->GetFirstHit().X()-track1->GetSecondHit().X(),
@@ -139,7 +139,7 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
       fitter2.SetFunction(wf2);
       bool ret2 = fitter2.Fit(track2Data);
       const ROOT::Fit::FitResult & res2 = fitter2.Result();
-      //res2.Print(std::cout);
+      //res2.Print(LOG(DEBUG));
       f->SetFitResult(res2);
     //The fit results are used for the direction of the second track
       TVector3 directTrack2(track2->GetFirstHit().X()-track2->GetSecondHit().X(),
@@ -186,8 +186,10 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
           //Adding functionality to merge verticies right in the tracks loop 
         Double_t dist = TMath::Sqrt((tempVertex->X()-vert->X())*(tempVertex->X()-vert->X()) + (tempVertex->Y()-vert->Y())*(tempVertex->Y()-vert->Y()) + (tempVertex->Z()-vert->Z())*(tempVertex->Z()-vert->Z()));
         //vert->AddDistanceBetweenVertices(dist);
-        if(dist < fVerticesMergeDistanceCut ){
-          std::cout << "Vertices merging! (first iteration)" << std::endl;
+        if(dist < fVerticesMergeDistanceCut){
+          if(jTrack%100==0){
+          LOG(DEBUG) << "Vertices merging! (first iteration), merges: " << jTrack << FairLogger::endl;
+          }
           vert->SetX((vert->X()+tempVertex->X())/2.);
           vert->SetY((vert->Y()+tempVertex->Y())/2.);
           vert->SetZ((vert->Z()+tempVertex->Z())/2.);
@@ -201,7 +203,6 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
         }
     }
   }
-  Int_t rems = 0;
   //merge vertices
   for (Int_t iVert = 0; iVert < fFootMuSiVertices->GetEntriesFast(); iVert++){
     ERFootMuSiVertex* vert1 = (ERFootMuSiVertex*)fFootMuSiVertices->At(iVert);
@@ -214,27 +215,25 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
       Double_t dist = TMath::Sqrt((vert2->X()-vert1->X())*(vert2->X()-vert1->X()) +  
                                   (vert2->Y()-vert1->Y())*(vert2->Y()-vert1->Y()) + 
                                   (vert2->Z()-vert1->Z())*(vert2->Z()-vert1->Z()));
-      vert1->AddDistanceBetweenVertices(dist);
-      if(dist < fVerticesMergeDistanceCut ){
-        std::cout << "Vertices merging! (second iteration)" << std::endl;
+        vert1->AddDistanceBetweenVertices(dist);
+      if(dist < fVerticesMergeDistanceCut){
+        if(jVert%100 == 0){
+        LOG(DEBUG) << "Vertices merging! (second iteration), merges: " << jVert << FairLogger::endl;
+        }
         vert1->SetX((vert1->X()+vert2->X())/2.);
         vert1->SetY((vert1->Y()+vert2->Y())/2.);
         vert1->SetZ((vert1->Z()+vert2->Z())/2.);
         for (Int_t iTrack = 0; iTrack < vert2->TrackNb(); iTrack++){
           vert1->AddTrack(vert2->Track(iTrack));
         }
-        rems++;
-        if(rems%1000==0){
-        LOG(INFO) << "rems = " << rems << FairLogger::endl; 
-        }
         fFootMuSiVertices->RemoveAt(jVert);
       }
     } fFootMuSiVertices->Compress(); //Delete empty spaces after going through all of the comparisons of vertices, so that not to skip some of them 
   }
-  std::cout << "Vertices count: " << fFootMuSiVertices->GetEntriesFast() << std::endl;
+  LOG(DEBUG) << "Vertices count: " << fFootMuSiVertices->GetEntriesFast() << FairLogger::endl;
   for(Int_t iVert=0; iVert < fFootMuSiVertices->GetEntriesFast(); iVert++){
     ERFootMuSiVertex* vert = (ERFootMuSiVertex*)fFootMuSiVertices->At(iVert);
-    std::cout << "Vertex "<< iVert << ": (" <<  vert->X() << "," << vert->Y() << "," << vert->Z() << ")" << std::endl;
+    LOG(INFO) << "Vertex "<< iVert << ": (" <<  vert->X() << "," << vert->Y() << "," << vert->Z() << ")" << FairLogger::endl;
   }
 }
 //----------------------------------------------------------------------------

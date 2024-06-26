@@ -59,7 +59,7 @@ private:
   FairIon        *fUnstableIon7C;
   FairIon        *fIon3He;
 
-  Double_t         fTargetReactZ;
+  //Double_t         fTargetReactZ;
   Double_t         fMinStep;
   Double_t         fTargetThickness;
   Bool_t           fTargetDecayFinish;

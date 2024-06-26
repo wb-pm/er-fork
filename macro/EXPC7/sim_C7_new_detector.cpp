@@ -5,6 +5,7 @@
 
 #include "FairPrimaryGenerator.h"
 #include "FairParRootFileIo.h"
+#include "FairParAsciiFileIo.h"
 
 #include "ERRunSim.h"
 #include "ERCave.h"
@@ -21,10 +22,11 @@
 
 void sim_C7_new_detector(Int_t nEvents = 10000)
 {
-  Double_t beamStartPosition = -10.; // [cm]
+  Double_t beamStartPosition = -20.; // [cm]
   //now should create a simulation with spread beam
-  TString appendName = "spread_beam_tracks_into_single_branch_twoprotons_1mm_cuts.root";
-  TString outFile = "outputFootMuSi/" + appendName;
+ // TString appendName = "twoProtons_defCuts1mm_BERTPhysList_spreadBeam.root";
+  TString appendName = "noProducts_cuts10meters_spreadBeam20cm.root";
+  TString outFile = "outputFootMuSi/CorrectedBeam/" + appendName;
   TString decayDatFile = "input/PureDecay7C.txt";
   TString parFile = "parametersFootMuSi/par_" + appendName;
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
@@ -45,8 +47,8 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   ERRunSim *run = new ERRunSim();
   /** Select transport engine
    * TGeant3
-   * TGeant4exp1904_sim_digi.C
-   **/
+   * TGeant4
+   *    **/
   run->SetName("TGeant4");            // Transport engine
   run->SetOutputFile(outFile.Data()); // Output file
   // ------------------------------------------------------------------------
@@ -68,7 +70,7 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   target->SetGeometryFileName(targetGeoFileName);
   run->AddModule(target);
   
-  // Trying to implement the functionality of obtaining target thickness from the list of modules
+  // Trying to implement the functionality of obtaining target thickness from the list of modules. Not a necessity
   // TList* moduleList = (TList*)run->GetListOfModules();
   
 
@@ -126,7 +128,7 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   generator->SetThetaSigma(0., 0.5); //for now there is a fixed 0 degree angle in the ERIonGenerator
   // generator->SetPhiRange(0, 45);
   //generator->SetBoxXYZ(0, 0, 0., 0., beamStartPosition);
-  generator->SetRoundXY(2.); // задает ограничение размытия пятна пучка на мишени
+  generator->SetRoundXY(2.,0.,0.,beamStartPosition); // задает ограничение размытия пятна пучка на мишени
 
   // generator->SpreadingOnTarget(); 				//Sets spreading of x and y coordinates on target (where z-position is zero) and
   // reconstruct them to the beam start position (to settes z-coordinate) along momentum vector.
@@ -157,7 +159,7 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   footMuSiDigitizer->SetSiTimeSigma(0.);
   run->AddTask(footMuSiDigitizer);
   //-------Set visualisation flag to true------------------------------------
-  run->SetStoreTraj(kTRUE);
+  run->SetStoreTraj(kFALSE);
 
   //-------Set LOG verbosity  -----------------------------------------------
   //FairLogger::GetLogger()->SetLogScreenLevel("INFO");
@@ -165,7 +167,6 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
 
   // -----   Initialize simulation run   ------------------------------------
   run->Init();
-  //Int_t nSteps = -15000;
   // -----   Runtime database   ---------------------------------------------
   Bool_t kParameterMerged = kTRUE;
   FairParRootFileIo *parOut = new FairParRootFileIo(kParameterMerged);
@@ -173,10 +174,11 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   rtdb->setOutput(parOut);
   rtdb->saveOutput();
   rtdb->print();
-
-  TString setup_name = outFile;
-  Ssiz_t p1 = setup_name.First("/");
-  setup_name.Insert(p1 + 1, "setup_");
+  //Since the geometry of the experiment isn't going to be changed for a while, let's have just one setup file
+  TString setup_name = "outputFootMuSi/CorrectedBeam/setup_threeStraightPairs.root"; 
+/*   TString setup_name = outFile;
+  Ssiz_t p1 = setup_name.Last('/');
+  setup_name.Insert(p1 + 1, "setup_"); */
   run->CreateGeometryFile(setup_name);
 
   // -----   Run simulation  ------------------------------------------------

@@ -167,7 +167,7 @@ private:
   Double32_t     fELoss;                      ///< energy loss
   Int_t fPDG;                                 ///< particle PDG
   Int_t  fStepNr;                             ///< current step numb in this active volumes
-  SensetiveType  fDetectorType;               ///< CsI or LaBr point
+  SensitiveType  fDetectorType;               ///< CsI or LaBr point
   Int_t fCsIWall;                             ///< CsI Wall number
   Int_t fCsIBlock;                            ///< CsI Block number
   Int_t fCsICell;                             ///< CsI Cell number

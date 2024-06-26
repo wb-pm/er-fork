@@ -32,7 +32,7 @@ public:
   virtual Int_t GetChannelFromSensetiveNodePath(
       const TString& path, OrientationAroundZ orientation = OrientationAroundZ::Default) const = 0;
 protected:
-  TString GetBranchNamePrefix(SensetiveType sensetiveType, ERDataObjectType object) const;
+  TString GetBranchNamePrefix(SensitiveType SensitiveType, ERDataObjectType object) const;
   void FillTwoSidedChannelAttribute(const TList* attributes);
   TString  fMedia;
   Double_t fSizeX = 0.;

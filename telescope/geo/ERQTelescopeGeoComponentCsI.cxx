@@ -131,7 +131,7 @@ void ERQTelescopeGeoComponentCsI::ParseXmlParameters() {
 TString ERQTelescopeGeoComponentCsI::GetBranchName(
     ERDataObjectType objectType, OrientationAroundZ orientationAroundZ /*= OrientationAroundZ::Default*/,
     ChannelSide side /*= ChannelSide::None*/) const {
-  return GetBranchNamePrefix(SensetiveType::CsI, objectType);
+  return GetBranchNamePrefix(SensitiveType::CsI, objectType);
 }
 //--------------------------------------------------------------------------------------------------
 std::list<OrientationAroundZ> ERQTelescopeGeoComponentCsI::GetOrientationsAroundZ() const {

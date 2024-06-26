@@ -12,3 +12,6 @@ run.sh
 core*
 .vscode/
 FairRoot-v-17.10_patches
+macro/EXPC7/local
+macro/EXPC7/input
+er.code-workspace

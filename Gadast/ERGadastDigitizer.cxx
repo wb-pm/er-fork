@@ -194,8 +194,8 @@ void ERGadastDigitizer::SetParContainers()
   fDigiPar = (ERGadastDigiPar*)
              (rtdb->getContainer("ERGadastDigiPar"));
   if ( fVerbose && fDigiPar ) {
-    std::cout << "ERGadastDigitizer::SetParContainers() "<< std::endl;
-    std::cout << "ERGadastDigiPar initialized! "<< std::endl;
+    LOG(INFO) << "ERGadastDigitizer::SetParContainers() "<< FairLogger::endl;
+    LOG(INFO) << "ERGadastDigiPar initialized! "<< FairLogger::endl;
   }
 }
 // ----------------------------------------------------------------------------
@@ -218,7 +218,7 @@ InitStatus ERGadastDigitizer::Init()
 
   fSetup = ERGadastSetup::Instance();
   if (!fSetup->Init()){
-    std::cerr << "Problems with ERGadastSetup initialization!" << std::endl;
+    std::cerr << "Problems with ERGadastSetup initialization!" << FairLogger::endl;
   }
   return kSUCCESS;
 }
@@ -235,6 +235,9 @@ void ERGadastDigitizer::Exec(Option_t* opt)
   // Sort points by sensentive volumes
   // Map points by cells: pointsCsI[iWall][iBlock][iCell]
   map<Int_t, map<Int_t, map <Int_t, vector<Int_t> > > > pointsCsI;
+  
+  LOG(DEBUG) << "fGadastCsIPoints contains entries: " << fGadastCsIPoints->GetEntriesFast() << FairLogger::endl;
+
   for (Int_t iPoint = 0; iPoint < fGadastCsIPoints->GetEntriesFast(); iPoint++){
     ERGadastCsIPoint* point = (ERGadastCsIPoint*)fGadastCsIPoints->At(iPoint);
     pointsCsI[point->GetWall()][point->GetBlock()][point->GetCell()].push_back(iPoint);
@@ -247,7 +250,6 @@ void ERGadastDigitizer::Exec(Option_t* opt)
     pointsLaBr[point->GetCell()].push_back(iPoint);
   }
   
-Int_t multiplicity_check = 6; // Multiplicity of the gammas, taken from the sim_digi
 //Generating Poisson distribution numbers, to determine quantity of gammas left 
 std::random_device dev_pos;
 std::mt19937 rng_pos(dev_pos());
@@ -267,12 +269,12 @@ int events_poisson_Co = distribution_Co(rng_pos);
         Double_t energydep = 0.;
         size_t x_countsLCA, y_countsLCA, z_countsLCA;
         std::tie(x_countsLCA, y_countsLCA, z_countsLCA) = fCsILCAGrid(address);
-        std::vector<std::vector<std::vector<std::vector<float> > > > separatedenergydeps(x_countsLCA, std::vector<std::vector<std::vector<float> > >(y_countsLCA, std::vector<std::vector<float> >(z_countsLCA, vector<float>(multiplicity_check*3,0))));
-        std::cout << "x_countsLCA: " << x_countsLCA << " y_countsLCA: " << y_countsLCA << " z_countsLCA: " << z_countsLCA << endl;
-		std::vector<Double_t> energydeps(multiplicity_check*3, 0.0);
-		std::vector<Double_t> changedenergydeps(multiplicity_check*3, 0.0);
-		std::vector<Double_t> poissonenergydeps(multiplicity_check*2, 0.0);
-		std::vector<Double_t> finalenergydeps(multiplicity_check*2, 0.0);
+        std::vector<std::vector<std::vector<std::vector<float> > > > separatedenergydeps(x_countsLCA, std::vector<std::vector<std::vector<float> > >(y_countsLCA, std::vector<std::vector<float> >(z_countsLCA, vector<float>(fMultiplicity*3,0))));
+        LOG(INFO) << "x_countsLCA: " << x_countsLCA << " y_countsLCA: " << y_countsLCA << " z_countsLCA: " << z_countsLCA << FairLogger::endl;
+		std::vector<Double_t> energydeps(fMultiplicity*3, 0.0);
+		std::vector<Double_t> changedenergydeps(fMultiplicity*3, 0.0);
+		std::vector<Double_t> poissonenergydeps(fMultiplicity*2, 0.0);
+		std::vector<Double_t> finalenergydeps(fMultiplicity*2, 0.0);
         Float_t time = std::numeric_limits<float>::max(); // first time in cell
 
         for (const auto iPoint : itCell.second){
@@ -285,16 +287,16 @@ int events_poisson_Co = distribution_Co(rng_pos);
 		  
 		  size_t x_countsLC, y_countsLC, z_countsLC;
           std::tie(x_countsLC, y_countsLC, z_countsLC) = fCsILCGrid(address);
-          cout << "x_countsLC: " << x_countsLC << " y_countsLC: " << y_countsLC << " z_countsLC: " << z_countsLC << endl;
+           LOG(DEBUG) << "x_countsLC: " << x_countsLC << " y_countsLC: " << y_countsLC << " z_countsLC: " << z_countsLC << FairLogger::endl;
           size_t x_binLC, y_binLC, z_binLC;
           std::tie(x_binLC, y_binLC, z_binLC) = fSetup->GetCsIMeshElement(&pos, x_countsLC, y_countsLC, z_countsLC);
-          cout << "x_binLC: " << x_binLC << " y_binLC: " << y_binLC << " z_binLC: " << z_binLC << endl;
+           LOG(DEBUG) << "x_binLC: " << x_binLC << " y_binLC: " << y_binLC << " z_binLC: " << z_binLC << FairLogger::endl;
           
           size_t x_binLCA, y_binLCA, z_binLCA;
           std::tie(x_binLCA, y_binLCA, z_binLCA) = fSetup->GetCsIMeshElement(&pos, x_countsLCA, y_countsLCA, z_countsLCA);
-          cout << "x_binLCA: " << x_binLCA << " y_binLCA: " << y_binLCA << " z_binLCA: " << z_binLCA << endl;
+           LOG(DEBUG) << "x_binLCA: " << x_binLCA << " y_binLCA: " << y_binLCA << " z_binLCA: " << z_binLCA << FairLogger::endl;
           const float A = fCsILCAFun(address, x_binLCA, y_binLCA, z_binLCA);
-          
+          LOG(DEBUG) << "GetParentGammaTrackID = " << point->GetParentGammaTrackID() << FairLogger::endl;
           separatedenergydeps.at(x_binLCA).at(y_binLCA).at(z_binLCA).at(point->GetParentGammaTrackID()) += fCsILCFun(address, x_binLC, y_binLC, z_binLC)*point->GetEnergyLoss();
 
 		  size_t x_countsLCB, y_countsLCB, z_countsLCB;
@@ -314,7 +316,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
 		  //energydeps[point->GetParentGammaTrackID()] += fCsILCFun(address, x_binLC, y_binLC, z_binLC) * point->GetEnergyLoss();
 		  
 		  //Energy depositions, altered by the Gauss distribution
-		  /*for(int i = 0; i < multiplicity_check*3; i++){
+		  /*for(int i = 0; i < fMultiplicity*3; i++){
 			  if (energydeps[i] <= 0.0001)
 				{;}
 			  else
@@ -340,7 +342,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
 		}
 		  //Counters for gammas of each type, arriving to detector before applying Poisson algorithm
 			int CsGammas_Before = 0;
-			for(int i = 0; i < multiplicity_check; i++)
+			for(int i = 0; i < fMultiplicity; i++)
 			{
 				if (changedenergydeps[i] >=0.0001)
 				{
@@ -349,7 +351,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
 			}
 			
 			int Co1Gammas_Before = 0;
-			for(int i = multiplicity_check; i < multiplicity_check*2; i++)
+			for(int i = fMultiplicity; i < fMultiplicity*2; i++)
 			{
 				if (changedenergydeps[i] >=0.0001)
 				{
@@ -358,7 +360,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
 			}
 						
 			int Co2Gammas_Before = 0;
-			for(int i = multiplicity_check*2; i < multiplicity_check*3; i++)
+			for(int i = fMultiplicity*2; i < fMultiplicity*3; i++)
 			{
 				if (changedenergydeps[i] >=0.0001)
 				{
@@ -366,18 +368,18 @@ int events_poisson_Co = distribution_Co(rng_pos);
 				}	
 			}
 			//Setting to 0 respective quantity of energy depositions (according to previously generated Poisson numbers)
-			for(int i = 0; i < multiplicity_check - events_poisson_Cs; i++)
+			for(int i = 0; i < fMultiplicity - events_poisson_Cs; i++)
 			{
 				changedenergydeps[i] = 0.;
 			}
-			for(int i = 0; i < multiplicity_check - events_poisson_Co; i++)
+			for(int i = 0; i < fMultiplicity - events_poisson_Co; i++)
 			{
-				  changedenergydeps[multiplicity_check+i] = 0.;
-				  changedenergydeps[multiplicity_check*2+i] = 0.;
+				  changedenergydeps[fMultiplicity+i] = 0.;
+				  changedenergydeps[fMultiplicity*2+i] = 0.;
 			}		
 					  
 			int CsGammas_After = 0;  
-			for(int i = 0; i < multiplicity_check; i++)
+			for(int i = 0; i < fMultiplicity; i++)
 			{
 				if (changedenergydeps[i] >=0.0001)
 				{
@@ -387,7 +389,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
 			}
 		//Counters for gammas of each type, left in the detector after applying Poisson algorithm
 			int Co1Gammas_After = 0;  
-			for(int i = multiplicity_check; i < multiplicity_check*2; i++)
+			for(int i = fMultiplicity; i < fMultiplicity*2; i++)
 			{
 				if (changedenergydeps[i] >=0.0001)
 				{
@@ -397,7 +399,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
 			}
 		
 			int Co2Gammas_After = 0;  
-			for(int i = multiplicity_check*2; i < multiplicity_check*3; i++)
+			for(int i = fMultiplicity*2; i < fMultiplicity*3; i++)
 			{
 				if (changedenergydeps[i] >=0.0001)
 				{
@@ -406,15 +408,15 @@ int events_poisson_Co = distribution_Co(rng_pos);
 				else{;}	
 			}
 			//Considering here the fact that gammas from cobalt-60 are co-dependent, they are created simultaneously
-		  for(int i = 0; i < multiplicity_check; i++){
+		  for(int i = 0; i < fMultiplicity; i++){
 			  poissonenergydeps[i] = changedenergydeps[i];
-			  poissonenergydeps[multiplicity_check+i] = changedenergydeps[multiplicity_check+i] + changedenergydeps[multiplicity_check*2+i];
+			  poissonenergydeps[fMultiplicity+i] = changedenergydeps[fMultiplicity+i] + changedenergydeps[fMultiplicity*2+i];
 		  }	  
 		//Creating a vector of times passed between energy depositions registered by the detector		  		  
 	    std::random_device dev;
 		std::mt19937 rng(dev());
 		std::uniform_int_distribution<> distime(0,1000); //interval of time in which the numbers are generated
-		std::vector<Int_t> rndtime(multiplicity_check*2, 0);
+		std::vector<Int_t> rndtime(fMultiplicity*2, 0);
 		for(auto &i: rndtime)
 		  {
 			  i = distime(rng);
@@ -428,10 +430,10 @@ int events_poisson_Co = distribution_Co(rng_pos);
 		std::mt19937 gen(rd());
 		std::shuffle(poissonenergydeps.begin(),poissonenergydeps.end(), gen);
 		//Changing the energy depositions according to the exponential decay based on "rndtime" vector and "shaping_time" constant
-		for(int i = 0; i < multiplicity_check*2; i++){
+		for(int i = 0; i < fMultiplicity*2; i++){
 			finalenergydeps[i] = poissonenergydeps[i];
 		}
-		for(int i = 1; i < multiplicity_check*2; i++){
+		for(int i = 1; i < fMultiplicity*2; i++){
 			for(int j = 0; j < i; j++){
 				finalenergydeps[i] += poissonenergydeps[j]*exp(-(rndtime[i]-rndtime[j])/shaping_time);
 		}}
@@ -568,7 +570,7 @@ void ERGadastDigitizer::Reset()
 // ----------------------------------------------------------------------------
 void ERGadastDigitizer::Finish()
 { 
-  std::cout << "========== Finish of ERGadastDigitizer =================="<< std::endl;
+  LOG(INFO) << "========== Finish of ERGadastDigitizer =================="<< FairLogger::endl;
 }
 // ----------------------------------------------------------------------------
 

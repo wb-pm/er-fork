@@ -96,7 +96,7 @@ protected:
   
   Int_t fEventID;                                       ///< event index
   Int_t fMot0TrackID;                                   ///< 0th mother track index
-  Int_t fParentGammaTrackId = -1;                      ///< id of parrent gamma
+  Int_t fParentGammaTrackId = -1;                      ///< id of parent gamma
   Double_t fMass;                                       ///< mass
   Double32_t fX_out,  fY_out,  fZ_out;                  ///< point out coordinate
   Double32_t fPx_out, fPy_out, fPz_out;                 ///< point out momentum

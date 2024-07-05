@@ -57,7 +57,6 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   gadast->SetGeometryFileName(geometry_file_name);
   run->AddModule(gadast);
   // ------------------------------------------------------------------------
-
   Int_t verbose = 2; // 1 - only standard log print, 2 - print digi information 
   ERGadastDigitizer* digitizer = new ERGadastDigitizer(verbose);
   //digitizer->SetCsILC(1.);
@@ -68,13 +67,13 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   */
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> lc;
   float lc_test = 1.;
+  digitizer->SetCsILC(lc_test);
   //Light output non-uniformity coefficients taken from the measurements for the crystal number 866 
   //std::vector<std::vector<std::vector<float>>> block_1 = { { { 1., 1., 1. }, { 1., 1., 1. } },
                                                              //{ { 1., 1., 1. }, { 1., 1., 1. } } }; 
   //std::vector<std::vector<std::vector<float>>> block_1 = { { { 1. } } };                                                                                                                  
   std::vector<std::vector<std::vector<float>>> block_1 = { { { 0.9985703,	0.9978926,	0.9945173,	0.990211,	0.9889056,	1.013246,	1.016656 } } };
-  lc[{1, 1}] = block_1;
-  digitizer->SetCsILC(lc_test);
+  //lc[{1, 1}] = block_1;
 //Data for energy resolution from new 887 crystal measurement
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> a;
   //std::vector<std::vector<std::vector<float>>> block_1_a = { { { 0.0215, 0.0215, 0.0215 }, { 0.0215, 0.0215, 0.0215 } },
@@ -86,7 +85,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
 			block_1_a[i][j].push_back(0.0215);
 }   */                                                     
   float a_test = 0.0215;                                                  
-  a[{1, 1}] = block_1_a;
+  //a[{1, 1}] = a_test;
 
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> b;
   std::vector<std::vector<std::vector<float>>> block_1_b(1, std::vector<std::vector<float> >(1, std::vector<float>(1, 0.0055)));
@@ -98,7 +97,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
  
 
   float b_test = 0.0055;                                                              
-  b[{1, 1}] = block_1_b;
+  //b[{1, 1}] = block_1_b;
 
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> c;
   std::vector<std::vector<std::vector<float>>> block_1_c(1, std::vector<std::vector<float> >(1, std::vector<float>(1, 0.0206)));
@@ -108,15 +107,18 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   block_1_c[0][0].push_back(0.0206);*/
   														 
   float c_test = 0.0206;                                                            
-  c[{1, 1}] = block_1_c;
+  //c[{1, 1}] = block_1_c;
   
-  digitizer->SetCsIEdepError(a, b, c);
+  digitizer->SetCsIEdepError(a_test, b_test, c_test);
   //digitizer->SetCsIEdepError(a, b, c);
 
   digitizer->SetCsITimeError(0.);
   digitizer->SetLaBrLC(1.);
   digitizer->SetLaBrEdepError(0.0,0.04,0.02);
   digitizer->SetLaBrTimeError(0.);
+
+  Int_t multiplicity = 6;
+  digitizer->SetGammasMultiplicity(multiplicity);
   run->AddTask(digitizer);
 	
   // -----   Create PrimaryGenerator   --------------------------------------
@@ -128,7 +130,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   Double32_t kin_energy_Cs = .6617 * 1e-3; //GeV
   Double32_t momentum_Cs = kin_energy_Cs; //GeV
   
-  FairBoxGenerator* Cs_boxGen = new FairBoxGenerator(pdgId, 6);
+  FairBoxGenerator* Cs_boxGen = new FairBoxGenerator(pdgId, multiplicity);
   Cs_boxGen->SetThetaRange(theta_min, theta_max);
   Cs_boxGen->SetPRange(momentum_Cs, momentum_Cs);
   Cs_boxGen->SetPhiRange(phi_min,phi_max);
@@ -139,7 +141,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   Double32_t kin_energy_Co1 = 1.173 * 1e-3;
   Double32_t momentum_Co1 = kin_energy_Co1;
  
-  FairBoxGenerator* Co1_boxGen = new FairBoxGenerator(pdgId, 6);
+  FairBoxGenerator* Co1_boxGen = new FairBoxGenerator(pdgId, multiplicity);
   Co1_boxGen->SetThetaRange(theta_min, theta_max);
   Co1_boxGen->SetPRange(momentum_Co1, momentum_Co1);
   Co1_boxGen->SetPhiRange(phi_min,phi_max);
@@ -149,7 +151,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   Double32_t kin_energy_Co2 = 1.3325 * 1e-3;
   Double32_t momentum_Co2 = kin_energy_Co2;
   
-  FairBoxGenerator* Co2_boxGen = new FairBoxGenerator(pdgId, 6);
+  FairBoxGenerator* Co2_boxGen = new FairBoxGenerator(pdgId, multiplicity);
   Co2_boxGen->SetThetaRange(theta_min, theta_max);
   Co2_boxGen->SetPRange(momentum_Co2, momentum_Co2);
   Co2_boxGen->SetPhiRange(phi_min,phi_max);
@@ -173,8 +175,8 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   run->SetStoreTraj(kFALSE);
 	
   //-------Set LOG verbosity  ----------------------------------------------- 
-  FairLogger::GetLogger()->SetLogVerbosityLevel("LOW");
-  FairLogger::GetLogger()->SetLogScreenLevel("INFO");
+  FairLogger::GetLogger()->SetLogVerbosityLevel("HIGH");
+  FairLogger::GetLogger()->SetLogScreenLevel("DEBUG");
   // -----   Initialize simulation run   ------------------------------------
   run->Init();
   // -----   Runtime database   ---------------------------------------------

@@ -155,7 +155,7 @@ void ERRTelescopeGeoComponentCsI::ParseXmlParameters() {
 TString ERRTelescopeGeoComponentCsI::GetBranchName(
     ERDataObjectType objectType, OrientationAroundZ orientationAroundZ /*= OrientationAroundZ::Default*/,
     ChannelSide side /*= ChannelSide::None*/) const {
-  return GetBranchNamePrefix(SensetiveType::CsI, objectType);
+  return GetBranchNamePrefix(SensitiveType::CsI, objectType);
 }
 //--------------------------------------------------------------------------------------------------
 std::list<OrientationAroundZ> ERRTelescopeGeoComponentCsI::GetOrientationsAroundZ() const {

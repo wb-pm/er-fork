@@ -40,7 +40,7 @@ ERTelescopeGeoComponentDoubleSi::ERTelescopeGeoComponentDoubleSi(
 TString ERTelescopeGeoComponentDoubleSi::GetBranchName(
     ERDataObjectType objectType, OrientationAroundZ orientationAroundZ /*= OrientationAroundZ::Default*/,
     ChannelSide channelSide /*= ChannelSide::None*/) const {
-  return GetBranchNamePrefix(SensetiveType::Si, objectType)
+  return GetBranchNamePrefix(SensitiveType::Si, objectType)
          + "_" + OrientationAroundZStr(orientationAroundZ)
          + (channelSide != ChannelSide::None ? TString("_") + ChannelSideStr(channelSide) : "");
 }

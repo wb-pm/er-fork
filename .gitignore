@@ -9,3 +9,8 @@ macro/tests/parameters
 run.sh
 *.sw*
 core*
+.vscode/
+FairRoot-v-17.10_patches/
+er.code-workspace
+macro/EXPC7/
+macro/Gadast/Pics/

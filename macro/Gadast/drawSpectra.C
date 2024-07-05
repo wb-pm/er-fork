@@ -63,7 +63,7 @@ void drawSpectra()
 	//OpenTree(11, "avcs2co4mult6inter0to1000sht960lonu880expdata.root", kGreen);
 	TString simulation_filename = "SimulationsTests/avcs2co4mult6inter0to1000sht960.root";
 	OpenTree(11, simulation_filename, kGreen);
-	OpenTree(12, "avcs2co4mult6inter0to1000sht960lonu880expdata.root", kMagenta);
+	OpenTree(12, "LO_Simulations/avcs2co4mult6inter0to1000sht960lonu880expdata.root", kMagenta);
 	//DrawingSimExp(11, "avcs2co4mult6inter0to1000sht960lonu880expdata",histExp);
 	//DrawingSimExp(11, simulation_filename,histExp);
 	DrawingTwoSimOneExp(11,12,"avcs2co4mult6inter0to1000sht960lonu880extreme+avcs2co4mult6inter0to1000sht960lonu880.root");

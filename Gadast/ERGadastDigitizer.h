@@ -79,6 +79,7 @@ public:
   void SetCsIElossThreshold(Float_t treshold){fCsIElossThreshold = treshold;}
   void SetLaBrElossThreshold(Float_t treshold){fLaBrElossThreshold = treshold;}
 
+  void SetGammasMultiplicity(Int_t multiplicity){fMultiplicity = multiplicity;}
 
   /** Accessors **/ 
 
@@ -105,6 +106,9 @@ protected:
 
   Float_t fCsIElossThreshold;
   Float_t fLaBrElossThreshold;
+
+  //gammas multiplicity
+  Int_t fMultiplicity;
 
   std::function<float(BlockAddress, size_t, size_t, size_t)> fCsILCFun = 
       [](BlockAddress, size_t, size_t, size_t) {return 1.;};

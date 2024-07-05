@@ -208,7 +208,7 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
           }
         }
       }
-      LOG(DEBUG) << "[ERFootMuSiTrackFinder] Strips array pair " << itComponent.second.first << " "
+      LOG(DEBUG) << FairLogger::endl << "[ERFootMuSiTrackFinder] Strips array pair " << itComponent.second.first << " "
         << itComponent.second.second << FairLogger::endl;
       LOG(DEBUG) << "[ERFootMuSiTrackFinder] Hits count on pair " << hitFootMuSiPoint.size() << FairLogger::endl;
       for (const auto& itHitPoint : hitFootMuSiPoint)

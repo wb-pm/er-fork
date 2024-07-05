@@ -29,11 +29,11 @@ void EventReader()
     Bool_t isProton = true;
     if (isProton)
     {
-        simulation = new TFile("../outputFootMuSi/CorrectedBeam/twoProtons_cuts10meters_spreadBeam.root");
+        simulation = new TFile("../outputFootMuSi/CorrectedBeam/threeProtons_cuts10meters_spreadBeam.root");
         simulation_tree = (TTree*)simulation->Get("er");
-        reconstruction = new TFile("../outputFootMuSi/CorrectedBeam/reco_edepCutProtons_AngleCut0p025_twoProtons_cuts10meters_spreadBeam.root");
+        reconstruction = new TFile("../outputFootMuSi/CorrectedBeam/testFakeTracks_reco_edepCutProtons_AngleCut0p025_threeProtons_cuts10meters_spreadBeam.root");
         reconstruction_tree = (TTree*)reconstruction->Get("er"); 
-    outFile = new TFile("selectedTrees/twoProtonsVertexQA.root", "RECREATE");
+    outFile = new TFile("selectedTrees/threeProtonsVertexQA.root", "RECREATE");
     output_tree = new TTree("output_tree","output_tree");
     }
     else {
@@ -67,13 +67,14 @@ void EventReader()
     output_tree->Branch("deltaOtherZ",&deltaOtherZ,"deltaOtherZ/D");
     output_tree->Branch("reactionZ", &reactionZ, "reactionZ/D");
     Long64_t totalEvents = reconstruction_tree->GetEntries();
+    //Long64_t totalEvents = 10;
     for (Long64_t eventNumber = 0; eventNumber < totalEvents; eventNumber++) {
 
         reconstruction_tree->GetEntry(eventNumber);
         simulation_tree->GetEntry(eventNumber);
         Int_t nTracks = footMuSiTracks->GetEntriesFast();
         Int_t nVerticies = footMuSiVerticies->GetEntriesFast();
-        if (nTracks != 4) //number of tracks from two protons
+        if (nTracks != 9) //number of tracks from 3 protons
         {
             continue;
         }
@@ -93,6 +94,7 @@ void EventReader()
                 deltaX = footMuSiVertex->X() - reactionPos.X();
                 deltaY = footMuSiVertex->Y() - reactionPos.Y();
                 deltaZ = footMuSiVertex->Z() - reactionPos.Z();
+                reactionZ = reactionPos.Z();
 /*                      deltaX = (tangentXZ*c9MCTrack->GetStartZ()+interceptXZ)-c9MCTrack->GetStartX();
                     deltaY = (tangentYZ*c9MCTrack->GetStartZ()+interceptYZ)-c9MCTrack->GetStartY();
                     deltaZ = ((c9MCTrack->GetStartY()-interceptYZ)/tangentYZ) - c9MCTrack->GetStartZ();

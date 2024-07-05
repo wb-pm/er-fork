@@ -239,7 +239,7 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
           vert->AddTrack(jTrack);
           //Adding functionality to merge verticies right in the tracks loop 
           Double_t dist = TMath::Sqrt((tempVertex->X() - vert->X()) * (tempVertex->X() - vert->X()) + (tempVertex->Y() - vert->Y()) * (tempVertex->Y() - vert->Y()) + (tempVertex->Z() - vert->Z()) * (tempVertex->Z() - vert->Z()));
-          //vert->AddDistanceBetweenVertices(dist);
+          vert->AddDistanceBetweenVertices(dist);
           if (dist < fVerticesMergeDistanceCut) {
             if (jTrack % 100 == 0) {
               LOG(DEBUG) << "Vertices merging! (first iteration), merges: " << jTrack << FairLogger::endl;

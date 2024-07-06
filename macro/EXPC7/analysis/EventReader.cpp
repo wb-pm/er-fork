@@ -49,7 +49,7 @@ void EventReader()
     ERDecay7CEventHeader* decay_event_header = new ERDecay7CEventHeader();
     Double_t C7_invariant_mass;
     TVector3* C9FirstHit = nullptr, *C9SecondHit = nullptr, *reactionPosition = nullptr;
-    Double_t deltaX = 0., deltaY = 0., deltaZ = 0., deltaOtherZ = 0., reactionZ = 0.;
+    Double_t deltaX = 0., deltaY = 0., deltaZ = 0., deltaOtherZ = 0., reactionZ = 0., vertexDistance = 0.;
     UInt_t uniqueID;
     TLorentzVector* C7_reco = new TLorentzVector();
     TClonesArray* footMuSiTracks = new TClonesArray("ERFootMuSiTrack");
@@ -66,6 +66,7 @@ void EventReader()
     output_tree->Branch("deltaZ", &deltaZ, "deltaZ/D");
     output_tree->Branch("deltaOtherZ",&deltaOtherZ,"deltaOtherZ/D");
     output_tree->Branch("reactionZ", &reactionZ, "reactionZ/D");
+    output_tree->Branch("vertexDistance", &vertexDistance, "vertexDistance/D");
     Long64_t totalEvents = reconstruction_tree->GetEntries();
     for (Long64_t eventNumber = 0; eventNumber < totalEvents; eventNumber++) {
 
@@ -93,6 +94,7 @@ void EventReader()
                 deltaX = footMuSiVertex->X() - reactionPos.X();
                 deltaY = footMuSiVertex->Y() - reactionPos.Y();
                 deltaZ = footMuSiVertex->Z() - reactionPos.Z();
+                vertexDistance = footMuSiVertex->GetVerticesDistance();
 /*                      deltaX = (tangentXZ*c9MCTrack->GetStartZ()+interceptXZ)-c9MCTrack->GetStartX();
                     deltaY = (tangentYZ*c9MCTrack->GetStartZ()+interceptYZ)-c9MCTrack->GetStartY();
                     deltaZ = ((c9MCTrack->GetStartY()-interceptYZ)/tangentYZ) - c9MCTrack->GetStartZ();

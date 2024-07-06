@@ -38,6 +38,8 @@ public:
 	void SetZ(Double_t z){fZ = z;}
 	void AddTrackDistance(Double_t trackDistance){fTrackDistance = trackDistance;}
 	void AddDistanceBetweenVertices(Double_t distanceBetweenVertices){fDistanceBetweenVertices = distanceBetweenVertices;}
+
+  Double_t GetVerticesDistance(){return fDistanceBetweenVertices;}
 private:
 /* 	std::vector<ERFootMuSiTrack> fTracks; */
 	Int_t fTracksID[3];

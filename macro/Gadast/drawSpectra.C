@@ -61,7 +61,7 @@ void drawSpectra()
 	histExp->Draw("same");
 	histExpCo->Draw("same");*/	
 	//OpenTree(11, "avcs2co4mult6inter0to1000sht960lonu880expdata.root", kGreen);
-	TString simulation_filename = "SimulationsTests/avcs2co4mult6inter0to1000sht960.root";
+	TString simulation_filename = "test_run.root";
 	OpenTree(11, simulation_filename, kGreen);
 	OpenTree(12, "LO_Simulations/avcs2co4mult6inter0to1000sht960lonu880expdata.root", kMagenta);
 	//DrawingSimExp(11, "avcs2co4mult6inter0to1000sht960lonu880expdata",histExp);

@@ -80,7 +80,11 @@ public:
   void SetLaBrElossThreshold(Float_t treshold){fLaBrElossThreshold = treshold;}
 
   void SetGammasMultiplicity(Int_t multiplicity){fMultiplicity = multiplicity;}
+  void SetShapingTime(Double_t shapingTime){fShapingTime = shapingTime;}
+  void SetSignalsInterval(Double_t signalsInterval){fSignalsInterval = signalsInterval;}
 
+  void SetPoissonCs(Double_t poissonCs){fPoissonCs = poissonCs;}
+  void SetPoissonCo(Double_t poissonCo){fPoissonCo = poissonCo;}
   /** Accessors **/ 
 
 protected:
@@ -109,6 +113,12 @@ protected:
 
   //gammas multiplicity
   Int_t fMultiplicity;
+  //Signal attenuation parameters [microseconds]
+  Double_t fShapingTime;
+  Double_t fSignalsInterval; 
+  //Poisson means
+  Double_t fPoissonCs;
+  Double_t fPoissonCo; 
 
   std::function<float(BlockAddress, size_t, size_t, size_t)> fCsILCFun = 
       [](BlockAddress, size_t, size_t, size_t) {return 1.;};

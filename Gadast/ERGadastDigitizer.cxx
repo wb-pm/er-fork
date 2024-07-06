@@ -253,8 +253,8 @@ void ERGadastDigitizer::Exec(Option_t* opt)
 //Generating Poisson distribution numbers, to determine quantity of gammas left 
 std::random_device dev_pos;
 std::mt19937 rng_pos(dev_pos());
-std::poisson_distribution<int> distribution_Cs(2.);
-std::poisson_distribution<int> distribution_Co(4.);
+std::poisson_distribution<int> distribution_Cs(fPoissonCs);
+std::poisson_distribution<int> distribution_Co(fPoissonCo);
 int events_poisson_Cs = distribution_Cs(rng_pos);
 //int events_poisson_Cs = 1;
 int events_poisson_Co = distribution_Co(rng_pos);
@@ -270,7 +270,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
         size_t x_countsLCA, y_countsLCA, z_countsLCA;
         std::tie(x_countsLCA, y_countsLCA, z_countsLCA) = fCsILCAGrid(address);
         std::vector<std::vector<std::vector<std::vector<float> > > > separatedenergydeps(x_countsLCA, std::vector<std::vector<std::vector<float> > >(y_countsLCA, std::vector<std::vector<float> >(z_countsLCA, vector<float>(fMultiplicity*3,0))));
-        LOG(INFO) << "x_countsLCA: " << x_countsLCA << " y_countsLCA: " << y_countsLCA << " z_countsLCA: " << z_countsLCA << FairLogger::endl;
+        LOG(DEBUG) << "x_countsLCA: " << x_countsLCA << " y_countsLCA: " << y_countsLCA << " z_countsLCA: " << z_countsLCA << FairLogger::endl;
 		std::vector<Double_t> energydeps(fMultiplicity*3, 0.0);
 		std::vector<Double_t> changedenergydeps(fMultiplicity*3, 0.0);
 		std::vector<Double_t> poissonenergydeps(fMultiplicity*2, 0.0);
@@ -297,6 +297,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
            LOG(DEBUG) << "x_binLCA: " << x_binLCA << " y_binLCA: " << y_binLCA << " z_binLCA: " << z_binLCA << FairLogger::endl;
           const float A = fCsILCAFun(address, x_binLCA, y_binLCA, z_binLCA);
           LOG(DEBUG) << "GetParentGammaTrackID = " << point->GetParentGammaTrackID() << FairLogger::endl;
+          LOG(DEBUG) << "GetMotherID = " << point->GetMot0TrackID() << FairLogger::endl;
           separatedenergydeps.at(x_binLCA).at(y_binLCA).at(z_binLCA).at(point->GetParentGammaTrackID()) += fCsILCFun(address, x_binLC, y_binLC, z_binLC)*point->GetEnergyLoss();
 
 		  size_t x_countsLCB, y_countsLCB, z_countsLCB;
@@ -415,7 +416,7 @@ int events_poisson_Co = distribution_Co(rng_pos);
 		//Creating a vector of times passed between energy depositions registered by the detector		  		  
 	    std::random_device dev;
 		std::mt19937 rng(dev());
-		std::uniform_int_distribution<> distime(0,1000); //interval of time in which the numbers are generated
+		std::uniform_real_distribution<> distime(0,fSignalsInterval); //interval of time in which the numbers are generated
 		std::vector<Int_t> rndtime(fMultiplicity*2, 0);
 		for(auto &i: rndtime)
 		  {
@@ -424,18 +425,17 @@ int events_poisson_Co = distribution_Co(rng_pos);
 		rndtime.front() = 0; //one of the energy depositions is set to take place at the beginning
 		std::sort(rndtime.begin(),rndtime.end());
 		   
-		Double_t shaping_time = 960.0; //shaping time constant
 		//Random shuffle of energy depositions (so that the order is not always Cs, Co1, Co2)
 	    std::random_device rd;
 		std::mt19937 gen(rd());
 		std::shuffle(poissonenergydeps.begin(),poissonenergydeps.end(), gen);
-		//Changing the energy depositions according to the exponential decay based on "rndtime" vector and "shaping_time" constant
+		//Changing the energy depositions according to the exponential decay based on "rndtime" vector and "fShapingTime" constant
 		for(int i = 0; i < fMultiplicity*2; i++){
 			finalenergydeps[i] = poissonenergydeps[i];
 		}
 		for(int i = 1; i < fMultiplicity*2; i++){
 			for(int j = 0; j < i; j++){
-				finalenergydeps[i] += poissonenergydeps[j]*exp(-(rndtime[i]-rndtime[j])/shaping_time);
+				finalenergydeps[i] += poissonenergydeps[j]*exp(-(rndtime[i]-rndtime[j])/fShapingTime);
 		}}
 		edep = *std::max_element(finalenergydeps.begin(),finalenergydeps.end());
         if (edep <= 0.0001)

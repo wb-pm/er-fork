@@ -67,13 +67,13 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   */
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> lc;
   float lc_test = 1.;
-  digitizer->SetCsILC(lc_test);
+  std::vector<std::vector<std::vector<float>>> block_1 = { { { 0.9985703,	0.9978926,	0.9945173,	0.990211,	0.9889056,	1.013246,	1.016656 } } };
+  lc[{1, 1}] = block_1;
+  digitizer->SetCsILC(lc);
   //Light output non-uniformity coefficients taken from the measurements for the crystal number 866 
   //std::vector<std::vector<std::vector<float>>> block_1 = { { { 1., 1., 1. }, { 1., 1., 1. } },
                                                              //{ { 1., 1., 1. }, { 1., 1., 1. } } }; 
   //std::vector<std::vector<std::vector<float>>> block_1 = { { { 1. } } };                                                                                                                  
-  std::vector<std::vector<std::vector<float>>> block_1 = { { { 0.9985703,	0.9978926,	0.9945173,	0.990211,	0.9889056,	1.013246,	1.016656 } } };
-  //lc[{1, 1}] = block_1;
 //Data for energy resolution from new 887 crystal measurement
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> a;
   //std::vector<std::vector<std::vector<float>>> block_1_a = { { { 0.0215, 0.0215, 0.0215 }, { 0.0215, 0.0215, 0.0215 } },
@@ -119,6 +119,10 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
 
   Int_t multiplicity = 6;
   digitizer->SetGammasMultiplicity(multiplicity);
+  digitizer->SetShapingTime(3.84);
+  digitizer->SetSignalsInterval(4.);
+  digitizer->SetPoissonCs(2.);
+  digitizer->SetPoissonCo(4.);
   run->AddTask(digitizer);
 	
   // -----   Create PrimaryGenerator   --------------------------------------
@@ -176,7 +180,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
 	
   //-------Set LOG verbosity  ----------------------------------------------- 
   FairLogger::GetLogger()->SetLogVerbosityLevel("HIGH");
-  FairLogger::GetLogger()->SetLogScreenLevel("DEBUG");
+  FairLogger::GetLogger()->SetLogScreenLevel("INFO");
   // -----   Initialize simulation run   ------------------------------------
   run->Init();
   // -----   Runtime database   ---------------------------------------------

@@ -6,7 +6,7 @@
 #root -l -q 'sim_digi_upd.C(3000000,"gadast_test_5mm_table1cm_plateheight25mm_extendedbox_cylinder_concretewall.gdml", 0, 180, 0, 360, "test_backgroundK40_0cm.root", -90.)'
 #root -l -q 'sim_digi_upd.C(3000000,"gadast_test_5mm_table1cm_plateheight25mm_extendedbox_cylinder.gdml", 0, 180, 0, 360, "poisson_newdigi_general_mult3_50mln_events.root")'
 #root -l -q 'sim_digi_twocrystals.C(3000000,"gadast_test_5mm_table1cm_plateheight25mm_extendedbox_cylinder_twocrystals.gdml", 0, 180, 0, 360, "two_active_crystals.root")'
-root -l -q 'sim_digi.C(10000,"gadast_test2021.gdml", 0, 180, 0, 360, "test_run.root")'
+root -l -q 'sim_digi.C(3000000,"gadast_test2021.gdml", 0, 180, 0, 360, "test_run.root")'
 #root -l -q 'sim_digi_upd.C(100000,"gadast_test_5mm_table1cm_plateheight25mm_extendedbox30cm_cylinder.gdml", 0, 180, 0, 360, "avcs2co4mult6inter0to1000sht960lonu880dtest.root")'
 #root -l -q 'sim_digi_upd.C(3000000,"gadast_test_5mm_table1cm_plateheight25mm_extendedbox_cylinder_concretewall.gdml", 0, 180, 0, 360, "backgroundK40_30cm.root", -120.)'
 #root -l -q 'sim_digi_upd.C(3000000,"gadast_test_5mm_table1cm_plateheight25mm_extendedbox_cylinder_concretewall.gdml", 0, 180, 0, 360, "backgroundK40_40cm.root", -130.)'

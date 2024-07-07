@@ -63,7 +63,7 @@ void drawSpectra()
 	//OpenTree(11, "avcs2co4mult6inter0to1000sht960lonu880expdata.root", kGreen);
 	TString simulation_filename = "test_run.root";
 	OpenTree(11, simulation_filename, kGreen);
-	OpenTree(12, "LO_Simulations/avcs2co4mult6inter0to1000sht960lonu880expdata.root", kMagenta);
+	OpenTree(12, "test_run_default.root", kMagenta);
 	//DrawingSimExp(11, "avcs2co4mult6inter0to1000sht960lonu880expdata",histExp);
 	//DrawingSimExp(11, simulation_filename,histExp);
 	DrawingTwoSimOneExp(11,12,"avcs2co4mult6inter0to1000sht960lonu880extreme+avcs2co4mult6inter0to1000sht960lonu880.root");
@@ -187,8 +187,8 @@ void DrawingTwoSimOneExp(Int_t treeID1,Int_t treeID2, TString filename)
 	TLegend *legend=new TLegend(0.6,0.50,0.9,0.7);
 	legend->SetTextFont(72);
     legend->SetTextSize(0.03);
-    legend->AddEntry(h1[treeID1], "Simulation (with #DeltaLO)", "l");
-    legend->AddEntry(h1[treeID2], "Simulation (without #DeltaLO)", "l");
+    legend->AddEntry(h1[treeID1], "Simulation (longer shaping time)", "l");
+    legend->AddEntry(h1[treeID2], "Simulation (regular shaping time)", "l");
     legend->AddEntry(histExp, "Experiment", "l");
     legend->Draw();
 	

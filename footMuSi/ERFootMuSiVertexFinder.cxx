@@ -88,6 +88,8 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
       //temporary for storing the previously found vertex
       ERFootMuSiVertex* tempVertex = new ERFootMuSiVertex(-10000.,-10000.,-10000.);
   //Searching for a common perpendicular for a pair of tracks
+  if(fFootMuSiTracks->GetEntriesFast() != 4)
+  {return;}
   for(Int_t iTrack = 0; iTrack < fFootMuSiTracks->GetEntriesFast(); iTrack++){
     ERFootMuSiTrack* track1 = (ERFootMuSiTrack*)fFootMuSiTracks->At(iTrack);
     
@@ -216,6 +218,10 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
                                   (vert2->Y()-vert1->Y())*(vert2->Y()-vert1->Y()) + 
                                   (vert2->Z()-vert1->Z())*(vert2->Z()-vert1->Z()));
         vert1->AddDistanceBetweenVertices(dist);
+        if(dist > 0.23)
+        { fFootMuSiVertices->RemoveAt(jVert);
+          fFootMuSiVertices->RemoveAt(iVert);
+          continue;}
       if(dist < fVerticesMergeDistanceCut){
         if(jVert%100 == 0){
         LOG(DEBUG) << "Vertices merging! (second iteration), merges: " << jVert << FairLogger::endl;

@@ -16,9 +16,9 @@
 void reco_C7_new_detector()
 {
   //---------------------Files-----------------------------------------------
-  TString appendName = "threeProtons_cuts10meters_spreadBeam.root";
+  TString appendName = "twoProtons_cuts10meters_spreadBeam.root";
   TString inFile = "outputFootMuSi/CorrectedBeam/" + appendName;
-  TString outFile = "outputFootMuSi/CorrectedBeam/reco_edepCutProtons_AngleCut0p025_" + appendName;
+  TString outFile = "outputFootMuSi/CorrectedBeam/reco_edepCutProtons_AngleCut0p025_verticiesDistanceCut_" + appendName;
   TString parFile = "parametersFootMuSi/par_" + appendName;
 
   TFile *file = TFile::Open(inFile.Data());

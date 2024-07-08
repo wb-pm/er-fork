@@ -31,7 +31,7 @@ void EventReader()
     {
         simulation = new TFile("../outputFootMuSi/CorrectedBeam/twoProtons_cuts10meters_spreadBeam.root");
         simulation_tree = (TTree*)simulation->Get("er");
-        reconstruction = new TFile("../outputFootMuSi/CorrectedBeam/reco_edepCutProtons_AngleCut0p025_twoProtons_cuts10meters_spreadBeam.root");
+        reconstruction = new TFile("../outputFootMuSi/CorrectedBeam/reco_edepCutProtons_AngleCut0p025_verticiesDistanceCut_twoProtons_cuts10meters_spreadBeam.root");
         reconstruction_tree = (TTree*)reconstruction->Get("er"); 
     outFile = new TFile("selectedTrees/twoProtonsVertexQA.root", "RECREATE");
     output_tree = new TTree("output_tree","output_tree");

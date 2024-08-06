@@ -416,13 +416,13 @@ int events_poisson_Co = distribution_Co(rng_pos);
 		//Creating a vector of times passed between energy depositions registered by the detector		  		  
 	    std::random_device dev;
 		std::mt19937 rng(dev());
-		std::uniform_real_distribution<> distime(0,fSignalsInterval); //interval of time in which the numbers are generated
-		std::vector<Int_t> rndtime(fMultiplicity*2, 0);
+		std::uniform_real_distribution<> distime(0.,fSignalsInterval); //interval of time in which the numbers are generated
+		std::vector<Double_t> rndtime(fMultiplicity*2, 0.);
 		for(auto &i: rndtime)
 		  {
 			  i = distime(rng);
 			  }
-		rndtime.front() = 0; //one of the energy depositions is set to take place at the beginning
+		//rndtime.front() = 0; //one of the energy depositions is set to take place at the beginning
 		std::sort(rndtime.begin(),rndtime.end());
 		   
 		//Random shuffle of energy depositions (so that the order is not always Cs, Co1, Co2)

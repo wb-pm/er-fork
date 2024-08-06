@@ -59,22 +59,15 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   // ------------------------------------------------------------------------
   Int_t verbose = 2; // 1 - only standard log print, 2 - print digi information 
   ERGadastDigitizer* digitizer = new ERGadastDigitizer(verbose);
-  //digitizer->SetCsILC(1.);
-  /*
-  std::map<std::pair<size_t, size_t>, float> lc;
-  lc[{0, 1}] = 1.;
-  digitizer->SetCsILC(lc);
-  */
+  //Structure for light output non-uniformity coefficients
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> lc;
-  float lc_test = 1.;
-  std::vector<std::vector<std::vector<float>>> block_1 = { { { 0.9985703,	0.9978926,	0.9945173,	0.990211,	0.9889056,	1.013246,	1.016656 } } };
-  lc[{1, 1}] = block_1;
-  digitizer->SetCsILC(lc);
+  //Values taken from the experiment
+    std::vector<std::vector<std::vector<float>>> lc_deltaLOexp = { { { 0.9985703,	0.9978926,	0.9945173,	0.990211,	0.9889056,	1.013246,	1.016656 } } };
+  lc[{1, 1}] = lc_deltaLOexp;
+  digitizer->SetCsILC(1.);
   //Light output non-uniformity coefficients taken from the measurements for the crystal number 866 
-  //std::vector<std::vector<std::vector<float>>> block_1 = { { { 1., 1., 1. }, { 1., 1., 1. } },
-                                                             //{ { 1., 1., 1. }, { 1., 1., 1. } } }; 
-  //std::vector<std::vector<std::vector<float>>> block_1 = { { { 1. } } };                                                                                                                  
-//Data for energy resolution from new 887 crystal measurement
+
+  //Data for energy resolution from new 887 crystal measurement
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> a;
   //std::vector<std::vector<std::vector<float>>> block_1_a = { { { 0.0215, 0.0215, 0.0215 }, { 0.0215, 0.0215, 0.0215 } },
                                                              //{ { 0.0215, 0.0215, 0.0215 }, { 0.0215, 0.0215, 0.0215 } } }; 
@@ -84,8 +77,8 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
 		for(int k = 0; k < 10000; k++){
 			block_1_a[i][j].push_back(0.0215);
 }   */                                                     
-  float a_test = 0.0215;                                                  
-  //a[{1, 1}] = a_test;
+  float a_exp = 0.0215;                                                  
+  //a[{1, 1}] = a_exp;
 
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> b;
   std::vector<std::vector<std::vector<float>>> block_1_b(1, std::vector<std::vector<float> >(1, std::vector<float>(1, 0.0055)));
@@ -96,7 +89,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   block_1_b[0][0].push_back(0.0055);*/
  
 
-  float b_test = 0.0055;                                                              
+  float b_exp = 0.0055;                                                              
   //b[{1, 1}] = block_1_b;
 
   std::map<std::pair<size_t, size_t>, std::vector<std::vector<std::vector<float>>>> c;
@@ -106,29 +99,35 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   /*for(int i = 0; i < 100; i++){
   block_1_c[0][0].push_back(0.0206);*/
   														 
-  float c_test = 0.0206;                                                            
+  float c_exp = 0.0206;                                                            
   //c[{1, 1}] = block_1_c;
   
-  digitizer->SetCsIEdepError(a_test, b_test, c_test);
-  //digitizer->SetCsIEdepError(a, b, c);
+  digitizer->SetCsIEdepError(a_exp, b_exp, c_exp);
 
   digitizer->SetCsITimeError(0.);
   digitizer->SetLaBrLC(1.);
   digitizer->SetLaBrEdepError(0.0,0.04,0.02);
   digitizer->SetLaBrTimeError(0.);
 
-  Int_t multiplicity = 6;
+  Int_t multiplicity = 4;
+  //Shaping time, taken from the GADAST characterization experiment 
+  Double_t expShapingTime = 4.; //microseconds
+  Double_t intervalTime = 4.; //microseconds
+  //Activity of caesium-137 source during the experiment
+  Double_t activityCs = 350.14e3; //becquerel
+  //Activity of cobalt-60 source during the experiment
+  Double_t activityCo = 380.54e3; //becquerel
   digitizer->SetGammasMultiplicity(multiplicity);
-  digitizer->SetShapingTime(3.84);
-  digitizer->SetSignalsInterval(4.);
-  digitizer->SetPoissonCs(2.);
-  digitizer->SetPoissonCo(4.);
+  digitizer->SetShapingTime(expShapingTime);
+  digitizer->SetSignalsInterval(intervalTime);
+  digitizer->SetPoissonCs(intervalTime*1e-6*activityCs);
+  digitizer->SetPoissonCo(intervalTime*1e-6*activityCo);
   run->AddTask(digitizer);
 	
   // -----   Create PrimaryGenerator   --------------------------------------
    FairPrimaryGenerator* primGen = new FairPrimaryGenerator();
   //Изотропно в ЛАБ системе
-  Int_t pdgId = 22; // gamma
+  Int_t pdgId = 22; // gamma PID
   Double_t mass = TDatabasePDG::Instance()->GetParticle(pdgId)->Mass();
 
   Double32_t kin_energy_Cs = .6617 * 1e-3; //GeV
@@ -138,8 +137,12 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   Cs_boxGen->SetThetaRange(theta_min, theta_max);
   Cs_boxGen->SetPRange(momentum_Cs, momentum_Cs);
   Cs_boxGen->SetPhiRange(phi_min,phi_max);
-  Cs_boxGen->SetBoxXYZ (0.,-1.875,0.,-1.875,3.95);
-  //Cs_boxGen->SetBoxXYZ (0.,-10.,0.,-10.,0.);
+  //Position on the top of the passive crystal, opposing the active one (sources on a holder)
+  //Cs_boxGen->SetBoxXYZ (0.,-1.875,0.,-1.875,3.95);
+  //Position that is opposing the front face of the active detector (sources on a holder)
+  //Cs_boxGen->SetBoxXYZ (10.,-16.4,10.,-16.4,0.);
+  //Position that is opposing the side face of the active detector (sources on a holder)
+  Cs_boxGen->SetBoxXYZ(0.,-5.,0.,-5.,-0.95);
   primGen->AddGenerator(Cs_boxGen);
 
   Double32_t kin_energy_Co1 = 1.173 * 1e-3;
@@ -149,7 +152,9 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   Co1_boxGen->SetThetaRange(theta_min, theta_max);
   Co1_boxGen->SetPRange(momentum_Co1, momentum_Co1);
   Co1_boxGen->SetPhiRange(phi_min,phi_max);
-  Co1_boxGen->SetBoxXYZ (0.,-1.875,0.,-1.875,3.95);
+  //Co1_boxGen->SetBoxXYZ (0.,-1.875,0.,-1.875,3.95);
+  //Co1_boxGen->SetBoxXYZ (10.,-16.4,10.,-16.4,0.);
+  Co1_boxGen->SetBoxXYZ(0.,-5.,0.,-5.,-0.95);
   primGen->AddGenerator(Co1_boxGen);
 
   Double32_t kin_energy_Co2 = 1.3325 * 1e-3;
@@ -159,9 +164,12 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   Co2_boxGen->SetThetaRange(theta_min, theta_max);
   Co2_boxGen->SetPRange(momentum_Co2, momentum_Co2);
   Co2_boxGen->SetPhiRange(phi_min,phi_max);
-  Co2_boxGen->SetBoxXYZ (0.,-1.875,0.,-1.875,3.95);
+  //Co2_boxGen->SetBoxXYZ (0.,-1.875,0.,-1.875,3.95);
+  //Co2_boxGen->SetBoxXYZ (10.,-16.4,10.,-16.4,0.);
+  Co2_boxGen->SetBoxXYZ(0.,-5.,0.,-5.,-0.95);
   primGen->AddGenerator(Co2_boxGen);
-  
+
+ //Simulating background potassium-40 radiation 
   /*Double32_t kin_energy_K40 = 1.461 * 1e-3;
   Double32_t momentum_K40 = kin_energy_K40;
   
@@ -205,8 +213,8 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   Double_t ctime = timer.CpuTime();
   std::cout << std::endl << std::endl;
   std::cout << "Macro finished succesfully." << std::endl;
-  std::cout << "Output file is sim_upd_lc.root" << std::endl;
-  std::cout << "Parameter file is par_upd.root" << std::endl;
+  std::cout << "Output file is " << outFile << std::endl;
+  std::cout << "Parameter file is " << parFile << std::endl;
   std::cout << "Real time " << rtime << " s, CPU time " << ctime
 		  << "s" << std::endl << std::endl;
 

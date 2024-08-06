@@ -6,7 +6,7 @@ void Import_GDML_Export_ROOT()
 
 	TGDMLParse parser;
 	// Define your input GDML file HERE
-	TGeoVolume* gdmlTop = parser.GDMLReadFile ("gadast.gdml");
+	TGeoVolume* gdmlTop = parser.GDMLReadFile ("gadast_test2021_reduced_crystal.gdml");
 	TGeoVolume* rootTop = new TGeoVolumeAssembly("TOP");
 
 	gGeoManager->SetTopVolume(gdmlTop);
@@ -21,9 +21,9 @@ void Import_GDML_Export_ROOT()
 	gGeoManager->CloseGeometry();
 
 	// Define you output ROOT file HERE
-	TFile* outfile = new TFile(vmcDir + "/geometry/gadast.root", "RECREATE");
+	TFile* outfile = new TFile(vmcDir + "/geometry/gadast_test2021_reduced_crystal.root", "RECREATE");
 	rootTop->Write();
-	outfile->Close();
+	//outfile->Close();
   
 }
 

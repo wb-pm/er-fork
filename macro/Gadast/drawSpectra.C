@@ -1,4 +1,4 @@
-//Drawing and comparing spectra from ROOT files
+//Drawing and comparing spectra of Gadast tests simulations and experiment
 #include <iostream>
 #include <array>
 
@@ -9,6 +9,7 @@
 #include "TCanvas.h"
 #include "TLegend.h"
 #include "TStyle.h"
+#include "TGaxis.h"
 
 std::array<TFile*, 25> fr1;
 std::array<TTree*, 25> tr1;
@@ -23,10 +24,12 @@ void DrawingTwoSimOneExp(Int_t treeID1,Int_t treeID2, TString filename);
 void drawSpectra()
 { 
 	gROOT->SetStyle("Pub");
-	gStyle->SetOptTitle(kTRUE);
+	gStyle->SetLineWidth(3);
 	TCanvas* c1 = new TCanvas();
-	TFile *frExp = new TFile("ROOT_Files/sub_back_877.root", "READ");
-	histExp = (TH1D*)frExp->Get("Subtracted_Background_Energy");
+/* 	TFile *frExp = new TFile("ROOT_Files/sub_back_877.root", "READ");
+	histExp = (TH1D*)frExp->Get("Subtracted_Background_Energy"); */
+	TFile *frExp = new TFile("ROOT_Files/892_st.root", "READ");
+	histExp = (TH1D*)frExp->Get("Calibrated Fitting");
 	TFile *frExpCs = new TFile("ROOT_Files/sub_back_877cs.root", "READ");
 	histExpCs = (TH1D*)frExpCs->Get("Subtracted_Background_Energy");
 	TFile *frExpCo = new TFile("ROOT_Files/sub_back_877co.root", "READ");
@@ -61,12 +64,13 @@ void drawSpectra()
 	histExp->Draw("same");
 	histExpCo->Draw("same");*/	
 	//OpenTree(11, "avcs2co4mult6inter0to1000sht960lonu880expdata.root", kGreen);
-	TString simulation_filename = "test_run.root";
+	TString simulation_filename = "defPoisSh4int0to4opposingSidePosMult4withoutLONU.root";
+	TString simulation_filename_second = "standardDigiBothSmallerCrystals.root";
 	OpenTree(11, simulation_filename, kGreen);
-	OpenTree(12, "test_run_default.root", kMagenta);
+	OpenTree(12, simulation_filename_second, kMagenta);
 	//DrawingSimExp(11, "avcs2co4mult6inter0to1000sht960lonu880expdata",histExp);
 	//DrawingSimExp(11, simulation_filename,histExp);
-	DrawingTwoSimOneExp(11,12,"avcs2co4mult6inter0to1000sht960lonu880extreme+avcs2co4mult6inter0to1000sht960lonu880.root");
+	DrawingTwoSimOneExp(11,12,simulation_filename+simulation_filename_second);
 }
 
 
@@ -87,7 +91,7 @@ void DrawingSimExp(Int_t treeID, TString filename, TH1D* histExperment)
 	drawCommand.Form("GadastCsIDigi.fEdep*1000>>%s", filename.Data());
 	tr1[treeID]->Draw("GadastCsIDigi.fEdep*1000>>htemp(1000,0.,3000.)");
 	h1[treeID] = (TH1D*)gPad->GetPrimitive("htemp");
-	h1[treeID]->SetTitle(filename);
+	//h1[treeID]->SetTitle(filename);
 	h1[treeID]->GetXaxis()->SetTitle("Energy, keV");
 	h1[treeID]->GetYaxis()->SetTitle("Counts");
 	TH1D* histExpShifted = new TH1D("h3", "Shifted", 1023, histExperment->GetXaxis()->GetBinLowEdge(1)+3., histExp->GetXaxis()->GetBinUpEdge(1024)+3.);
@@ -120,6 +124,7 @@ void DrawingSimExp(Int_t treeID, TString filename, TH1D* histExperment)
 	histExperment->Scale(histExpCsPeak/histExperment->GetMaximum(),"nosw2");
 	//h1[treeID]->Scale(histExpShifted->GetMaximum()/h1[treeID]->GetMaximum(),"nosw2");
 	//histExpShifted->Draw("same");
+	gPad->SetLeftMargin(0.15);
 	histExperment->Draw("samehist");
 	
 	TLegend *legend=new TLegend(0.6,0.50,0.75,0.7);
@@ -187,8 +192,8 @@ void DrawingTwoSimOneExp(Int_t treeID1,Int_t treeID2, TString filename)
 	TLegend *legend=new TLegend(0.6,0.50,0.9,0.7);
 	legend->SetTextFont(72);
     legend->SetTextSize(0.03);
-    legend->AddEntry(h1[treeID1], "Simulation (longer shaping time)", "l");
-    legend->AddEntry(h1[treeID2], "Simulation (regular shaping time)", "l");
+    legend->AddEntry(h1[treeID1], "Regular crystal", "l");
+    legend->AddEntry(h1[treeID2], "Shorter crystal", "l");
     legend->AddEntry(histExp, "Experiment", "l");
     legend->Draw();
 	

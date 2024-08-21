@@ -1,12 +1,19 @@
+
+#include "TString.h"
+#include "TSystem.h"
+#include "TGeoManager.h"
+#include "TGDMLParse.h"
+#include "TGeoVolume.h"
+#include "TFile.h"
+
 void Import_GDML_Export_ROOT()
 {
-	TString vmcDir = TString(gSystem->Getenv("VMCWORKDIR"));
-
 	TGeoManager *gdml = new TGeoManager("gdml", "FAIRGeom");
 
 	TGDMLParse parser;
 	// Define your input GDML file HERE
-	TGeoVolume* gdmlTop = parser.GDMLReadFile ("gadast_test2021_reduced_crystal.gdml");
+	TString gdmlName = "gadast_test2021";
+	TGeoVolume* gdmlTop = parser.GDMLReadFile (gdmlName + ".gdml");
 	TGeoVolume* rootTop = new TGeoVolumeAssembly("TOP");
 
 	gGeoManager->SetTopVolume(gdmlTop);
@@ -21,7 +28,7 @@ void Import_GDML_Export_ROOT()
 	gGeoManager->CloseGeometry();
 
 	// Define you output ROOT file HERE
-	TFile* outfile = new TFile(vmcDir + "/geometry/gadast_test2021_reduced_crystal.root", "RECREATE");
+	TFile* outfile = new TFile(gdmlName + ".root", "RECREATE");
 	rootTop->Write();
 	//outfile->Close();
   

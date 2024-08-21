@@ -113,7 +113,7 @@ int ERGadast::ParentGammaTrackId(int track_id) const {
   //Couldn't fix the problem with std::out_of_range error in ERGadastDigitizer, when there also was an additional condition for parent_track->GetPdgCode() != 22, so I have removed it) 
   while (parent_track->GetMotherId() != -1) {
     parent_track = id_to_track[parent_track->GetMotherId()];
-    LOG(DEBUG) << "Current iteration of gamma parent finding: " << findParentIteration << "Mother ID: " << parent_track->GetMotherId() << FairLogger::endl;
+    //LOG(DEBUG) << "Current iteration of gamma parent finding: " << findParentIteration << "Mother ID: " << parent_track->GetMotherId() << FairLogger::endl;
     findParentIteration++;
   }
 

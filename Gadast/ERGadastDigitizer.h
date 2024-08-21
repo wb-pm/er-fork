@@ -85,6 +85,8 @@ public:
 
   void SetPoissonCs(Double_t poissonCs){fPoissonCs = poissonCs;}
   void SetPoissonCo(Double_t poissonCo){fPoissonCo = poissonCo;}
+
+  void SetSeed(Int_t seed){fMtGenerator.seed(seed);}
   /** Accessors **/ 
 
 protected:
@@ -119,6 +121,10 @@ protected:
   //Poisson means
   Double_t fPoissonCs;
   Double_t fPoissonCo; 
+
+  //For debug purposes
+  Int_t fSeed;
+  std::mt19937 fMtGenerator; 
 
   std::function<float(BlockAddress, size_t, size_t, size_t)> fCsILCFun = 
       [](BlockAddress, size_t, size_t, size_t) {return 1.;};

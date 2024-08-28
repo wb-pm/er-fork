@@ -11,8 +11,14 @@
 #include "ERGadastLaBrPoint.h"
 
 #include "TH1.h"
-using namespace std;
 
+using std::map;
+using std::vector;
+
+//Things TODO:
+//1) replace shuffle by two-component vector sorting
+//2) Poisson lambda as a function of activity and time window
+//3) investigate the possibilty of sampling (Poisson) the number of decays before simulation
 // ----------------------------------------------------------------------------
 ERGadastDigitizer::ERGadastDigitizer()
   : FairTask("ER Gadast Digitization scheme"),
@@ -229,6 +235,10 @@ InitStatus ERGadastDigitizer::Init()
 //New Implementation with pile-up algorithm and Poisson distribution
 void ERGadastDigitizer::Exec(Option_t* opt)
 {
+  FairRootManager* ioman = FairRootManager::Instance();
+  if(ioman->GetEntryNr() % 100000 == 0){
+  LOG(INFO) << "Digitization of event number " << ioman->GetEntryNr() << std::endl;
+  }
   // Reset entries in output arrays
   Reset();
 
@@ -455,7 +465,7 @@ void ERGadastDigitizer::Exec(Option_t* opt)
           for (int j = 0; j < i; j++) {
             if(poissonenergydeps[i] >= 0.00001)
             {
-            finalenergydeps[i] += poissonenergydeps[j] * exp(-(rndtime[i] - rndtime[j]) / fShapingTime);
+            finalenergydeps[i] += poissonenergydeps[j] * exp(-(rndtime[i] - rndtime[j]) / fDecayTime);
             }
           }
         }

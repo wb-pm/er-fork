@@ -1,10 +1,10 @@
 #!/bin/bash
 
 #simulation_file="resolutionTests/SeedTestStandardDigiNormalLengthSideCuts1mmPlate6cmCo380kBqNoResolutionNoLONU2.root"
-simulation_file="sim_regularCrystal_plate6cm.root"
-simulation_file_digi="separateDigi/A0215B0055C0207_digi_no_lonu_just_sim_test.root"
-parameters_file="ParametersROOT/par_sim_regularCrystal_plate6cm.root"
-numberEvents=3000000
+simulation_file="sim_regularCrystal_plate6cm30mln.root"
+digi_file="separateDigi/LONU/A0177B00978C02265_digi_lonu_sim_regularCrystal_plate6cm_Co390kBq_Interval20.root"
+parameters_file="ParametersROOT/par_sim_regularCrystal_plate6cm30mln.root"
+numberEvents=30000000
 
 #Function to run simulation
 run_simulation() {
@@ -29,13 +29,13 @@ run_simulation() {
 }
 #Function to run digitization
 run_digitization() {
-    if [ -f "$simulation_file_digi" ]; then
-        echo "Warning: The file '$simulation_file_digi' already exists."
+    if [ -f "$digi_file" ]; then
+        echo "Warning: The file '$digi_file' already exists."
         read -p "Do you want to overwrite the file (y/n): " choice
         case "$choice" in
         y|Y )
             echo "Overwriting the file..."
-            root -l -q 'digitization.C('$numberEvents',"'$simulation_file'", "'$parameters_file'", "'$simulation_file_digi'",4)'
+            root -l -q 'digitization.C('$numberEvents',"'$simulation_file'", "'$parameters_file'", "'$digi_file'",4)'
             ;;
         n|N )
             echo "Operation aborted. The file was not overwritten."
@@ -45,7 +45,7 @@ run_digitization() {
             ;;
         esac
     else
-        root -l -q 'digitization.C('$numberEvents',"'$simulation_file'", "'$parameters_file'", "'$simulation_file_digi'",4)'
+        root -l -q 'digitization.C('$numberEvents',"'$simulation_file'", "'$parameters_file'", "'$digi_file'",4)'
     fi
 }
 echo "Choose an option:"

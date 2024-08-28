@@ -20,6 +20,11 @@
 
 void digitization(int nEvents = 1,TString sim_file = "just_sim_test.root",TString par_file = "ParametersROOT/par_just_sim_test.root", TString digi_out_file = "digi_just_sim_test.root", int multiplicity = 4)
 {
+  nEvents = 3e7;
+  sim_file = "sim_regularCrystal_plate6cm30mln.root";
+  par_file = "ParametersROOT/par_sim_regularCrystal_plate6cm30mln.root";
+    digi_out_file = "separateDigi/No_LONU/A0187B00978C02265_digi_no_lonu_sim_regularCrystal_plate6cm_Co380kBq_Interval10usDecay4us.root";
+  TString parOutFile = "ParametersROOT/par_digi_test.root";
   // -----   Timer   --------------------------------------------------------
   TStopwatch timer;
   timer.Start();
@@ -79,25 +84,26 @@ void digitization(int nEvents = 1,TString sim_file = "just_sim_test.root",TStrin
   //c[{1, 1}] = block_1_c;
   
   //digitizer->SetCsIEdepError(0.0107, 0.0279, 0.0098);
-  digitizer->SetCsIEdepError(0.0215,0.0055,0.0207);
+  digitizer->SetCsIEdepError(0.0187,0.00978,0.02265);
 
   digitizer->SetCsITimeError(0.);
-  digitizer->SetLaBrLC(1.);
-  digitizer->SetLaBrEdepError(0.0,0.04,0.02);
-  digitizer->SetLaBrTimeError(0.);
+  //digitizer->SetLaBrLC(1.);
+  //digitizer->SetLaBrEdepError(0.0,0.04,0.02);
+  //digitizer->SetLaBrTimeError(0.);
 
   //Shaping time, taken from the GADAST characterization experiment 
-  Double_t expShapingTime = 4.; //microseconds
-  Double_t intervalTime = 4.; //microseconds
+  const Double_t expShapingTime = 4.; //microseconds
+  Double_t decayTime = 4.;
+  Double_t intervalTime = 10.; //microseconds
   //Activity of caesium-137 source during the experiment
   Double_t activityCs = 350.14e3; //becquerel
   //Activity of cobalt-60 source during the experiment
   Double_t activityCo = 380.54e3; //becquerel
   digitizer->SetGammasMultiplicity(multiplicity);
-  digitizer->SetShapingTime(expShapingTime);
+  digitizer->SetDecayTime(decayTime);
   digitizer->SetSignalsInterval(intervalTime);
-  digitizer->SetPoissonCs(intervalTime*1e-6*activityCs);
-  digitizer->SetPoissonCo(intervalTime*1e-6*activityCo);
+  digitizer->SetPoissonCs(expShapingTime*1e-6*activityCs);
+  digitizer->SetPoissonCo(expShapingTime*1e-6*activityCo);
   fRun->AddTask(digitizer);
   // -----------Runtime DataBase info -------------------------------------
   FairRuntimeDb* rtdb = fRun->GetRuntimeDb();
@@ -109,10 +115,15 @@ void digitization(int nEvents = 1,TString sim_file = "just_sim_test.root",TStrin
   FairLogger::GetLogger()->SetLogVerbosityLevel("HIGH");
   FairLogger::GetLogger()->SetLogScreenLevel("INFO");
   // -----   Initialise and run   --------------------------------------------
+//  if(gSystem->AccessPathName())
   fRun->Init();
   fRun->Run(0, nEvents);
   // -----------Runtime DataBase output -------------------------------------
-  rtdb->setOutput(parInput);
+  parInput->close();
+  Bool_t kParameterMerged = kTRUE;
+  FairParRootFileIo*  parOut = new FairParRootFileIo(kParameterMerged);
+  parOut->open(parOutFile.Data());
+  rtdb->setOutput(parOut);
   rtdb->saveOutput();
 
   // -----   Finish   -------------------------------------------------------

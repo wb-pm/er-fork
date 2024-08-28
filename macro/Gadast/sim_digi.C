@@ -119,7 +119,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   //Activity of cobalt-60 source during the experiment
   Double_t activityCo = 380.54e3; //becquerel
   digitizer->SetGammasMultiplicity(multiplicity);
-  digitizer->SetShapingTime(expShapingTime);
+  digitizer->SetDecayTime(expShapingTime);
   digitizer->SetSignalsInterval(intervalTime);
   digitizer->SetPoissonCs(intervalTime*1e-6*activityCs);
   digitizer->SetPoissonCo(intervalTime*1e-6*activityCo);

@@ -2,11 +2,12 @@
 // -----                       ERGadastCsIDigi source file                -----
 // -----           Created 11/12/15  by V.Schetinin        			   -----
 // -------------------------------------------------------------------------
-
 #include "ERGadastCsIDigi.h"
-#include<iostream>
 
-using namespace std;
+#include <iostream>
+
+#include "FairLogger.h"
+
 
 // -----   Default constructor   -------------------------------------------
 ERGadastCsIDigi::ERGadastCsIDigi()
@@ -61,11 +62,11 @@ ERGadastCsIDigi::~ERGadastCsIDigi()
 // -----   Public method Print   -------------------------------------------
 void ERGadastCsIDigi::Print(const Option_t* opt /* = 0 */) const
 {
-  std::cout << "-I- ERGadastCsIDigi:  " << endl;
-  std::cout << "    Edep : " << fEdep << endl;
-  std::cout << "    Wall : " << fWall << endl;
-  std::cout << "    Block : " << fBlock << endl;
-  std::cout << "    Cell : " << fCell << endl;
+  LOG(INFO) << "ERGadastCsIDigi:  " << FairLogger::endl;
+  LOG(INFO) << "    Edep : " << fEdep << FairLogger::endl;
+  LOG(INFO) << "    Wall : " << fWall << FairLogger::endl;
+  LOG(INFO) << "    Block : " << fBlock << FairLogger::endl;
+  LOG(INFO) << "    Cell : " << fCell << FairLogger::endl;
 }
 // -------------------------------------------------------------------------
 

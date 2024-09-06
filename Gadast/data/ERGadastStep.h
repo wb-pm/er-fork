@@ -92,4 +92,5 @@ class ERGadastStep : public FairMultiLinkedData
 
   ClassDef(ERGadastStep,1)
 };
+
 #endif

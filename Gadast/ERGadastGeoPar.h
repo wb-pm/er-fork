@@ -38,4 +38,4 @@ class ERGadastGeoPar : public FairParGenericSet
     ClassDef(ERGadastGeoPar,1)
 };
 
-#endif /* ERGadastGeoPar_H */
+#endif

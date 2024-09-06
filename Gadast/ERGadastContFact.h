@@ -21,4 +21,4 @@ class ERGadastContFact : public FairContFact
     ClassDef( ERGadastContFact,0)
 };
 
-#endif  /* !ERNeuRadContFact_H */
+#endif  

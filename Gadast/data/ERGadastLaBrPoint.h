@@ -98,4 +98,5 @@ class ERGadastLaBrPoint : public FairMCPoint
 
   ClassDef(ERGadastLaBrPoint,1)
 };
+
 #endif

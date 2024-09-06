@@ -4,8 +4,12 @@
 
 
 #include "ERGadastStep.h"
-#include<iostream>
+
+#include <iostream>
+
 #include "TVirtualMC.h"
+
+#include "FairLogger.h"
 
 
 // -----   Default constructor   -------------------------------------------
@@ -87,7 +91,7 @@ void ERGadastStep::Print()
     default:            sParticle="not known" ;break;
   }
   
-  std::cout << "-I- STEPINFO:" << std::endl;
+  LOG(INFO) << "-I- STEPINFO:" << FairLogger::endl;
   TString flag;
   switch (fTrackStatus) {
     case Entering :      flag="enters to";               break;
@@ -97,19 +101,19 @@ void ERGadastStep::Print()
     default:                                        flag="unknown tracking status"; break;  
   }
   
-  std::cout << "STEP = " << fStepNr << " particle="<< sParticle << "(" << fPID << ") Edep = " 
-            << fEloss << "[KeV]" << std::endl;
-  std::cout << "track_status = "  << flag.Data() << " track_charge = " << fCharge 
-            << "track_nb = " << fTrackID << std::endl;
-  std::cout << "track_pos = "  << fX << " " << fY << " " << fZ << std::endl;
-  std::cout << "track_mom = "  << fPx << " " << fPy << " " << fPz << std::endl;
+  LOG(INFO) << "STEP = " << fStepNr << " particle="<< sParticle << "(" << fPID << ") Edep = " 
+            << fEloss << "[KeV]" << FairLogger::endl;
+  LOG(INFO) << "track_status = "  << flag.Data() << " track_charge = " << fCharge 
+            << "track_nb = " << fTrackID << FairLogger::endl;
+  LOG(INFO) << "track_pos = "  << fX << " " << fY << " " << fZ << FairLogger::endl;
+  LOG(INFO) << "track_mom = "  << fPx << " " << fPy << " " << fPz << FairLogger::endl;
   
   for ( int i = 0 ; i < fProcessID.GetSize(); i++){
     //if(proc.At(i)!=22 && proc.At(i)!=23 && proc.At(i)!=31 && proc.At(i)!=43 &&  proc.At(i)!=13){
-    std::cout << "process: " << fProcessID.At(i) <<"  "<< TMCProcessName[fProcessID.At(i)] 
-              << std::endl;
+    LOG(INFO) << "process: " << fProcessID.At(i) <<"  "<< TMCProcessName[fProcessID.At(i)] 
+              << FairLogger::endl;
 	}
-  std::cout << std::endl;
+  LOG(INFO) << FairLogger::endl;
 }
 // ----------------------------------------------------------------------------
 

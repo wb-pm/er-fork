@@ -1,10 +1,11 @@
 #include "ERGadastGeoPar.h"
 
-#include "FairParamList.h"
+#include <iostream>
 
 #include "TObjArray.h"
 
-#include <iostream>
+#include "FairParamList.h"
+
 //-------------------------------------------------------------------------
 ERGadastGeoPar::ERGadastGeoPar(const char* name,
     const char* title,

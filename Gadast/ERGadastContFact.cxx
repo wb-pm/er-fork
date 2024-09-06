@@ -6,7 +6,6 @@
 #include "FairRuntimeDb.h"
 
 #include <iostream>
-using namespace std;
 
 static ERGadastContFact gERGadastContFact;
 

@@ -1,5 +1,7 @@
 #include "ERGadastSetup.h"
 
+#include <iostream>
+
 #include "TMath.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -7,14 +9,12 @@
 #include "TGeoCompositeShape.h"
 #include "TGeoBoolNode.h"
 #include "TGeoTrd2.h"
-#include <iostream>
 
 #include "FairRun.h"
 #include "FairRuntimeDb.h"
+#include "FairLogger.h"
 
 #include "ERDetectorList.h"
-
-using namespace std;
 
 ERGadastSetup* ERGadastSetup::fInstance = NULL;
 ERGadastDigiPar* ERGadastSetup::fDigiPar;
@@ -105,7 +105,7 @@ int ERGadastSetup::GetMeshElement(TVector3* pos, SensitiveType detType){
 		Int_t xCount=4,yCount=4,zCount=4;
 		Double_t dX = 72.8/(double)xCount;
 		Double_t dY = 41.5/(double)yCount;
-		Double_t dZ = 150.1/(double)zCount; // 4 ячейки длина криистала 150.1
+		Double_t dZ = 150.1/(double)zCount; // 4 ячейки длина кристалла 150.1
 		posLocal[0] += 72.8/2;
 		posLocal[1] += 41.5/2;
 		posLocal[2] += 30.; //так как начало координат в начале координат первого trd. сдвигаем ее на поверхность второго trd
@@ -119,7 +119,7 @@ int ERGadastSetup::GetMeshElement(TVector3* pos, SensitiveType detType){
 	}
 	if (detType == LaBr){
 		Int_t zCount=4;
-		Double_t dZ = 50.8/(double)zCount; // 4 ячейки длина криистала 150.1
+		Double_t dZ = 50.8/(double)zCount; // 4 ячейки длина кристалла 150.1
 		posLocal[2] += 50.8/2; //так как начало координат в центре tube
 		
 		Int_t z = (Int_t)(posLocal[2]/dZ);
@@ -134,23 +134,23 @@ Bool_t ERGadastSetup::Init(){
 		Fatal("ERGadastSetup","Can`t find gGeoManager!");
 		return kFALSE;
 	}
-	cout << "Reading geometry from TGeoManager " << geo->GetName() << endl;
+	LOG(INFO) << "ERGadastSetup: Reading geometry from TGeoManager " << geo->GetName() << FairLogger::endl;
   	geo->CdTop();
   	TGeoNode* cave = geo->GetCurrentNode();
-  	 // --- Get top Gaadast node
+  	 // --- Get top Gadast node
 	TGeoNode* gadast = NULL;
 	for (Int_t iNode = 0; iNode < cave->GetNdaughters(); iNode++) {
 		TString name = cave->GetDaughter(iNode)->GetName();
 		if ( name.Contains("Gadast", TString::kIgnoreCase) ) {
 			gadast = cave->GetDaughter(iNode);
   			geo->CdDown(iNode);
-  			cout << "Gadast top node is " << gadast->GetName() << endl;
+  			LOG(INFO) << "ERGadastSetup: Gadast top node is " << gadast->GetName() << FairLogger::endl;
 		  	break;
 		}
 	}
 
 	if ( ! gadast ) {
-		cout << "No top Gadast node found in geometry!" << endl;
+		LOG(FATAL) << "ERGadastSetup: No top Gadast node found in geometry!" << FairLogger::endl;
 		return kFALSE;
 	}
 

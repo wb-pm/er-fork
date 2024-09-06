@@ -3,7 +3,10 @@
 // -------------------------------------------------------------------------
 
 #include "ERGadastLaBrPoint.h"
-#include<iostream>
+
+#include <iostream>
+
+#include "FairLogger.h"
 // -----   Default constructor   -------------------------------------------
 ERGadastLaBrPoint::ERGadastLaBrPoint()
   : FairMCPoint(),
@@ -57,11 +60,11 @@ ERGadastLaBrPoint::~ERGadastLaBrPoint()
 // -----   Public method Print   -------------------------------------------
 void ERGadastLaBrPoint::Print(const Option_t* opt /* = 0*/) const
 {
-  std::cout << "-I- ERGadastLaBrPoint: track " << fTrackID << " mother track = " << fMot0TrackID << std::endl;
-  std::cout << "    Position (" << fX << ", " << fY << ", " << fZ << ") cm" << std::endl;
-  std::cout << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << std::endl;
-  std::cout << "    Time " << fTime << " ns,  Length " << fLength << " cm" << std::endl;
-  std::cout << "    Energy loss " << fELoss << " keV "<< std::endl;
+  LOG(INFO) << "-I- ERGadastLaBrPoint: track " << fTrackID << " mother track = " << fMot0TrackID << FairLogger::endl;
+  LOG(INFO) << "    Position (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;
+  LOG(INFO) << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
+  LOG(INFO) << "    Time " << fTime << " ns,  Length " << fLength << " cm" << FairLogger::endl;
+  LOG(INFO) << "    Energy loss " << fELoss << " keV "<< FairLogger::endl;
 }
 // -------------------------------------------------------------------------
 

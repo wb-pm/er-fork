@@ -1,5 +1,10 @@
 #include "ERGadastDigiPar.h"
 
+#include <iostream>
+
+#include "TString.h"
+#include "TMath.h"
+
 #include "FairParamList.h"
 #include "FairDetParIo.h"
 #include "FairParIo.h"
@@ -7,11 +12,6 @@
 #include "FairGenericParRootFileIo.h"
 #include "FairParAsciiFileIo.h"
 #include "FairParRootFileIo.h"
-
-#include "TString.h"
-#include "TMath.h"
-
-#include <iostream>
 
 using std::cout;
 using std::cerr;

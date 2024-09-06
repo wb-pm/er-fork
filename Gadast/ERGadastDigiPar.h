@@ -77,5 +77,4 @@ class ERGadastDigiPar : public FairParGenericSet
     ClassDef(ERGadastDigiPar,1);
 };
 
-
-#endif /**  ERGadastDigiPar_H   **/
+#endif

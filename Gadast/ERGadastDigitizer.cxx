@@ -595,6 +595,11 @@ void ERGadastDigitizer::Exec(Option_t* opt)
   }
 }*/
 //----------------------------------------------------------------------------
+void ERGadastDigitizer::Print()
+{
+  ;
+}
+//----------------------------------------------------------------------------
 void ERGadastDigitizer::Reset()
 {
   if (fGadastCsIDigi) {

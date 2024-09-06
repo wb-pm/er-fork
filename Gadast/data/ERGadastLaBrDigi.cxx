@@ -2,11 +2,12 @@
 // -----                       ERGadastLaBrDigi source file                -----
 // -----           Created 11/12/15  by V.Schetinin        			   -----
 // -------------------------------------------------------------------------
-
 #include "ERGadastLaBrDigi.h"
-#include<iostream>
 
-using namespace std;
+#include <iostream>
+
+#include "FairLogger.h"
+
 
 // -----   Default constructor   -------------------------------------------
 ERGadastLaBrDigi::ERGadastLaBrDigi()
@@ -39,9 +40,9 @@ ERGadastLaBrDigi::~ERGadastLaBrDigi()
 // -----   Public method Print   -------------------------------------------
 void ERGadastLaBrDigi::Print(const Option_t* opt /* = 0 */) const
 {
-  std::cout << "-I- ERGadastLaBrDigi:  " << endl;
-  std::cout << "    Edep : " << fEdep << endl;
-  std::cout << "    Cell : " << fCell << endl;
+  LOG(INFO) << "ERGadastLaBrDigi:  " << FairLogger::endl;
+  LOG(INFO) << "    Edep : " << fEdep << FairLogger::endl;
+  LOG(INFO) << "    Cell : " << fCell << FairLogger::endl;
 }
 // -------------------------------------------------------------------------
 

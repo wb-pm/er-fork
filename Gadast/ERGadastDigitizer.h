@@ -50,6 +50,8 @@ public:
 
   /** Virtual method Exec **/
   virtual void Exec(Option_t* opt);
+/* Print ERGadastDigitizer parameters either to terminal or to a file*/
+  virtual void Print();
 
   /** Virtual method Finish **/
   virtual void Finish();

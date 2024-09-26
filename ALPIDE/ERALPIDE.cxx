@@ -1,8 +1,8 @@
 /********************************************************************************
  *              Copyright (C) Joint Institute for Nuclear Research              *
  *                                                                              *
- *              This software is distributed under the terms of the             * 
- *         GNU Lesser General Public Licence version 3 (LGPL) version 3,        *  
+ *              This software is distributed under the terms of the             *
+ *         GNU Lesser General Public Licence version 3 (LGPL) version 3,        *
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
@@ -18,44 +18,44 @@
 
 
 
+ //--------------------------------------------------------------------------------------------------
+ERALPIDE::ERALPIDE() :
+  ERDetector("ERALPIDE", kTRUE),
+  fALPIDEPoints(new TClonesArray("ERALPIDEPoint")),
+  fALPIDESteps(new TClonesArray("ERALPIDEStep")),
+  fStoreSteps(kFALSE)
+{
+  flGeoPar = new TList();
+  flGeoPar->SetName(GetName());
+  fVerboseLevel = 1;
+}
 //--------------------------------------------------------------------------------------------------
-ERALPIDE::ERALPIDE():
-    ERDetector("ERALPIDE",kTRUE),
-    fALPIDEPoints(new TClonesArray("ERALPIDEPoint")),
-    fALPIDESteps(new TClonesArray("ERALPIDEStep")),
-    fStoreSteps(kFALSE)
-   {
-    flGeoPar = new TList();
-    flGeoPar->SetName (GetName()); 
-    fVerboseLevel = 1;
-   } 
-//--------------------------------------------------------------------------------------------------
-ERALPIDE::ERALPIDE(const char* name, Bool_t active, Int_t verbose):
-    ERDetector(name,active),
-    fALPIDEPoints(new TClonesArray("ERALPIDEPoint")),
-    fALPIDESteps(new TClonesArray("ERALPIDEStep")),
-    fStoreSteps(kFALSE)
-   {
-    flGeoPar = new TList();
-    flGeoPar->SetName (GetName()); 
-    fVerboseLevel = verbose;
-   } 
+ERALPIDE::ERALPIDE(const char* name, Bool_t active, Int_t verbose) :
+  ERDetector(name, active),
+  fALPIDEPoints(new TClonesArray("ERALPIDEPoint")),
+  fALPIDESteps(new TClonesArray("ERALPIDEStep")),
+  fStoreSteps(kFALSE)
+{
+  flGeoPar = new TList();
+  flGeoPar->SetName(GetName());
+  fVerboseLevel = verbose;
+}
 //--------------------------------------------------------------------------------------------------
 ERALPIDE::~ERALPIDE() {
   if (fALPIDEPoints) {
     fALPIDEPoints->Delete();
     delete fALPIDEPoints;
   }
-  if (fALPIDESteps){
+  if (fALPIDESteps) {
     fALPIDESteps->Delete();
     delete fALPIDESteps;
   }
 }
 //--------------------------------------------------------------------------------------------------
 TClonesArray* ERALPIDE::GetCollection(Int_t iColl) const {
-  if (iColl == 0) 
+  if (iColl == 0)
     return fALPIDEPoints;
-  else 
+  else
     return NULL;
 }
 //--------------------------------------------------------------------------------------------------
@@ -69,66 +69,75 @@ void ERALPIDE::Register() {
   FairRootManager* ioman = FairRootManager::Instance();
   if (!ioman)
     LOG(FATAL) << "IO manager is not set" << FairLogger::endl;
-  fMCTracks = (TClonesArray*) ioman->GetObject("MCTrack");
-  ioman->Register("ALPIDEPoint","ERALPIDE", fALPIDEPoints, kTRUE);
-  ioman->Register("ALPIDEStep","ERALPIDE", fALPIDESteps, kTRUE);
+  fMCTracks = (TClonesArray*)ioman->GetObject("MCTrack");
+  ioman->Register("ALPIDEPoint", "ERALPIDE", fALPIDEPoints, kTRUE);
+  ioman->Register("ALPIDEStep", "ERALPIDE", fALPIDESteps, kTRUE);
 }
 //--------------------------------------------------------------------------------------------------
 Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
+  static Int_t          eventID;           //!  event index
+  static Int_t          trackID;           //!  track index
+  static Int_t          mot0TrackID;       //!  0th mother track index
+  static Double_t       mass;              //!  mass
+  static TLorentzVector posIn, posOut;    //!  position
+  static TLorentzVector momIn, momOut;    //!  momentum
+  static Double32_t     time;              //!  time
+  static Double32_t     length;            //!  length
+  static Double32_t     eLoss;             //!  energy loss
+  static Int_t          pdg;                //! particle ID
+  static Int_t pixelNoX;                                       ///< number of entrance pixel along x axis 
+  static Int_t pixelNoY;                                       ///< number of entrance pixel along y axis
+  static Int_t pixelNoX_out;                                       ///< number of exit pixel along x axis 
+  static Int_t pixelNoY_out;                                       ///< number of exit pixel along y axis
+  const Double_t plateXlength = 10.;
+  const Double_t plateYlength = 10.;
+  const Double_t pixelXlength = 10./512.;
+  const Double_t pixelYlength = 10./1024.;
   //Start point
-  if ( gMC->IsTrackEntering() ) { // Return true if this is the first step of the track in sensitive volume
-    StartPoint();
+  if (gMC->IsTrackEntering()) { // Return true if this is the first step of the track in sensitive volume
+    eLoss = 0.;
+    eventID = gMC->CurrentEvent();
+
+    gMC->TrackPosition(posIn);
+    gMC->TrackMomentum(momIn);
+    pixelNoX = Int_t((posIn.X() + plateXlength / 2) / pixelXlength);
+    pixelNoY = Int_t((posIn.Y() + plateYlength / 2) / pixelYlength);
+    trackID = gMC->GetStack()->GetCurrentTrackNumber();
+
+    time = gMC->TrackTime() * 1.0e09;// Return the current time track being transported
+    length = gMC->TrackLength(); // Return the length of the current track from its origin (in cm)
+    mot0TrackID = gMC->GetStack()->GetCurrentTrack()->GetMother(0);
+    mass = gMC->ParticleMass(gMC->TrackPid()); // GeV/c2
+
+    pdg = gMC->TrackPid();
+    //fStepNr = 0;
   }
 
   if (fStoreSteps) {
-    AddStep();
-    return kTRUE;
+    // AddALPIDEStep();
   }
-  fELoss += gMC->Edep() * 1e3; // MeV //Return the energy lost in the current step
-  
+  eLoss += gMC->Edep() * 1e3; // MeV //Return the energy lost in the current step
+
   //Finish point
-  if (gMC->IsTrackExiting() || gMC->IsTrackStop() || gMC->IsTrackDisappeared()) { 
-    FinishPoint();
+  if (gMC->IsTrackExiting() || gMC->IsTrackStop() || gMC->IsTrackDisappeared()) {
+
+    gMC->TrackPosition(posOut);
+    gMC->TrackMomentum(momOut);
+    pixelNoX_out = Int_t((posOut.X() + plateXlength / 2) / pixelXlength);
+    pixelNoY_out = Int_t((posOut.Y() + plateYlength / 2) / pixelYlength);
+    if (eLoss > 0.) {
+      AddALPIDEPoint( eventID, trackID, mot0TrackID, mass,
+                TVector3(posIn.X(),   posIn.Y(),   posIn.Z()),
+                TVector3(posOut.X(),  posOut.Y(),  posOut.Z()),
+                TVector3(momIn.Px(),  momIn.Py(),  momIn.Pz()),
+                TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
+                time, length, eLoss, pdg, pixelNoX,pixelNoY,pixelNoX_out,pixelNoY_out);
+    }
+    //fStepNr++;
   }
-  fStepNr++;
+  return kTRUE;
 }
 
-//--------------------------------------------------------------------------------------------------
-
-void ERALPIDE::StartPoint() {
-  fELoss  = 0.;
-  fEventID = gMC->CurrentEvent();
-
-  TLorentzVector pos, mom;
-
-  gMC->TrackPosition(pos);
-  gMC->TrackMomentum(mom);
-  fPosIn = pos.Vect();
-  fMomIn = mom.Vect();
-
-  fTrackID  = gMC->GetStack()->GetCurrentTrackNumber();
-
-  fTime   = gMC->TrackTime() * 1.0e09;// Return the current time track being transported
-  fLength = gMC->TrackLength(); // Return the length of the current track from its origin (in cm)
-  //fMot0TrackID  = gMC->GetStack()->GetCurrentTrack()->GetMother(0);
-  fMass = gMC->ParticleMass(gMC->TrackPid()); // GeV/c2
-
-  fPDG = gMC->TrackPid();
-  fStepNr = 0;
-}
-//--------------------------------------------------------------------------------------------------
-void ERALPIDE::FinishPoint() {
-  TLorentzVector pos, mom;
-
-  gMC->TrackPosition(pos);
-  gMC->TrackMomentum(mom);
-  fPosOut = pos.Vect();
-  fMomOut = mom.Vect();
-
-  if (fELoss > 0.){
-      AddALPIDEPoint();
-  }
-}
 //--------------------------------------------------------------------------------------------------
 void ERALPIDE::EndOfEvent() {
   if (fVerboseLevel > 1) {
@@ -138,10 +147,10 @@ void ERALPIDE::EndOfEvent() {
   Reset();
 }
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::Print(Option_t *option) const {
-  if (fALPIDEPoints->GetEntriesFast() > 0){
+void ERALPIDE::Print(Option_t* option) const {
+  if (fALPIDEPoints->GetEntriesFast() > 0) {
     LOG(INFO) << "======== ALPIDE Points ==================" << FairLogger::endl;
-    for (Int_t i_point = 0; i_point < fALPIDEPoints->GetEntriesFast(); i_point++){
+    for (Int_t i_point = 0; i_point < fALPIDEPoints->GetEntriesFast(); i_point++) {
       ERALPIDEPoint* point = (ERALPIDEPoint*)fALPIDEPoints->At(i_point);
       point->Print();
     }
@@ -158,31 +167,47 @@ void ERALPIDE::CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset) {
   LOG(DEBUG) << "ERALPIDE: " << nEntries << " entries to add" << FairLogger::endl;
   TClonesArray& clref = *cl2;
   ERALPIDEPoint* oldpoint = NULL;
-  for (Int_t i=0; i<nEntries; i++) {
-  oldpoint = (ERALPIDEPoint*) cl1->At(i);
-   Int_t index = oldpoint->GetTrackID() + offset;
-   oldpoint->SetTrackID(index);
-   new (clref[cl2->GetEntriesFast()]) ERALPIDEPoint(*oldpoint);
+  for (Int_t i = 0; i < nEntries; i++) {
+    oldpoint = (ERALPIDEPoint*)cl1->At(i);
+    Int_t index = oldpoint->GetTrackID() + offset;
+    oldpoint->SetTrackID(index);
+    new (clref[cl2->GetEntriesFast()]) ERALPIDEPoint(*oldpoint);
   }
   LOG(DEBUG) << "ERALPIDE: " << cl2->GetEntriesFast() << " merged entries" << FairLogger::endl;
 }
 //--------------------------------------------------------------------------------------------------
-ERALPIDEPoint* ERALPIDE::AddALPIDEPoint() {
+ERALPIDEPoint* ERALPIDE::AddALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID, Double_t mass,
+  const TVector3& posIn,
+  const TVector3& posOut,
+  const TVector3& momIn,
+  const TVector3& momOut,
+  Double_t time, Double_t length, Double_t eLoss, Int_t PDG, Int_t pixelNoX, Int_t pixelNoY, Int_t pixelNoX_out, Int_t pixelNoY_out) {
   TClonesArray& clref = *fALPIDEPoints;
   Int_t size = clref.GetEntriesFast();
-  return new(clref[size]) ERALPIDEPoint(fEventID, fTrackID,  fMass,
-              TVector3(fPosIn.X(),  fPosIn.Y(), fPosIn.Z()),
-              TVector3(fPosOut.X(), fPosOut.Y(), fPosOut.Z()),
-              TVector3(fMomIn.Px(), fMomIn.Py(), fMomIn.Pz()),
-              TVector3(fMomOut.Px(), fMomOut.Py(), fMomOut.Pz()),
-              fTime, fLength, fELoss, fPDG, fPixelNo);
+  return new(clref[size]) ERALPIDEPoint(eventID, trackID, mot0TrackID, mass,
+    TVector3(posIn.X(), posIn.Y(), posIn.Z()),
+    TVector3(posOut.X(), posOut.Y(), posOut.Z()),
+    TVector3(momIn.Px(), momIn.Py(), momIn.Pz()),
+    TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
+    time, length, eLoss, PDG, pixelNoX, pixelNoY, pixelNoX_out, pixelNoY_out);
 }
 //--------------------------------------------------------------------------------------------------
-ERALPIDEStep* ERALPIDE::AddStep(){
-  
+ERALPIDEStep* ERALPIDE::AddALPIDEStep(Int_t eventID, Int_t stepNr, Int_t trackID,
+  Int_t pixelNo,
+  TVector3 pos,
+  TVector3 mom,
+  Double_t tof,
+  Double_t length,
+  Int_t pid,
+  Double_t mass,
+  ExpertTrackingStatus trackStatus,
+  Double_t eLoss,
+  Double_t charge,
+  TArrayI  processID) {
+
   TClonesArray& clref = *fALPIDESteps;
   //Fill step info
-  ExpertTrackingStatus trackStatus = ERALPIDEStep::GetTrackStatus();
+  trackStatus = ERALPIDEStep::GetTrackStatus();
   TArrayI processesID;
   gMC->StepProcesses(processesID);
   TLorentzVector curPosIn;
@@ -191,28 +216,35 @@ ERALPIDEStep* ERALPIDE::AddStep(){
   gMC->TrackMomentum(curMomIn);
 
 
-  return new(clref[fALPIDESteps->GetEntriesFast()]) 
-                                      ERALPIDEStep(fEventID, fStepNr, fTrackID, 0,
-                                      TVector3(curPosIn.X(),   curPosIn.Y(),   curPosIn.Z()),
-                                      TVector3(curMomIn.X(),   curMomIn.Y(),   curMomIn.Z()),  
-                                      gMC->TrackTime() * 1.0e09, gMC->TrackStep(), gMC->TrackPid(),
-                                      fMass,trackStatus,gMC->Edep(),gMC->TrackCharge(),processesID);                                  
+  return new(clref[fALPIDESteps->GetEntriesFast()])
+    ERALPIDEStep(eventID, stepNr, trackID, pixelNo,
+      pos,
+      mom,
+      tof,
+      length,
+      pid,
+      mass,
+      trackStatus,
+      eLoss,
+      charge,
+      processID);
 }
 //--------------------------------------------------------------------------------------------------
 void ERALPIDE::ConstructGeometry() {
   TString fileName = GetGeometryFileName();
-  if(fileName.EndsWith(".root")) {
+  if (fileName.EndsWith(".root")) {
     LOG(DEBUG) << "Constructing ALPIDE geometry from ROOT file " << fileName.Data() << FairLogger::endl;
     ConstructRootGeometry();
-  } else {
+  }
+  else {
     LOG(FATAL) << "Geometry file name is not set!" << FairLogger::endl;
   }
-  
+
 }
 //--------------------------------------------------------------------------------------------------
 Bool_t ERALPIDE::CheckIfSensitive(std::string name) {
   TString volName = name;
-  if(volName.Contains("SiliconPlate")) {
+  if (volName.Contains("SiliconPlate")) {
     return kTRUE;
   }
   return kFALSE;

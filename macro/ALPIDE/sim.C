@@ -17,7 +17,7 @@
 #include "ERDecay7C.h"
 #endif
 
-void sim(Int_t nEvents = 100)
+void sim(Int_t nEvents = 50)
 {
     // File names
     TString workDirPath = gSystem->Getenv("VMCWORKDIR");
@@ -55,14 +55,15 @@ void sim(Int_t nEvents = 100)
   target->SetGeometryFileName(targetGeoFileName);
   run->AddModule(target);
   // -----   Create ALPIDE detector  --------------------------------------------
-  ERALPIDE *ALPIDE = new ERALPIDE();
-  ALPIDE->SetGeometryFileName("/geometry/ALPIDE.geo.root");
+  ERALPIDE *ALPIDE = new ERALPIDE("ERALPIDE",kTRUE,2);
+  ALPIDE->SetGeometryFileName(workDirPath + "/geometry/ALPIDE_nochips.geo.root");
+  ALPIDE->SetStoreSteps();
   run->AddModule(ALPIDE);
   //----------  Generate initial beam --------------------------------------------
   FairPrimaryGenerator *primGen = new FairPrimaryGenerator();
 
   Double_t kinE_MevPerNucleon = 600.;
-  Double_t beamStartPosition = 0.;
+  Double_t beamStartPosition = -10.;
   Int_t Z = 6, A = 9, Q = 6;
   TString ionName = "9C";
   ERIonMixGenerator *generator = new ERIonMixGenerator(ionName, Z, A, Q, 1);

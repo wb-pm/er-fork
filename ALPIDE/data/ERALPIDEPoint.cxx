@@ -18,17 +18,17 @@ ERALPIDEPoint::ERALPIDEPoint():
 }
 
 //--------------------------------------------------------------------------------------------------
-ERALPIDEPoint::ERALPIDEPoint(Int_t eventID, Int_t trackID,
+ERALPIDEPoint::ERALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
     Double_t mass,
     TVector3 posIn,
     TVector3 posOut, TVector3 momIn, TVector3 momOut,
     Double_t tof, Double_t length, Double_t eLoss, Int_t pdg,
-    Int_t pixelNo):
+    Int_t pixelNoX, Int_t pixelNoY, Int_t pixelNoX_out, Int_t pixelNoY_out):
   FairMCPoint(trackID, -1., posIn, momIn, tof, length, eLoss),
   fEventID(eventID),
   fX_out(posOut.X()), fY_out(posOut.Y()), fZ_out(posOut.Z()),
   fPx_out(momOut.X()), fPy_out(momOut.Y()), fPz_out(momOut.Z()),
-  fPDG(pdg), fPixelNo(pixelNo) 
+  fPDG(pdg), fPixelNoX(pixelNoX),fPixelNoY(pixelNoY), fPixelNoX_out(pixelNoX_out), fPixelNoY_out(pixelNoY_out) 
 {
 }
 
@@ -43,7 +43,9 @@ void ERALPIDEPoint::Print(const Option_t* opt) const {
   LOG(INFO) << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
   LOG(INFO) << "    Time " << fTime << " ns,  Length " << fLength << " cm" << FairLogger::endl;
   LOG(INFO) << "    Energy loss " << fELoss << " keV "<< FairLogger::endl;
-  LOG(INFO) << "    Pixel number " << fPixelNo << FairLogger::endl;
+  LOG(INFO) << "    Pixel number along x axis (entrance): " << fPixelNoX << " along y axis (entrance): " << fPixelNoY << FairLogger::endl;
+  LOG(INFO) << "    Pixel number along x axis (exit): " << fPixelNoX_out << " along y axis (exit): " << fPixelNoY_out << FairLogger::endl;
+  LOG(INFO) << " PDG: " << fPDG << FairLogger::endl;
 }
 
 //--------------------------------------------------------------------------------------------------

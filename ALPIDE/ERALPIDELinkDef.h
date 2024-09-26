@@ -9,5 +9,6 @@
 #pragma link C++ class ERALPIDEPoint+;
 #pragma link C++ class ERALPIDEStep+;
 #pragma link C++ class ERALPIDESetup+;
+#pragma link C++ class ERALPIDEHit+;
 
 #endif

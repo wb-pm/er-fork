@@ -27,6 +27,7 @@ ERALPIDEGeoPar.cxx
 ERALPIDESetup.cxx
 data/ERALPIDEPoint.cxx
 data/ERALPIDEStep.cxx
+data/ERALPIDEHit.cxx
 )
 
 CHANGE_FILE_EXTENSION(*.cxx *.h HEADERS "${SRCS}")

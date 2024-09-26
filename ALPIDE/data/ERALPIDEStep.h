@@ -5,7 +5,7 @@
  *         GNU Lesser General Public Licence version 3 (LGPL) version 3,        *  
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
-
+//Probably this class is not necessary
 #ifndef ERALPIDEStep_H
 #define ERALPIDEStep_H
 

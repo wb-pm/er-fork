@@ -36,15 +36,16 @@ public:
    ** @param length   Track length since creation [cm]
    ** @param eLoss    Energy deposit [KeV]
    ** @param pdg      PDG of point particle
-   ** @param pixelNo  Number of pixel where point was registered
+   ** @param pixelNoX Number of pixel along the x axis 
+   ** @param pixelNoY Number of pixel along the y axis 
   **/
 
-  ERALPIDEPoint(Int_t eventID, Int_t trackID,
+  ERALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
       Double_t mass,
       TVector3 posIn,
       TVector3 posOut, TVector3 momIn, TVector3 momOut,
       Double_t tof, Double_t length, Double_t eLoss, Int_t pdg,
-      Int_t pixelNo);
+      Int_t pixelNoX,Int_t pixelNoY, Int_t pixelNoX_out, Int_t pixelNoY_out);
 
   /** @brief Destructor **/
   virtual ~ERALPIDEPoint();
@@ -65,7 +66,7 @@ public:
   Double_t GetPyOut()             const { return fPy_out; }
   Double_t GetPzOut()             const { return fPz_out; }
   Double_t GetMass()              const { return fMass; }
-  Int_t GetPixelNo()              const { return fPixelNo;}
+  Int_t GetPixelNoX()              const { return fPixelNoX;}
   void PositionIn(TVector3& pos)  const { pos.SetXYZ(fX, fY, fZ); }
   void PositionOut(TVector3& pos) const { pos.SetXYZ(fX_out,fY_out,fZ_out); }
   void MomentumOut(TVector3& mom) const { mom.SetXYZ(fPx_out,fPy_out,fPz_out); }
@@ -85,12 +86,15 @@ public:
 protected:
   
   Int_t fEventID;                                       ///< event index
+  Int_t fMot0TrackID;                                   ///< 0th mother track index
   Double_t fMass;                                       ///< mass
   Double32_t fX_out,  fY_out,  fZ_out;                  ///< point out coordinate
   Double32_t fPx_out, fPy_out, fPz_out;                 ///< point out momentum
   Int_t fPDG;                                           ///< particle PDG
-  Int_t fPixelNo;                                       ///< number of pixel where point was registered
-
+  Int_t fPixelNoX;                                       ///< number of entrance pixel along x axis 
+  Int_t fPixelNoY;                                       ///< number of entrance pixel along y axis
+  Int_t fPixelNoX_out;                                       ///< number of exit pixel along x axis 
+  Int_t fPixelNoY_out;                                       ///< number of exit pixel along y axis
   ClassDef(ERALPIDEPoint,1)
 };
 

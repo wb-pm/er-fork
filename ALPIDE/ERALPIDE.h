@@ -108,20 +108,36 @@ public:
   /** @brief Check whether a volume is sensitive.
    ** @param name  Volume name
    ** @value        kTRUE if volume is sensitive, else kFALSE
-   ** The decision is based on the volume name (has to contain "ALPIDE_pixel").
+   ** The decision is based on the volume name (has to contain "SiliconPlate").
    ** Virtual from FairModule.
   **/
   virtual Bool_t CheckIfSensitive(std::string name);
-  // Constructs the ERND geometry
+  // Constructs the ALPIDE geometry
   virtual void ConstructGeometry();  
 
 private:
 
   /** @brief Adds an ALPIDEPoint to the Point Collection **/
-  ERALPIDEPoint* AddALPIDEPoint();
+  ERALPIDEPoint* AddALPIDEPoint(Int_t eventID, Int_t trackID,  Int_t mot0TrackID, Double_t mass,
+              const TVector3& posIn,
+              const TVector3& posOut,
+              const TVector3& momIn,
+              const TVector3& momOut,
+              Double_t time, Double_t length, Double_t eLoss, Int_t fPDG, Int_t fPixelNoX,Int_t fPixelNoY,Int_t fPixelNoX_out,Int_t fPixelNoY_out);
 
   /** @brief Adds an ALPIDEStep to the Step Collection **/
-  ERALPIDEStep* AddStep();
+  ERALPIDEStep* AddALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
+		  Int_t pixelNo,
+		  TVector3 pos, 
+      TVector3 mom, 
+		  Double_t tof, 
+      Double_t length, 
+      Int_t pid,
+      Double_t mass,
+      ExpertTrackingStatus trackStatus,
+      Double_t eLoss,
+      Double_t charge,
+      TArrayI  processID);
 
   /** @brief Start new point creation. Reinit current point data **/
   void StartPoint();
@@ -138,20 +154,6 @@ private:
     TClonesArray* fMCTracks = nullptr; 
 
     Bool_t fStoreSteps;
-
-    Int_t fEventID;                             ///< event index
-    Int_t fTrackID;                             ///< track index
-    Double_t fMass;                             ///< mass
-    TVector3 fPosIn;                            ///< point start  position
-    TVector3 fPosOut;                           ///< point finish  position         
-    TVector3 fMomIn;                            ///< point start momentum
-    TVector3 fMomOut;                           ///< point finish momentum
-    Double32_t     fTime;                       ///< point start time
-    Double32_t     fLength;                     ///< track length from his origin
-    Double32_t     fELoss;                      ///< energy loss
-    Int_t fPDG;                                 ///< particle PDG
-    Int_t  fStepNr;                             ///< current step number in the active volume
-    Int_t fPixelNo;
 
 ClassDef(ERALPIDE, 1);
 };

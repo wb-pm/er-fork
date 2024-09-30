@@ -6,8 +6,8 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 //Probably this class is not necessary
-#ifndef ERALPIDEStep_H
-#define ERALPIDEStep_H
+#ifndef ERAlpideStep_H
+#define ERAlpideStep_H
 
 #include "TVector3.h"
 #include "TArrayI.h"
@@ -16,19 +16,19 @@
 
 #include "ERMCTrack.h"
 
-/** @class ERALPIDEStep
- ** @brief Class for stepping action of ALPIDE detector 
+/** @class ERAlpideStep
+ ** @brief Class for stepping action of Alpide detector 
  ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
  **
 **/
 
-class ERALPIDEStep : public FairMultiLinkedData 
+class ERAlpideStep : public FairMultiLinkedData 
 {
  public:
 
   /** Default constructor **/
-  ERALPIDEStep();
+  ERAlpideStep();
 
   /** Constructor with arguments
    *@param EventID  Index of Event
@@ -40,7 +40,7 @@ class ERALPIDEStep : public FairMultiLinkedData
    *@param length Track length since creation [cm]
    *@param pid   
    **/
-  ERALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
+  ERAlpideStep(Int_t eventID, Int_t stepNr,Int_t trackID,
 		  TVector3 pos, 
       TVector3 mom, 
       Int_t pixelNoX,
@@ -56,13 +56,13 @@ class ERALPIDEStep : public FairMultiLinkedData
 
 
   /** Copy constructor **/
-  ERALPIDEStep(const ERALPIDEStep&);
+  ERAlpideStep(const ERAlpideStep&);
 
 
   /** Destructor **/
-  virtual ~ERALPIDEStep();
+  virtual ~ERAlpideStep();
   
-  ERALPIDEStep& operator=(const ERALPIDEStep&) { return *this; }
+  ERAlpideStep& operator=(const ERAlpideStep&) { return *this; }
   
   /** Accessors **/
   Double_t GetX() const {return fX;}
@@ -90,7 +90,7 @@ class ERALPIDEStep : public FairMultiLinkedData
   TArrayI fProcessID;
   
 
-  ClassDef(ERALPIDEStep,1)
+  ClassDef(ERAlpideStep,1)
 };
 
 #endif

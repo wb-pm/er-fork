@@ -6,42 +6,42 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#ifndef ERALPIDE_H
-#define ERALPIDE_H
+#ifndef ERAlpide_H
+#define ERAlpide_H
 
 #include "ERDetector.h"
 
-#include "ERALPIDEPoint.h"
-#include "ERALPIDEStep.h"
+#include "ERAlpidePoint.h"
+#include "ERAlpideStep.h"
 
-/** @class ERALPIDE
- ** @brief Class for the MC transport of the ALPIDE detector 
+/** @class ERAlpide
+ ** @brief Class for the MC transport of the Alpide detector 
  ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
  **
- ** The ERALPIDE defines the behaviour of the ALPIDE system during
- ** transport simulation. It constructs the ALPIDE transport geometry
- ** and creates objects of type ERALPIDEPoints and ERALPIDESteps if requested.
+ ** The ERAlpide defines the behaviour of the Alpide system during
+ ** transport simulation. It constructs the Alpide transport geometry
+ ** and creates objects of type ERAlpidePoints and ERAlpideSteps if requested.
 **/
 
-class ERALPIDE : public ERDetector
+class ERAlpide : public ERDetector
 {
 
 public:
   
   /** @brief Default constructor **/
-  ERALPIDE();
+  ERAlpide();
   /** @brief Standard constructor
-     ** @param name    ERALPIDE detector name
+     ** @param name    ERAlpide detector name
      ** @param active  Sensitivity flag
      ** @param verbose Verbosity level. 1 - only standart logs,
      **                                 2 - Print points after each event, 
      **                                 3 - GEANT Step information.
   **/
-  ERALPIDE(const char* name, Bool_t active, Int_t verbose);
+  ERAlpide(const char* name, Bool_t active, Int_t verbose);
    
   /** @brief Destructor **/
-  virtual ~ERALPIDE();
+  virtual ~ERAlpide();
 
   /* Modifiers */
 
@@ -51,9 +51,9 @@ public:
 
   /*Accessors*/
 
-  /** @brief Get array of ERALPIDEPoint
+  /** @brief Get array of ERAlpidePoint
    ** @param iColl  number of point collection
-   ** @return Pointer to ERALPIDEPoint array. NULL if iColl > 0.
+   ** @return Pointer to ERAlpidePoint array. NULL if iColl > 0.
    **
    ** Abstract from FairDetector.
   **/
@@ -63,18 +63,18 @@ public:
 
   /** @brief Initialization
    ** class method FairDetector::Initialize() is called.
-   ** ALPIDEGeoPar initialized from RuntimeDB
+   ** AlpideGeoPar initialized from RuntimeDB
    ** Virtual from FairDetector.
   **/
   virtual void Initialize();
 
-  /** @brief Register output array (ALPIDEPoint) to the I/O manager
+  /** @brief Register output array (AlpidePoint) to the I/O manager
    ** Virtual from FairDetector.
   **/
   virtual void Register();
 
   /** @brief Virtual method 
-   ** Defines the action to be taken when a step is inside the active volume. Creates ERALPIDEPoint and adds it to the collection.
+   ** Defines the action to be taken when a step is inside the active volume. Creates ERAlpidePoint and adds it to the collection.
    ** @param vol  Pointer to the active volume
    ** Virtual from FairDetector.
   **/
@@ -87,7 +87,7 @@ public:
   virtual void EndOfEvent();
   
   /** @brief Screen log
-   ** Prints ALPIDEPoint information
+   ** Prints AlpidePoint information
    ** Virtual from TObject.
   **/
   virtual void Print(Option_t *option="") const;
@@ -112,21 +112,21 @@ public:
    ** Virtual from FairModule.
   **/
   virtual Bool_t CheckIfSensitive(std::string name);
-  // Constructs the ALPIDE geometry
+  // Constructs the Alpide geometry
   virtual void ConstructGeometry();  
 
 private:
 
-  /** @brief Adds an ALPIDEPoint to the Point Collection **/
-  ERALPIDEPoint* AddALPIDEPoint(Int_t eventID, Int_t trackID,  Int_t mot0TrackID, Double_t mass,
+  /** @brief Adds an AlpidePoint to the Point Collection **/
+  ERAlpidePoint* AddAlpidePoint(Int_t eventID, Int_t trackID,  Int_t mot0TrackID, Double_t mass,
               const TVector3& posIn,
               const TVector3& posOut,
               const TVector3& momIn,
               const TVector3& momOut,
               Double_t time, Double_t length, Double_t eLoss, Int_t fPDG, Int_t fPixelNoX,Int_t fPixelNoY,Int_t fPixelNoX_out,Int_t fPixelNoY_out);
 
-  /** @brief Adds an ALPIDEStep to the Step Collection **/
-  ERALPIDEStep* AddALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
+  /** @brief Adds an AlpideStep to the Step Collection **/
+  ERAlpideStep* AddAlpideStep(Int_t eventID, Int_t stepNr,Int_t trackID,
 		  TVector3 pos, 
       TVector3 mom, 
       Int_t pixelNoX,
@@ -148,9 +148,9 @@ private:
 
 private:
 
-    TClonesArray* fALPIDEPoints = nullptr;
+    TClonesArray* fAlpidePoints = nullptr;
 
-    TClonesArray* fALPIDESteps = nullptr;
+    TClonesArray* fAlpideSteps = nullptr;
 
     TClonesArray* fMCTracks = nullptr; 
 
@@ -158,7 +158,7 @@ private:
 
     Int_t fStepNumber;
 
-ClassDef(ERALPIDE, 1);
+ClassDef(ERAlpide, 1);
 };
 
 

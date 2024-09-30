@@ -1,4 +1,4 @@
-# Create a library called "libERALPIDE" which includes the source files given in
+# Create a library called "libERAlpide" which includes the source files given in
 # the array .
 #? The extension is already found.  Any number of sources could be listed here.
 
@@ -8,8 +8,8 @@ ${ROOT_INCLUDE_DIR}
 ${Boost_INCLUDE_DIRS}
 ${CMAKE_SOURCE_DIR}/data/
 ${CMAKE_SOURCE_DIR}/base/
-${CMAKE_SOURCE_DIR}/ALPIDE/
-${CMAKE_SOURCE_DIR}/ALPIDE/data
+${CMAKE_SOURCE_DIR}/Alpide/
+${CMAKE_SOURCE_DIR}/Alpide/data
 )
 
 include_directories( ${INCLUDE_DIRECTORIES})
@@ -22,18 +22,18 @@ ${FAIRROOT_LIBRARY_DIR}
 link_directories( ${LINK_DIRECTORIES})
 
 set(SRCS 
-ERALPIDE.cxx
-ERALPIDEGeoPar.cxx
-ERALPIDESetup.cxx
-data/ERALPIDEPoint.cxx
-data/ERALPIDEStep.cxx
-data/ERALPIDEHit.cxx
+ERAlpide.cxx
+ERAlpideGeoPar.cxx
+ERAlpideSetup.cxx
+data/ERAlpidePoint.cxx
+data/ERAlpideStep.cxx
+data/ERAlpideHit.cxx
 )
 
 CHANGE_FILE_EXTENSION(*.cxx *.h HEADERS "${SRCS}")
 
-Set(LINKDEF ERALPIDELinkDef.h)
-Set(LIBRARY_NAME ERALPIDE)
+Set(LINKDEF ERAlpideLinkDef.h)
+Set(LIBRARY_NAME ERAlpide)
 Set(DEPENDENCIES ERData ERBase Base Core)
 
 GENERATE_LIBRARY()

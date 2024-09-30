@@ -7,11 +7,11 @@
  ********************************************************************************/
 
 
-#include "ERALPIDE.h"
+#include "ERAlpide.h"
 
 #include "TVirtualMC.h"
 
-#include "ERALPIDEGeoPar.h"
+#include "ERAlpideGeoPar.h"
 
 
 
@@ -19,10 +19,10 @@
 
 
  //--------------------------------------------------------------------------------------------------
-ERALPIDE::ERALPIDE() :
-  ERDetector("ERALPIDE", kTRUE),
-  fALPIDEPoints(new TClonesArray("ERALPIDEPoint")),
-  fALPIDESteps(new TClonesArray("ERALPIDEStep")),
+ERAlpide::ERAlpide() :
+  ERDetector("ERAlpide", kTRUE),
+  fAlpidePoints(new TClonesArray("ERAlpidePoint")),
+  fAlpideSteps(new TClonesArray("ERAlpideStep")),
   fStoreSteps(kFALSE)
 {
   flGeoPar = new TList();
@@ -30,10 +30,10 @@ ERALPIDE::ERALPIDE() :
   fVerboseLevel = 1;
 }
 //--------------------------------------------------------------------------------------------------
-ERALPIDE::ERALPIDE(const char* name, Bool_t active, Int_t verbose) :
+ERAlpide::ERAlpide(const char* name, Bool_t active, Int_t verbose) :
   ERDetector(name, active),
-  fALPIDEPoints(new TClonesArray("ERALPIDEPoint")),
-  fALPIDESteps(new TClonesArray("ERALPIDEStep")),
+  fAlpidePoints(new TClonesArray("ERAlpidePoint")),
+  fAlpideSteps(new TClonesArray("ERAlpideStep")),
   fStoreSteps(kFALSE)
 {
   flGeoPar = new TList();
@@ -41,40 +41,40 @@ ERALPIDE::ERALPIDE(const char* name, Bool_t active, Int_t verbose) :
   fVerboseLevel = verbose;
 }
 //--------------------------------------------------------------------------------------------------
-ERALPIDE::~ERALPIDE() {
-  if (fALPIDEPoints) {
-    fALPIDEPoints->Delete();
-    delete fALPIDEPoints;
+ERAlpide::~ERAlpide() {
+  if (fAlpidePoints) {
+    fAlpidePoints->Delete();
+    delete fAlpidePoints;
   }
-  if (fALPIDESteps) {
-    fALPIDESteps->Delete();
-    delete fALPIDESteps;
+  if (fAlpideSteps) {
+    fAlpideSteps->Delete();
+    delete fAlpideSteps;
   }
 }
 //--------------------------------------------------------------------------------------------------
-TClonesArray* ERALPIDE::GetCollection(Int_t iColl) const {
+TClonesArray* ERAlpide::GetCollection(Int_t iColl) const {
   if (iColl == 0)
-    return fALPIDEPoints;
+    return fAlpidePoints;
   else
     return NULL;
 }
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::Initialize() {
+void ERAlpide::Initialize() {
   FairDetector::Initialize();
   FairRuntimeDb* rtdb = FairRun::Instance()->GetRuntimeDb();
-  ERALPIDEGeoPar* par = (ERALPIDEGeoPar*)(rtdb->getContainer("ERALPIDEGeoPar"));
+  ERAlpideGeoPar* par = (ERAlpideGeoPar*)(rtdb->getContainer("ERAlpideGeoPar"));
 }
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::Register() {
+void ERAlpide::Register() {
   FairRootManager* ioman = FairRootManager::Instance();
   if (!ioman)
     LOG(FATAL) << "IO manager is not set" << FairLogger::endl;
   fMCTracks = (TClonesArray*)ioman->GetObject("MCTrack");
-  ioman->Register("ALPIDEPoint", "ERALPIDE", fALPIDEPoints, kTRUE);
-  ioman->Register("ALPIDEStep", "ERALPIDE", fALPIDESteps, kTRUE);
+  ioman->Register("AlpidePoint", "ERAlpide", fAlpidePoints, kTRUE);
+  ioman->Register("AlpideStep", "ERAlpide", fAlpideSteps, kTRUE);
 }
 //--------------------------------------------------------------------------------------------------
-Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
+Bool_t ERAlpide::ProcessHits(FairVolume* vol) {
   static Int_t          eventID;           //!  event index
   static Int_t          trackID;           //!  track index
   static Int_t          mot0TrackID;       //!  0th mother track index
@@ -125,10 +125,10 @@ Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
 
   gMC->TrackPosition(posStep);
   gMC->TrackMomentum(momStep);
-  trackStatus = ERALPIDEStep::GetTrackStatus();
+  trackStatus = ERAlpideStep::GetTrackStatus();
   gMC->StepProcesses(processesID);
-  ERALPIDEStep *alpideStep = AddALPIDEStep(eventID,stepNumber,trackID,TVector3(posStep.X(),posStep.Y(),posStep.Z()),TVector3(momStep.X(),momStep.Y(),momStep.Z()), pixelNoXStep, pixelNoYStep, gMC->TrackTime()*1e9,gMC->TrackStep(),gMC->TrackPid(),gMC->TrackMass(),trackStatus,gMC->Edep(),gMC->TrackCharge(),processesID);
-  if(fVerboseLevel > 1) alpideStep->Print();
+  ERAlpideStep *AlpideStep = AddAlpideStep(eventID,stepNumber,trackID,TVector3(posStep.X(),posStep.Y(),posStep.Z()),TVector3(momStep.X(),momStep.Y(),momStep.Z()), pixelNoXStep, pixelNoYStep, gMC->TrackTime()*1e9,gMC->TrackStep(),gMC->TrackPid(),gMC->TrackMass(),trackStatus,gMC->Edep(),gMC->TrackCharge(),processesID);
+  if(fVerboseLevel > 1) AlpideStep->Print();
 
   }
   eLoss += gMC->Edep() * 1e3; // MeV //Return the energy lost in the current step
@@ -142,7 +142,7 @@ Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
     pixelNoX_out = Int_t((posOut.X() + plateXlength / 2) / pixelXlength);
     pixelNoY_out = Int_t((posOut.Y() + plateYlength / 2) / pixelYlength);
     if (eLoss > 0.) {
-      AddALPIDEPoint( eventID, trackID, mot0TrackID, mass,
+      AddAlpidePoint( eventID, trackID, mot0TrackID, mass,
                 TVector3(posIn.X(),   posIn.Y(),   posIn.Z()),
                 TVector3(posOut.X(),  posOut.Y(),  posOut.Z()),
                 TVector3(momIn.Px(),  momIn.Py(),  momIn.Pz()),
@@ -154,7 +154,7 @@ Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
 }
 
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::EndOfEvent() {
+void ERAlpide::EndOfEvent() {
   if (fVerboseLevel > 1) {
     Print();
   }
@@ -162,44 +162,44 @@ void ERALPIDE::EndOfEvent() {
   Reset();
 }
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::Print(Option_t* option) const {
-  if (fALPIDEPoints->GetEntriesFast() > 0) {
-    LOG(INFO) << "======== ALPIDE Points ==================" << FairLogger::endl;
-    for (Int_t i_point = 0; i_point < fALPIDEPoints->GetEntriesFast(); i_point++) {
-      ERALPIDEPoint* point = (ERALPIDEPoint*)fALPIDEPoints->At(i_point);
+void ERAlpide::Print(Option_t* option) const {
+  if (fAlpidePoints->GetEntriesFast() > 0) {
+    LOG(INFO) << "======== Alpide Points ==================" << FairLogger::endl;
+    for (Int_t i_point = 0; i_point < fAlpidePoints->GetEntriesFast(); i_point++) {
+      ERAlpidePoint* point = (ERAlpidePoint*)fAlpidePoints->At(i_point);
       point->Print();
     }
   }
 }
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::Reset() {
-  fALPIDEPoints->Clear();
-  fALPIDESteps->Clear();
+void ERAlpide::Reset() {
+  fAlpidePoints->Clear();
+  fAlpideSteps->Clear();
 }
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset) {
+void ERAlpide::CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset) {
   Int_t nEntries = cl1->GetEntriesFast();
-  LOG(DEBUG) << "ERALPIDE: " << nEntries << " entries to add" << FairLogger::endl;
+  LOG(DEBUG) << "ERAlpide: " << nEntries << " entries to add" << FairLogger::endl;
   TClonesArray& clref = *cl2;
-  ERALPIDEPoint* oldpoint = NULL;
+  ERAlpidePoint* oldpoint = NULL;
   for (Int_t i = 0; i < nEntries; i++) {
-    oldpoint = (ERALPIDEPoint*)cl1->At(i);
+    oldpoint = (ERAlpidePoint*)cl1->At(i);
     Int_t index = oldpoint->GetTrackID() + offset;
     oldpoint->SetTrackID(index);
-    new (clref[cl2->GetEntriesFast()]) ERALPIDEPoint(*oldpoint);
+    new (clref[cl2->GetEntriesFast()]) ERAlpidePoint(*oldpoint);
   }
-  LOG(DEBUG) << "ERALPIDE: " << cl2->GetEntriesFast() << " merged entries" << FairLogger::endl;
+  LOG(DEBUG) << "ERAlpide: " << cl2->GetEntriesFast() << " merged entries" << FairLogger::endl;
 }
 //--------------------------------------------------------------------------------------------------
-ERALPIDEPoint* ERALPIDE::AddALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID, Double_t mass,
+ERAlpidePoint* ERAlpide::AddAlpidePoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID, Double_t mass,
   const TVector3& posIn,
   const TVector3& posOut,
   const TVector3& momIn,
   const TVector3& momOut,
   Double_t time, Double_t length, Double_t eLoss, Int_t PDG, Int_t pixelNoX, Int_t pixelNoY, Int_t pixelNoX_out, Int_t pixelNoY_out) {
-  TClonesArray& clref = *fALPIDEPoints;
+  TClonesArray& clref = *fAlpidePoints;
   Int_t size = clref.GetEntriesFast();
-  return new(clref[size]) ERALPIDEPoint(eventID, trackID, mot0TrackID, mass,
+  return new(clref[size]) ERAlpidePoint(eventID, trackID, mot0TrackID, mass,
     TVector3(posIn.X(), posIn.Y(), posIn.Z()),
     TVector3(posOut.X(), posOut.Y(), posOut.Z()),
     TVector3(momIn.Px(), momIn.Py(), momIn.Pz()),
@@ -207,7 +207,7 @@ ERALPIDEPoint* ERALPIDE::AddALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0
     time, length, eLoss, PDG, pixelNoX, pixelNoY, pixelNoX_out, pixelNoY_out);
 }
 //--------------------------------------------------------------------------------------------------
-ERALPIDEStep* ERALPIDE::AddALPIDEStep(Int_t eventID, Int_t stepNr, Int_t trackID,
+ERAlpideStep* ERAlpide::AddAlpideStep(Int_t eventID, Int_t stepNr, Int_t trackID,
   TVector3 pos,
   TVector3 mom,
   Int_t pixelNoX,
@@ -221,10 +221,10 @@ ERALPIDEStep* ERALPIDE::AddALPIDEStep(Int_t eventID, Int_t stepNr, Int_t trackID
   Double_t charge,
   TArrayI  processID) {
 
-  TClonesArray& clref = *fALPIDESteps;
+  TClonesArray& clref = *fAlpideSteps;
 
-  return new(clref[fALPIDESteps->GetEntriesFast()])
-    ERALPIDEStep(eventID, stepNr, trackID,
+  return new(clref[fAlpideSteps->GetEntriesFast()])
+    ERAlpideStep(eventID, stepNr, trackID,
       pos,
       mom,
       pixelNoX,
@@ -239,10 +239,10 @@ ERALPIDEStep* ERALPIDE::AddALPIDEStep(Int_t eventID, Int_t stepNr, Int_t trackID
       processID);
 }
 //--------------------------------------------------------------------------------------------------
-void ERALPIDE::ConstructGeometry() {
+void ERAlpide::ConstructGeometry() {
   TString fileName = GetGeometryFileName();
   if (fileName.EndsWith(".root")) {
-    LOG(DEBUG) << "Constructing ALPIDE geometry from ROOT file " << fileName.Data() << FairLogger::endl;
+    LOG(DEBUG) << "Constructing Alpide geometry from ROOT file " << fileName.Data() << FairLogger::endl;
     ConstructRootGeometry();
   }
   else {
@@ -251,7 +251,7 @@ void ERALPIDE::ConstructGeometry() {
 
 }
 //--------------------------------------------------------------------------------------------------
-Bool_t ERALPIDE::CheckIfSensitive(std::string name) {
+Bool_t ERAlpide::CheckIfSensitive(std::string name) {
   TString volName = name;
   if (volName.Contains("SiliconPlate")) {
     return kTRUE;
@@ -260,4 +260,4 @@ Bool_t ERALPIDE::CheckIfSensitive(std::string name) {
 }
 
 //--------------------------------------------------------------------------------------------------
-ClassImp(ERALPIDE)
+ClassImp(ERAlpide)

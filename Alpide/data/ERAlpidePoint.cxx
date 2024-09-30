@@ -6,11 +6,11 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#include "ERALPIDEPoint.h"
+#include "ERAlpidePoint.h"
 
 #include "FairLogger.h"
 //--------------------------------------------------------------------------------------------------
-ERALPIDEPoint::ERALPIDEPoint():
+ERAlpidePoint::ERAlpidePoint():
   FairMCPoint(),
   fX_out(0.), fY_out(0.), fZ_out(0.),
   fPx_out(0.), fPy_out(0.), fPz_out(0.) 
@@ -18,7 +18,7 @@ ERALPIDEPoint::ERALPIDEPoint():
 }
 
 //--------------------------------------------------------------------------------------------------
-ERALPIDEPoint::ERALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
+ERAlpidePoint::ERAlpidePoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
     Double_t mass,
     TVector3 posIn,
     TVector3 posOut, TVector3 momIn, TVector3 momOut,
@@ -33,12 +33,12 @@ ERALPIDEPoint::ERALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
 }
 
 //--------------------------------------------------------------------------------------------------
-ERALPIDEPoint::~ERALPIDEPoint() {
+ERAlpidePoint::~ERAlpidePoint() {
 }
 
 //--------------------------------------------------------------------------------------------------
-void ERALPIDEPoint::Print(const Option_t* opt) const {
-  LOG(INFO) << "ERALPIDEPoint: track " << fTrackID;
+void ERAlpidePoint::Print(const Option_t* opt) const {
+  LOG(INFO) << "ERAlpidePoint: track " << fTrackID;
   LOG(INFO) << "    Position (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;
   LOG(INFO) << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
   LOG(INFO) << "    Time " << fTime << " ns,  Length " << fLength << " cm" << FairLogger::endl;
@@ -49,25 +49,25 @@ void ERALPIDEPoint::Print(const Option_t* opt) const {
 }
 
 //--------------------------------------------------------------------------------------------------
-Double_t ERALPIDEPoint::GetX(Double_t z) const {
+Double_t ERAlpidePoint::GetX(Double_t z) const {
   if ( (fZ_out-z)*(fZ-z) >= 0. ) return (fX_out+fX)/2.;
   Double_t dz = fZ_out - fZ;
   return ( fX + (z-fZ) / dz * (fX_out-fX) );
 }
 
 //--------------------------------------------------------------------------------------------------
-Double_t ERALPIDEPoint::GetY(Double_t z) const {
+Double_t ERAlpidePoint::GetY(Double_t z) const {
   if ( (fZ_out-z)*(fZ-z) >= 0. ) return (fY_out+fY)/2.;
   Double_t dz = fZ_out - fZ;
   return ( fY + (z-fZ) / dz * (fY_out-fY) );
 }
 
 //--------------------------------------------------------------------------------------------------
-Bool_t ERALPIDEPoint::IsUsable() const {
+Bool_t ERAlpidePoint::IsUsable() const {
   Double_t dz = fZ_out - fZ;
   if ( TMath::Abs(dz) < 1.e-4 ) return kFALSE;
   return kTRUE;
 }
 
 //--------------------------------------------------------------------------------------------------
-ClassImp(ERALPIDEPoint)
+ClassImp(ERAlpidePoint)

@@ -6,21 +6,21 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#ifndef ERALPIDEGeoPar_H
-#define ERALPIDEGeoPar_H
+#ifndef ERAlpideGeoPar_H
+#define ERAlpideGeoPar_H
 
 #include "FairParGenericSet.h"
 
 class TObjArray;
 class FairParamList;
 
-/** @class ERALPIDEGeoPar
+/** @class ERAlpideGeoPar
  ** @brief 
  ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
 **/
 
-class ERALPIDEGeoPar : public FairParGenericSet
+class ERAlpideGeoPar : public FairParGenericSet
 {
   public:
 
@@ -30,10 +30,10 @@ class ERALPIDEGeoPar : public FairParGenericSet
     /** List of FairGeoNodes for sensitive  volumes */
     TObjArray*      fGeoPassNodes;
 
-    ERALPIDEGeoPar(const char* name="ERALPIDEGeoPar",
-                           const char* title="ALPIDE Geometry Parameters",
+    ERAlpideGeoPar(const char* name="ERAlpideGeoPar",
+                           const char* title="Alpide Geometry Parameters",
                            const char* context="TestDefaultContext");
-    ~ERALPIDEGeoPar(void);
+    ~ERAlpideGeoPar(void);
     void clear(void);
     void putParams(FairParamList*);
     Bool_t getParams(FairParamList*);
@@ -41,10 +41,10 @@ class ERALPIDEGeoPar : public FairParGenericSet
     TObjArray* GetGeoPassiveNodes()   {return fGeoPassNodes;}
 
   private:
-    ERALPIDEGeoPar(const ERALPIDEGeoPar&);
-    ERALPIDEGeoPar& operator=(const ERALPIDEGeoPar&);
+    ERAlpideGeoPar(const ERAlpideGeoPar&);
+    ERAlpideGeoPar& operator=(const ERAlpideGeoPar&);
 
-    ClassDef(ERALPIDEGeoPar,1)
+    ClassDef(ERAlpideGeoPar,1)
 };
 
 #endif

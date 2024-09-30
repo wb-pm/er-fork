@@ -22,7 +22,7 @@ void reco()
     TString inFile = "sim/sim.root" + appendName;
     TString outFile = "reco/reco.root" + appendName;
     TString parFile = "par/reco_par.root" + appendName;
-    TString geoFile = "geo/setup_alpide.root";
+    TString geoFile = "geo/setup_Alpide.root";
     //Open simulation
     TFile* file = TFile::Open(inFile.Data());
     TTree* tree = (TTree*)file->Get("er");

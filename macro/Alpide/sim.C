@@ -1,7 +1,7 @@
 #if !defined(__CLING__)
 
 
-#include "ERALPIDE.h"
+#include "ERAlpide.h"
 
 #include "TSystem.h"
 #include "TStopwatch.h"
@@ -24,7 +24,7 @@ void sim(Int_t nEvents = 100000)
 {
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
   //Simulation output
-  TString outFile = "sim/sim_alpide_4foot_ranges1m.root";
+  TString outFile = "sim/sim_Alpide_4foot_ranges1m.root";
   //Decay products file
   TString decayDatFile = workDirPath + "/input/generators/PureDecay7C.txt";
   //Output parameters
@@ -64,11 +64,11 @@ void sim(Int_t nEvents = 100000)
   FairModule* target = new ERTarget("target", kTRUE, detectorVerbosity);
   target->SetGeometryFileName(targetGeoFileName);
   run->AddModule(target);
-  // -----   Create ALPIDE detector  --------------------------------------------
-  ERALPIDE* ALPIDE = new ERALPIDE("ERALPIDE", kTRUE, detectorVerbosity);
-  ALPIDE->SetGeometryFileName(workDirPath + "/geometry/ALPIDE_nochips.geo.root");
-  ALPIDE->SetStoreSteps();
-  run->AddModule(ALPIDE);
+  // -----   Create Alpide detector  --------------------------------------------
+  ERAlpide* Alpide = new ERAlpide("ERAlpide", kTRUE, detectorVerbosity);
+  Alpide->SetGeometryFileName(workDirPath + "/geometry/Alpide_nochips.geo.root");
+  Alpide->SetStoreSteps();
+  run->AddModule(Alpide);
   //----------  Create FOOT detector --------------------------------------------
   ERFootMuSiSetup* setupFootMuSi = ERFootMuSiSetup::Instance();
   setupFootMuSi->SetXMLParametersFile(paramFileFootMuSi);
@@ -165,7 +165,7 @@ void sim(Int_t nEvents = 100000)
   rtdb->saveOutput();
   rtdb->print();
 
-  TString setup_name = "geo/setup_alpide.root";
+  TString setup_name = "geo/setup_Alpide.root";
   run->CreateGeometryFile(setup_name);
 
   // -----   Run simulation  ------------------------------------------------

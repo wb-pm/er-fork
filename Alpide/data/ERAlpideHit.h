@@ -6,26 +6,26 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#ifndef ERALPIDEHit_H
-#define ERALPIDEHit_H
+#ifndef ERAlpideHit_H
+#define ERAlpideHit_H
 
 #include "TObject.h"
 #include "TVector3.h"
 
 #include "FairHit.h"
 
-/** @class ERALPIDEHit
- ** @brief Class for hits of the ALPIDE detector 
+/** @class ERAlpideHit
+ ** @brief Class for hits of the Alpide detector 
  ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
  **
 **/
 
-class ERALPIDEHit : public FairHit {
+class ERAlpideHit : public FairHit {
 
 public:
   /** Default constructor **/
-  ERALPIDEHit();
+  ERAlpideHit();
 
   /** Standard constructor 
   *@param statNr Station number
@@ -33,12 +33,12 @@ public:
   *@param dpos   Errors in position coordinates [cm]
   *@param flag   Hit flag
   **/
-  ERALPIDEHit(int32_t statNr, TVector3& pos, TVector3& dpos, int32_t indexCentralX = 0, int32_t indexCentralY = 0,
+  ERAlpideHit(int32_t statNr, TVector3& pos, TVector3& dpos, int32_t indexCentralX = 0, int32_t indexCentralY = 0,
             int32_t fClusterIndex = 0, int32_t flag = 0);
 
 
   /** Destructor **/
-  virtual ~ERALPIDEHit();
+  virtual ~ERAlpideHit();
 
   /** Output to screen **/
   virtual void Print(const Option_t* opt = nullptr) const;
@@ -57,7 +57,7 @@ protected:
   double fTime;         ///< Hit time [ns]
   double fTimeError;    ///< Error of hit time [ns]
 
-  ClassDef(ERALPIDEHit, 1);
+  ClassDef(ERAlpideHit, 1);
 };
 
 #endif

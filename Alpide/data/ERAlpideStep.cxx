@@ -6,7 +6,7 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 //Probably this class is not necessary
-#include "ERALPIDEStep.h"
+#include "ERAlpideStep.h"
 
 #include "TVector3.h"
 #include "TVirtualMC.h"
@@ -16,7 +16,7 @@
 #include "ERMCTrack.h"
 
 // -----   Default constructor   -------------------------------------------
-ERALPIDEStep::ERALPIDEStep()
+ERAlpideStep::ERAlpideStep()
   : fX(0.), fY(0.), fZ(0.),
     fPx(0.), fPy(0.), fPz(0.)
 {
@@ -24,7 +24,7 @@ ERALPIDEStep::ERALPIDEStep()
 // -------------------------------------------------------------------------
 
 // -----   Standard constructor   ------------------------------------------
-ERALPIDEStep::ERALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
+ERAlpideStep::ERAlpideStep(Int_t eventID, Int_t stepNr,Int_t trackID,
 		  TVector3 pos, 
       TVector3 mom, 
       Int_t pixelNoX,
@@ -52,7 +52,7 @@ ERALPIDEStep::ERALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
 
 
 // -------------------------------------------------------------------------
-ERALPIDEStep::ERALPIDEStep(const ERALPIDEStep& right)
+ERAlpideStep::ERAlpideStep(const ERAlpideStep& right)
   : fEventID(right.fEventID),  fStepNr(right.fStepNr), fTrackID(right.fTrackID), 
     fX(right.fX), fY(right.fY), fZ(right.fZ),
     fPx(right.fPx), fPy(right.fPy), fPz(right.fPz), fPixelNoX(right.fPixelNoX), fPixelNoY(right.fPixelNoY),
@@ -66,14 +66,14 @@ ERALPIDEStep::ERALPIDEStep(const ERALPIDEStep& right)
 
 
 // -----   Destructor   ----------------------------------------------------
-ERALPIDEStep::~ERALPIDEStep()
+ERAlpideStep::~ERAlpideStep()
 {
   
 }
 // -------------------------------------------------------------------------
 
 // -----   Public method Print   ---------------------------------------
-void ERALPIDEStep::Print()
+void ERAlpideStep::Print()
 {
   // Particle being tracked
   const char *sParticle;
@@ -94,7 +94,7 @@ void ERALPIDEStep::Print()
     default:            sParticle="not known" ;break;
   }
   
-  LOG(INFO) << "ERALPIDEStep:" << FairLogger::endl;
+  LOG(INFO) << "ERAlpideStep:" << FairLogger::endl;
   TString flag;
   switch (fTrackStatus) {
     case Entering :      flag="enters to ";               break;
@@ -121,7 +121,7 @@ void ERALPIDEStep::Print()
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-ExpertTrackingStatus ERALPIDEStep::GetTrackStatus(){
+ExpertTrackingStatus ERAlpideStep::GetTrackStatus(){
   if(gMC->IsTrackAlive()) {
     if(gMC->IsTrackEntering())      
       return Entering;
@@ -136,4 +136,4 @@ ExpertTrackingStatus ERALPIDEStep::GetTrackStatus(){
 }
 // ----------------------------------------------------------------------------
 
-ClassImp(ERALPIDEStep)
+ClassImp(ERAlpideStep)

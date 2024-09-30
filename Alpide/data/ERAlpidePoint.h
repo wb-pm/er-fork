@@ -6,23 +6,23 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#ifndef ERALPIDEPoint_H
-#define ERALPIDEPoint_H
+#ifndef ERAlpidePoint_H
+#define ERAlpidePoint_H
 
 #include "FairMCPoint.h"
 
-/** @class ERALPIDEPoint
- ** @brief The data class for storing pieces of charged tracks in sensitive volumes of AlPIDE pixel detector 
+/** @class ERAlpidePoint
+ ** @brief The data class for storing pieces of charged tracks in sensitive volumes of Alpide pixel detector 
  ** @author B.Khamidullin <brkhamidullin@jinr.ru>
  ** @version 1.0
 **/
 
-class ERALPIDEPoint : public FairMCPoint
+class ERAlpidePoint : public FairMCPoint
 {
 
 public:
   /** @brief Default constructor **/
-  ERALPIDEPoint();
+  ERAlpidePoint();
 
   /** @brief Standard constructor
    ** @param EventID  Index of Event
@@ -40,7 +40,7 @@ public:
    ** @param pixelNoY Number of pixel along the y axis 
   **/
 
-  ERALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
+  ERAlpidePoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
       Double_t mass,
       TVector3 posIn,
       TVector3 posOut, TVector3 momIn, TVector3 momOut,
@@ -48,10 +48,10 @@ public:
       Int_t pixelNoX,Int_t pixelNoY, Int_t pixelNoX_out, Int_t pixelNoY_out);
 
   /** @brief Destructor **/
-  virtual ~ERALPIDEPoint();
+  virtual ~ERAlpidePoint();
 
   /** @brief operator= **/
-  ERALPIDEPoint& operator=(const ERALPIDEPoint&) { return *this; }
+  ERAlpidePoint& operator=(const ERAlpidePoint&) { return *this; }
 
   /** Accessors **/
 
@@ -95,7 +95,7 @@ protected:
   Int_t fPixelNoY;                                       ///< number of entrance pixel along y axis
   Int_t fPixelNoX_out;                                       ///< number of exit pixel along x axis 
   Int_t fPixelNoY_out;                                       ///< number of exit pixel along y axis
-  ClassDef(ERALPIDEPoint,1)
+  ClassDef(ERAlpidePoint,1)
 };
 
 #endif

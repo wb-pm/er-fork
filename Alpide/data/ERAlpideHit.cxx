@@ -6,12 +6,12 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#include "ERALPIDEHit.h"
+#include "ERAlpideHit.h"
 
 #include "FairLogger.h"
 
 // -----   Default constructor   -------------------------------------------
-ERALPIDEHit::ERALPIDEHit() :
+ERAlpideHit::ERAlpideHit() :
   fFlag(-1)
   , fClusterIndex(-1)
   , fIndexCentralX(-1)
@@ -23,7 +23,7 @@ ERALPIDEHit::ERALPIDEHit() :
 }
 // -------------------------------------------------------------------------
 // -----   Standard constructor   ------------------------------------------
-ERALPIDEHit::ERALPIDEHit(int32_t statNr, TVector3& pos, TVector3& dpos, int32_t indexCentralX, int32_t indexCentralY,
+ERAlpideHit::ERAlpideHit(int32_t statNr, TVector3& pos, TVector3& dpos, int32_t indexCentralX, int32_t indexCentralY,
                      int32_t clusterIndex, int32_t flag)
   : FairHit(0, pos, dpos, 0.)
   , fFlag(flag)
@@ -38,15 +38,15 @@ ERALPIDEHit::ERALPIDEHit(int32_t statNr, TVector3& pos, TVector3& dpos, int32_t 
 }
 // -------------------------------------------------------------------------
 // -----   Destructor   ----------------------------------------------------
-ERALPIDEHit::~ERALPIDEHit() {}
+ERAlpideHit::~ERAlpideHit() {}
 // -------------------------------------------------------------------------
 // -----   Public method Print   -------------------------------------------
-void ERALPIDEHit::Print(const Option_t* /*opt*/) const
+void ERAlpideHit::Print(const Option_t* /*opt*/) const
 {
-  LOG(INFO) << "ALPIDE Hit " << " at (" << GetX() << ", " << GetY() << ", " << GetZ()
+  LOG(INFO) << "Alpide Hit " << " at (" << GetX() << ", " << GetY() << ", " << GetZ()
             << ") cm";
 }
 // -------------------------------------------------------------------------
 
 
-ClassImp(ERALPIDEHit)
+ClassImp(ERAlpideHit)

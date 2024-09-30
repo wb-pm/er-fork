@@ -6,14 +6,14 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#include "ERALPIDEGeoPar.h"
+#include "ERAlpideGeoPar.h"
 
 #include "TObjArray.h"
 
 #include "FairParamList.h"
 
 //-------------------------------------------------------------------------
-ERALPIDEGeoPar::ERALPIDEGeoPar(const char* name,
+ERAlpideGeoPar::ERAlpideGeoPar(const char* name,
     const char* title,
     const char* context)
   : FairParGenericSet(name,title,context),
@@ -22,24 +22,24 @@ ERALPIDEGeoPar::ERALPIDEGeoPar(const char* name,
 {
 }
 //-------------------------------------------------------------------------
-ERALPIDEGeoPar::~ERALPIDEGeoPar(void)
+ERAlpideGeoPar::~ERAlpideGeoPar(void)
 {
 }
 //-------------------------------------------------------------------------
-void ERALPIDEGeoPar::clear(void)
+void ERAlpideGeoPar::clear(void)
 {
   if(fGeoSensNodes) { delete fGeoSensNodes; }
   if(fGeoPassNodes) { delete fGeoPassNodes; }
 }
 //-------------------------------------------------------------------------
-void ERALPIDEGeoPar::putParams(FairParamList* l)
+void ERAlpideGeoPar::putParams(FairParamList* l)
 {
   if (!l) { return; }
   l->addObject("FairGeoNodes Sensitive List", fGeoSensNodes);
   l->addObject("FairGeoNodes Passive List", fGeoPassNodes);
 }
 //-------------------------------------------------------------------------
-Bool_t ERALPIDEGeoPar::getParams(FairParamList* l)
+Bool_t ERAlpideGeoPar::getParams(FairParamList* l)
 {
   if (!l) { return kFALSE; }
   if (!l->fillObject("FairGeoNodes Sensitive List", fGeoSensNodes)) { return kFALSE; }
@@ -47,4 +47,4 @@ Bool_t ERALPIDEGeoPar::getParams(FairParamList* l)
   return kTRUE;
 }
 //-------------------------------------------------------------------------
-ClassImp(ERALPIDEGeoPar)
+ClassImp(ERAlpideGeoPar)

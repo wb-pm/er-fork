@@ -6,28 +6,28 @@
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
 
-#ifndef ERALPIDESetup_H
-#define ERALPIDESetup_H
+#ifndef ERAlpideSetup_H
+#define ERAlpideSetup_H
 
 #include "TGeoPhysicalNode.h"
 
-/** @class ERALPIDESetup
- ** @brief Class for initializing ALPIDE geometry 
+/** @class ERAlpideSetup
+ ** @brief Class for initializing Alpide geometry 
  ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
  **
 **/
 
-class ERALPIDESetup
+class ERAlpideSetup
 {
 public:
-	static ERALPIDESetup* Instance();
+	static ERAlpideSetup* Instance();
 	static Bool_t Init();
-	ERALPIDESetup();
-    ~ERALPIDESetup();
+	ERAlpideSetup();
+    ~ERAlpideSetup();
 private:
-	static ERALPIDESetup* fInstance;
-	static TGeoPhysicalNode* fALPIDENode;
+	static ERAlpideSetup* fInstance;
+	static TGeoPhysicalNode* fAlpideNode;
 };
 
 #endif

@@ -5,7 +5,7 @@
  *         GNU Lesser General Public Licence version 3 (LGPL) version 3,        *  
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
-#include "ERALPIDESetup.h"
+#include "ERAlpideSetup.h"
 
 #include "TMath.h"
 #include "TGeoManager.h"
@@ -18,65 +18,65 @@
 #include "FairRuntimeDb.h"
 #include "FairLogger.h"
 
-ERALPIDESetup* ERALPIDESetup::fInstance = NULL;
-TGeoPhysicalNode* ERALPIDESetup::fALPIDENode;
+ERAlpideSetup* ERAlpideSetup::fInstance = NULL;
+TGeoPhysicalNode* ERAlpideSetup::fAlpideNode;
 //----------------------------------------------------------------------------
-ERALPIDESetup* ERALPIDESetup::Instance(){
+ERAlpideSetup* ERAlpideSetup::Instance(){
     if (fInstance == NULL)
-        return new ERALPIDESetup();
+        return new ERAlpideSetup();
     else
         return fInstance;
 }
 
-ERALPIDESetup::ERALPIDESetup()
+ERAlpideSetup::ERAlpideSetup()
 {
 	FairRun* run = FairRun::Instance();
     if ( ! run ) 
-    {LOG(FATAL) << "ERALPIDESetup: No analysis run" << FairLogger::endl;}
+    {LOG(FATAL) << "ERAlpideSetup: No analysis run" << FairLogger::endl;}
 
     FairRuntimeDb* rtdb = run->GetRuntimeDb();
     if ( ! rtdb ) 
-    {LOG(FATAL) << "ERALPIDESetup: No runtime database" << FairLogger::endl;}
+    {LOG(FATAL) << "ERAlpideSetup: No runtime database" << FairLogger::endl;}
 
 }
 //----------------------------------------------------------------------------
-Bool_t ERALPIDESetup::Init(){
+Bool_t ERAlpideSetup::Init(){
 	// --- Get cave (top node)
 	TGeoManager* geo = gGeoManager;
 	if (!gGeoManager){
-        LOG(FATAL) << "ERALPIDESetup: Can't find gGeoManager" << FairLogger::endl;
+        LOG(FATAL) << "ERAlpideSetup: Can't find gGeoManager" << FairLogger::endl;
 		return kFALSE;
 	}
 	LOG(INFO) << "Reading geometry from TGeoManager " << geo->GetName() << FairLogger::endl;
   	geo->CdTop();
   	TGeoNode* cave = geo->GetCurrentNode();
-  	 // --- Get top ALPIDE node
-	TGeoNode* ALPIDE = NULL;
+  	 // --- Get top Alpide node
+	TGeoNode* Alpide = NULL;
 	for (Int_t iNode = 0; iNode < cave->GetNdaughters(); iNode++) {
 		TString name = cave->GetDaughter(iNode)->GetName();
-		if ( name.Contains("ALPIDE", TString::kIgnoreCase) ) {
-			ALPIDE = cave->GetDaughter(iNode);
+		if ( name.Contains("Alpide", TString::kIgnoreCase) ) {
+			Alpide = cave->GetDaughter(iNode);
   			geo->CdDown(iNode);
-  			LOG(INFO) << "ALPIDE top node is " << ALPIDE->GetName() << FairLogger::endl;
+  			LOG(INFO) << "Alpide top node is " << Alpide->GetName() << FairLogger::endl;
 		  	break;
 		}
 	}
 
-	if ( ! ALPIDE ) {
-		LOG(FATAL) << "No top ALPIDE node found in geometry!" << FairLogger::endl;
+	if ( ! Alpide ) {
+		LOG(FATAL) << "No top Alpide node found in geometry!" << FairLogger::endl;
 		return kFALSE;
 	}
 
   	// --- Create physical node for sts
     TString path = cave->GetName();
-    path = path + "/" + ALPIDE->GetName();
-    fALPIDENode = new TGeoPhysicalNode(path);
+    path = path + "/" + Alpide->GetName();
+    fAlpideNode = new TGeoPhysicalNode(path);
     
     return kTRUE;
 }
 //----------------------------------------------------------------------------
-ERALPIDESetup::~ERALPIDESetup()
+ERAlpideSetup::~ERAlpideSetup()
 {
 }
 
-ClassImp(ERALPIDESetup)
+ClassImp(ERAlpideSetup)

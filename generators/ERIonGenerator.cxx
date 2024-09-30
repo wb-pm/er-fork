@@ -81,6 +81,7 @@ ERIonGenerator::ERIonGenerator(TString name, Int_t z, Int_t a, Int_t q, Int_t mu
   fIon= new FairIon(fName, z, a, q);
   G4IonTable* fIonTable =  G4IonTable::GetIonTable();
   fIonMass = fIonTable->GetIonMass(z,a)/1000.;
+  LOG(INFO) << "Since the mass from FairIon is incorrect, new mass of ion " << fIon->GetName() << " is set to: " << fIonMass << FairLogger::endl;
   FairRunSim* run = FairRunSim::Instance();
   if ( ! run ) {
     LOG(ERROR) << "No FairRunSim instantised!" 

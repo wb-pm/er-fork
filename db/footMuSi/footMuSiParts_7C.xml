@@ -50,6 +50,22 @@
 				<stripCount>600</stripCount>
 				<singleSiMedia>silicon</singleSiMedia>
 			</singleSi>	
+			<singleSi id="SingleSi_SSD150_7">
+				<singleSiSize singleSiX="10" singleSiY="10" singleSiZ="0.015"/>
+				<singleSiSensAreaSize singleSiSensX="10" singleSiSensY="10" singleSiSensZ="0.015"/>
+				<deadLayerThicknessFrontSide>0.0001</deadLayerThicknessFrontSide>
+				<deadLayerThicknessBackSide>0.0001</deadLayerThicknessBackSide>
+				<stripCount>600</stripCount>
+				<singleSiMedia>silicon</singleSiMedia>
+			</singleSi>	
+			<singleSi id="SingleSi_SSD150_8">
+				<singleSiSize singleSiX="10" singleSiY="10" singleSiZ="0.015"/>
+				<singleSiSensAreaSize singleSiSensX="10" singleSiSensY="10" singleSiSensZ="0.015"/>
+				<deadLayerThicknessFrontSide>0.0001</deadLayerThicknessFrontSide>
+				<deadLayerThicknessBackSide>0.0001</deadLayerThicknessBackSide>
+				<stripCount>600</stripCount>
+				<singleSiMedia>silicon</singleSiMedia>
+			</singleSi>	
 		</singleSiTypes>
 	</SiTypes>
 </footMuSiParts>

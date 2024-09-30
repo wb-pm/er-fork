@@ -41,9 +41,10 @@ class ERALPIDEStep : public FairMultiLinkedData
    *@param pid   
    **/
   ERALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
-      Int_t pixelNo,
 		  TVector3 pos, 
       TVector3 mom, 
+      Int_t pixelNoX,
+      Int_t pixelNoY,
 		  Double_t tof, 
       Double_t length, 
       Int_t pid,
@@ -76,7 +77,7 @@ class ERALPIDEStep : public FairMultiLinkedData
   Int_t fEventID;
   Int_t fStepNr;
   Int_t fTrackID;
-  Int_t fPixelNo;
+  Int_t fPixelNoX, fPixelNoY;
   Double32_t fX,  fY,  fZ;
   Double32_t fPx, fPy, fPz;
   Double32_t fTOF;

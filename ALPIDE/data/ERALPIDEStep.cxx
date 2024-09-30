@@ -25,9 +25,10 @@ ERALPIDEStep::ERALPIDEStep()
 
 // -----   Standard constructor   ------------------------------------------
 ERALPIDEStep::ERALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
-		  Int_t pixelNo,
 		  TVector3 pos, 
       TVector3 mom, 
+      Int_t pixelNoX,
+      Int_t pixelNoY,
 		  Double_t tof, 
       Double_t length, 
       Int_t pid,
@@ -36,9 +37,9 @@ ERALPIDEStep::ERALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
       Double_t eLoss,
       Double_t charge,
       TArrayI  processID)
-  : fEventID(eventID), fStepNr(stepNr), fTrackID(trackID), fPixelNo(pixelNo),
+  : fEventID(eventID), fStepNr(stepNr), fTrackID(trackID),
     fX(pos.X()), fY(pos.Y()), fZ(pos.Z()),
-    fPx(mom.X()), fPy(mom.Y()), fPz(mom.Z()),
+    fPx(mom.X()), fPy(mom.Y()), fPz(mom.Z()), fPixelNoX(pixelNoX),fPixelNoY(pixelNoY),
     fTOF(tof), fLength(length), fPID(pid), fMass(mass),
     fTrackStatus(trackStatus),
     fEloss(eLoss),
@@ -53,9 +54,8 @@ ERALPIDEStep::ERALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
 // -------------------------------------------------------------------------
 ERALPIDEStep::ERALPIDEStep(const ERALPIDEStep& right)
   : fEventID(right.fEventID),  fStepNr(right.fStepNr), fTrackID(right.fTrackID), 
-    fPixelNo(right.fPixelNo),
     fX(right.fX), fY(right.fY), fZ(right.fZ),
-    fPx(right.fPx), fPy(right.fPy), fPz(right.fPz),
+    fPx(right.fPx), fPy(right.fPy), fPz(right.fPz), fPixelNoX(right.fPixelNoX), fPixelNoY(right.fPixelNoY),
     fTOF(right.fTOF), fLength(right.fLength), fPID(right.fPID),fMass(right.fMass),
     fTrackStatus(right.fTrackStatus),
     fEloss(right.fEloss), fCharge(right.fCharge), fProcessID(right.fProcessID)
@@ -68,6 +68,7 @@ ERALPIDEStep::ERALPIDEStep(const ERALPIDEStep& right)
 // -----   Destructor   ----------------------------------------------------
 ERALPIDEStep::~ERALPIDEStep()
 {
+  
 }
 // -------------------------------------------------------------------------
 
@@ -80,6 +81,7 @@ void ERALPIDEStep::Print()
   switch(fPID){
     case 2212:          sParticle="proton"    ;break;
     case 2112:          sParticle="neutron"   ;break;
+    case 11:            sParticle="electron"  ;break;      
     case 22:            sParticle="gamma"     ;break;
     case 50000050:      sParticle="ckov"      ;break;
     case 111:           sParticle="pi0"       ;break;  
@@ -92,25 +94,25 @@ void ERALPIDEStep::Print()
     default:            sParticle="not known" ;break;
   }
   
-  LOG(INFO) << "-I- STEPINFO:" << FairLogger::endl;
+  LOG(INFO) << "ERALPIDEStep:" << FairLogger::endl;
   TString flag;
   switch (fTrackStatus) {
-    case Entering :      flag="enters to";               break;
-    case Exiting :  flag="exits from";              break;
-    case Inside :   flag="inside";                  break;
-    case Stop :     flag="stopped in";              break;
-    default:                                        flag="unknown tracking status"; break;  
+    case Entering :      flag="enters to ";               break;
+    case Exiting :  flag="exits from ";              break;
+    case Inside :   flag="inside ";                  break;
+    case Stop :     flag="stopped in ";              break;
+    default:                                        flag="unknown tracking status "; break;  
   }
   
-  LOG(INFO) << "STEP = " << fStepNr << " particle="<< sParticle << "(" << fPID << ") Edep = " 
-            << fEloss << "[KeV]" << FairLogger::endl;
+  LOG(INFO) << "STEP = " << fStepNr << " particle = "<< sParticle << "( PDG = " << fPID << " ) Edep = " 
+            << fEloss << " [KeV]" << FairLogger::endl;
   LOG(INFO) << "track_status = "  << flag.Data() << " track_charge = " << fCharge 
-            << "track_nb = " << fTrackID << FairLogger::endl;
-  LOG(INFO) << "track_pos = "  << fX << " " << fY << " " << fZ << FairLogger::endl;
-  LOG(INFO) << "track_mom = "  << fPx << " " << fPy << " " << fPz << FairLogger::endl;
+            << " track_nb = " << fTrackID << FairLogger::endl;
+  LOG(INFO) << "track_pos = (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;
+  LOG(INFO) << "track_mom = (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
+  LOG(INFO) << "pixel along X = " << fPixelNoX << ", pixel along Y = " << fPixelNoY << FairLogger::endl;
   
   for ( int i = 0 ; i < fProcessID.GetSize(); i++){
-    //if(proc.At(i)!=22 && proc.At(i)!=23 && proc.At(i)!=31 && proc.At(i)!=43 &&  proc.At(i)!=13){
     LOG(INFO) << "process: " << fProcessID.At(i) <<"  "<< TMCProcessName[fProcessID.At(i)] 
               << FairLogger::endl;
 	}

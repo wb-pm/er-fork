@@ -42,7 +42,7 @@ void ERSetup::AddSubAssembly(ERGeoSubAssembly* subAssembly, const TVector3& posi
 //--------------------------------------------------------------------------------------------------
 void ERSetup::ConstructGeometry(void) {
   if (!gGeoManager)
-    LOG(FATAL) << "[ERSetup] gGeoManager has not inited.\n";
+    LOG(FATAL) << "[ERSetup] gGeoManager has not been iniliazited.\n";
   TGeoVolume* top   = new TGeoVolumeAssembly("TOP");
   TGeoVolume* geoVol = new TGeoVolumeAssembly(fGeoName);
   int i = 0;

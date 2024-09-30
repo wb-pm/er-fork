@@ -42,7 +42,7 @@ void ERALPIDEPoint::Print(const Option_t* opt) const {
   LOG(INFO) << "    Position (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;
   LOG(INFO) << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
   LOG(INFO) << "    Time " << fTime << " ns,  Length " << fLength << " cm" << FairLogger::endl;
-  LOG(INFO) << "    Energy loss " << fELoss << " keV "<< FairLogger::endl;
+  LOG(INFO) << "    Energy loss " << fELoss << " MeV "<< FairLogger::endl;
   LOG(INFO) << "    Pixel number along x axis (entrance): " << fPixelNoX << " along y axis (entrance): " << fPixelNoY << FairLogger::endl;
   LOG(INFO) << "    Pixel number along x axis (exit): " << fPixelNoX_out << " along y axis (exit): " << fPixelNoY_out << FairLogger::endl;
   LOG(INFO) << " PDG: " << fPDG << FairLogger::endl;

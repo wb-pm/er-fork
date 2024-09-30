@@ -241,11 +241,13 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
       }
     }
   }
-Bool_t isProtonDebug = false;  
+Bool_t isProtonDebug = true;  
 std::vector<TVector3> p1Xp1YHits(3);
 std::vector<TVector3> p1Xp2YHits(3);
 std::vector<TVector3> p1Yp2XHits(3);
 std::vector<TVector3> p2Xp2YHits(3);
+#if isProtonDebug
+#endif
 
   //Test by putting coordinates of protons' continued trajectories from reaction position into the track finder
 if(isProtonDebug)

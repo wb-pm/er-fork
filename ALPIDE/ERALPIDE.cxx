@@ -89,10 +89,13 @@ Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
   static Int_t pixelNoY;                                       ///< number of entrance pixel along y axis
   static Int_t pixelNoX_out;                                       ///< number of exit pixel along x axis 
   static Int_t pixelNoY_out;                                       ///< number of exit pixel along y axis
-  const Double_t plateXlength = 10.;
-  const Double_t plateYlength = 10.;
-  const Double_t pixelXlength = 10./512.;
-  const Double_t pixelYlength = 10./1024.;
+
+  static Int_t stepNumber;
+
+  const Double_t plateXlength = 10.; ///< size of carbon plate along X axis
+  const Double_t plateYlength = 10.; ///< size of carbon plate along Y axis
+  const Double_t pixelXlength = 10./(6.*512.); ///<size of one pixel along X axis
+  const Double_t pixelYlength = 10./(6.*1024.); ///<size of one pixel along Y axis
   //Start point
   if (gMC->IsTrackEntering()) { // Return true if this is the first step of the track in sensitive volume
     eLoss = 0.;
@@ -110,17 +113,30 @@ Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
     mass = gMC->ParticleMass(gMC->TrackPid()); // GeV/c2
 
     pdg = gMC->TrackPid();
-    //fStepNr = 0;
+    stepNumber = 0;
   }
-
   if (fStoreSteps) {
-    // AddALPIDEStep();
+  static TLorentzVector posStep, momStep;
+  static ExpertTrackingStatus trackStatus;
+  static TArrayI processesID;
+  static Int_t pixelNoXStep, pixelNoYStep;
+  pixelNoXStep = Int_t((posStep.X() + plateXlength / 2) / pixelXlength);
+  pixelNoYStep = Int_t((posStep.Y() + plateYlength / 2) / pixelYlength);
+
+  gMC->TrackPosition(posStep);
+  gMC->TrackMomentum(momStep);
+  trackStatus = ERALPIDEStep::GetTrackStatus();
+  gMC->StepProcesses(processesID);
+  ERALPIDEStep *alpideStep = AddALPIDEStep(eventID,stepNumber,trackID,TVector3(posStep.X(),posStep.Y(),posStep.Z()),TVector3(momStep.X(),momStep.Y(),momStep.Z()), pixelNoXStep, pixelNoYStep, gMC->TrackTime()*1e9,gMC->TrackStep(),gMC->TrackPid(),gMC->TrackMass(),trackStatus,gMC->Edep(),gMC->TrackCharge(),processesID);
+  if(fVerboseLevel > 1) alpideStep->Print();
+
   }
   eLoss += gMC->Edep() * 1e3; // MeV //Return the energy lost in the current step
+  stepNumber++;
 
   //Finish point
   if (gMC->IsTrackExiting() || gMC->IsTrackStop() || gMC->IsTrackDisappeared()) {
-
+    //LOG(DEBUG) << "Current volume of the point is" << gMC->CurrentVolName() << FairLogger::endl;
     gMC->TrackPosition(posOut);
     gMC->TrackMomentum(momOut);
     pixelNoX_out = Int_t((posOut.X() + plateXlength / 2) / pixelXlength);
@@ -133,7 +149,6 @@ Bool_t ERALPIDE::ProcessHits(FairVolume* vol) {
                 TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
                 time, length, eLoss, pdg, pixelNoX,pixelNoY,pixelNoX_out,pixelNoY_out);
     }
-    //fStepNr++;
   }
   return kTRUE;
 }
@@ -193,9 +208,10 @@ ERALPIDEPoint* ERALPIDE::AddALPIDEPoint(Int_t eventID, Int_t trackID, Int_t mot0
 }
 //--------------------------------------------------------------------------------------------------
 ERALPIDEStep* ERALPIDE::AddALPIDEStep(Int_t eventID, Int_t stepNr, Int_t trackID,
-  Int_t pixelNo,
   TVector3 pos,
   TVector3 mom,
+  Int_t pixelNoX,
+  Int_t pixelNoY,
   Double_t tof,
   Double_t length,
   Int_t pid,
@@ -206,20 +222,13 @@ ERALPIDEStep* ERALPIDE::AddALPIDEStep(Int_t eventID, Int_t stepNr, Int_t trackID
   TArrayI  processID) {
 
   TClonesArray& clref = *fALPIDESteps;
-  //Fill step info
-  trackStatus = ERALPIDEStep::GetTrackStatus();
-  TArrayI processesID;
-  gMC->StepProcesses(processesID);
-  TLorentzVector curPosIn;
-  TLorentzVector curMomIn;
-  gMC->TrackPosition(curPosIn);
-  gMC->TrackMomentum(curMomIn);
-
 
   return new(clref[fALPIDESteps->GetEntriesFast()])
-    ERALPIDEStep(eventID, stepNr, trackID, pixelNo,
+    ERALPIDEStep(eventID, stepNr, trackID,
       pos,
       mom,
+      pixelNoX,
+      pixelNoY,
       tof,
       length,
       pid,

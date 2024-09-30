@@ -21,6 +21,8 @@
 
 #include "ERDecay.h"
 
+
+
 class ERDecay7C : public ERDecay {
 
 public:
@@ -43,12 +45,13 @@ public:
   Bool_t DecayPhaseGenerator();
 
 private:
-
+  //Particles identification numbers
   TParticlePDG   *f9C;
   TParticlePDG   *f7C;
   TParticlePDG   *f3He;
   TParticlePDG   *fp;
 
+  //Lorentz vectors
   TLorentzVector *fLv7C; //!
   TLorentzVector *fLv3He; //!
   TLorentzVector *fLvp1; //!
@@ -57,9 +60,7 @@ private:
   TLorentzVector *fLvp4; //!
 
   FairIon        *fUnstableIon7C;
-  FairIon        *fIon3He;
 
-  //Double_t         fTargetReactZ;
   Double_t         fMinStep;
   Double_t         fTargetThickness;
   Bool_t           fTargetDecayFinish;

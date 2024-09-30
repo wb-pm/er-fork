@@ -1,8 +1,10 @@
 #include "ERDecayer.h"
 
-#include<iostream>
+#include <iostream>
 
-using namespace std;
+#include "FairLogger.h"
+
+using std::vector;
 
 ERDecayer::ERDecayer(){
 }
@@ -22,7 +24,7 @@ Bool_t ERDecayer::Stepping(){
 Bool_t ERDecayer::Init(){
   for (vector<ERDecay*>::iterator it = fDecays.begin(); it != fDecays.end(); ++it){
     ERDecay* decay = (*it);
-    cout << "Decay " << decay->GetName() << " initialized!" << endl;
+    LOG(INFO) << "Decay " << decay->GetName() << " initialized!" << FairLogger::endl;
     if (!decay->Init())
       return kFALSE;
   }
@@ -44,7 +46,7 @@ void ERDecayer::FinishEvent(){
 }
 
 void ERDecayer::AddDecay(ERDecay* decay) {
-  cout << "Decay " << decay->GetName() << " added!" << endl;
+  LOG(INFO) << "Decay " << decay->GetName() << " added!" << FairLogger::endl;
   fDecays.push_back(decay);
 }
 

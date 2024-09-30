@@ -127,9 +127,10 @@ private:
 
   /** @brief Adds an ALPIDEStep to the Step Collection **/
   ERALPIDEStep* AddALPIDEStep(Int_t eventID, Int_t stepNr,Int_t trackID,
-		  Int_t pixelNo,
 		  TVector3 pos, 
       TVector3 mom, 
+      Int_t pixelNoX,
+      Int_t pixelNoY,
 		  Double_t tof, 
       Double_t length, 
       Int_t pid,
@@ -154,6 +155,8 @@ private:
     TClonesArray* fMCTracks = nullptr; 
 
     Bool_t fStoreSteps;
+
+    Int_t fStepNumber;
 
 ClassDef(ERALPIDE, 1);
 };

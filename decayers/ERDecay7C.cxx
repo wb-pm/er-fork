@@ -17,40 +17,35 @@
 #include "ERDecayMCEventHeader.h"
 #include "ERDecay7CEventHeader.h"
 
-ERDecay7C::ERDecay7C():
+ //Since in the ERDecay7C only masses and pdg codes of ions are being used, this data will be taken from G4IonTable. But G4IonTable gives masses in MeV, so it is important to divide by 1000 for converting to GeV!
+ //There is a problem with taking mass from the TDatabasePDG, because it is defined there for atoms and not for ions 
+
+ERDecay7C::ERDecay7C() :
   ERDecay("7C"),
   fTargetDecayFinish(kFALSE),
-  //fTargetReactZ(0.),
   fMinStep(0.01),
   f9C(NULL),
   f7C(NULL),
   f3He(NULL),
-  fp  (NULL),
+  fp(NULL),
   fDecayFilePath(""),
   fDecayFileFinished(kFALSE),
   fDecayFileCurrentEvent(0)
 {
-  FairRunSim* run = FairRunSim::Instance();
-  //Value of He3 mass taken from LISE++ database. Maybe better change to using G4IonTable
-  fIon3He = new FairIon("3He",2,3,2, 0., 2.808391);
-  //fIon3He = new FairIon("3He",2,3,2, 0., G4IonTable::GetIonTable()->GetIonMass(2,3));
-  fUnstableIon7C = new FairIon("7C",  6, 7, 6, 0.,TDatabasePDG::Instance()->GetParticle("proton")->Mass()*4 + fIon3He->GetMass());
-  run->AddNewIon(fUnstableIon7C);
-  run->AddNewIon(fIon3He);
-
   fLv7C = new TLorentzVector();
 }
 //-------------------------------------------------------------------------------------------------
 ERDecay7C::~ERDecay7C() {
   if (fDecayFile.is_open())
     fDecayFile.close();
-  if (fDecayFilePath == ""){ // LV from TGenPhaseSpace will be deleted in TGenPhaseSpace
-    if (fLv3He){
+  if (fDecayFilePath == "") {
+    if (fLv3He) {
       delete fLv3He;
       delete fLvp1;
       delete fLvp2;
       delete fLvp3;
       delete fLvp4;
+      delete fLv7C;
     }
   }
 }
@@ -60,36 +55,34 @@ Bool_t ERDecay7C::Init() {
 
   LOG(INFO) << "Decayer Init." << FairLogger::endl;
 
-f9C = TDatabasePDG::Instance()->GetParticle("9C");
+  f9C = TDatabasePDG::Instance()->GetParticle("9C");
 if ( ! f9C ) {
   LOG(ERROR)  << "-W- ERDecay7C: Ion 9C not found in database!" << FairLogger::endl;
   return kFALSE;
 }
+  LOG(INFO) << "Ion 7C is not in database! Adding the 7C ion..." << FairLogger::endl;
+  const Double_t mass7C = G4IonTable::GetIonTable()->GetIonMass(1, 1) * 4 / 1000. + G4IonTable::GetIonTable()->GetIonMass(2, 3) / 1000.;
+  f7C = TDatabasePDG::Instance()->AddParticle("7C", "7C", mass7C, 0, 1e-3, 18., "Baryon", 1000060070);
+  f7C->Print();
 
-  f7C = TDatabasePDG::Instance()->GetParticle("7C");
-  if ( ! f7C ) {
-    LOG(ERROR)  << "-W- ERDecay7C: Ion 7C not found in database!" << FairLogger::endl;
-    Double_t mass7C = 6.5614830; // How was it calculated (sum of 4 protons and a helium-3)
-    f7C = TDatabasePDG::Instance()->AddParticle("7C","7C",mass7C,0,1e-3,21.,"Baryon",1000060070);
-    return kTRUE;
-  }
-
-  f3He = TDatabasePDG::Instance()->GetParticle(fIon3He->GetName());
-  if ( ! f3He ) {
-    LOG(ERROR)  << "-W- ERDecay7C: Ion 3He not found in database!" << FairLogger::endl;
+  f3He = TDatabasePDG::Instance()->GetParticle("HE3");
+  f3He->Print();
+  if (!f3He) {
+    LOG(ERROR) << "Ion 3He not found in database!" << FairLogger::endl;
     return kFALSE;
   }
 
   fp = TDatabasePDG::Instance()->GetParticle("proton");
-  if ( ! fp ) {
-    LOG(ERROR)  << "-W- ERDecay7C: Particle proton not found in database!" << FairLogger::endl;
+  fp->Print();
+  if (!fp) {
+    LOG(ERROR) << "Particle proton not found in database!" << FairLogger::endl;
     return kFALSE;
   }
 
-CalculateTargetParameters();
+  CalculateTargetParameters();
 
-  if (fDecayFilePath != ""){
-    LOG(INFO) << "Use decay kinematics from external text file" << FairLogger::endl;
+  if (fDecayFilePath != "") {
+    LOG(INFO) << "Use decay kinematics from external text file" << fDecayFilePath << FairLogger::endl;
     fDecayFile.open(fDecayFilePath.Data());
     if (!fDecayFile.is_open())
       LOG(FATAL) << "Can`t open decay file " << fDecayFilePath << FairLogger::endl;
@@ -106,14 +99,14 @@ CalculateTargetParameters();
 
 //-------------------------------------------------------------------------------------------------
 Bool_t ERDecay7C::DecayPhaseGenerator() {
-  if (fDecayFilePath == ""){
+  if (fDecayFilePath == "") {
     LOG(ERROR) << "Please enter the decay file name! Decay phase generator is turned off " << FairLogger::endl;
     //Built-in decay phase generator is unreliable, therefore it is not used! 
 /*     Double_t decayMasses[5];
     decayMasses[0] = f3He->Mass();
-    decayMasses[1] = fp->Mass(); 
+    decayMasses[1] = fp->Mass();
     decayMasses[2] = fp->Mass();
-    decayMasses[3] = fp->Mass(); 
+    decayMasses[3] = fp->Mass();
     decayMasses[4] = fp->Mass();
     fDecayPhaseSpace->SetDecay(*fLv7C, 5, decayMasses);
     fDecayPhaseSpace->Generate();
@@ -125,43 +118,43 @@ Bool_t ERDecay7C::DecayPhaseGenerator() {
     return kTRUE; */
     return kFALSE;
   }
-  if (fDecayFile.eof()){
-    LOG(ERROR) << "Decay file finished! There are no more events in file " << fDecayFilePath
-               << " to be processed." << FairLogger::endl;
+  if (fDecayFile.eof()) {
+    LOG(ERROR) << "Decay file finished! There are no more events in file " << fDecayFilePath << " to be processed." << FairLogger::endl;
     return kFALSE;
   }
   std::string event_line;
-  std::getline(fDecayFile,event_line);
+  std::getline(fDecayFile, event_line);
   std::istringstream iss(event_line);
   std::vector<std::string> outputs_components((std::istream_iterator<std::string>(iss)),
-                                               std::istream_iterator<std::string>());
-  if (outputs_components.size() != 5*3){
-    LOG(ERROR) << "Wrong components number in raw in decay file!" << FairLogger::endl;
+    std::istream_iterator<std::string>());
+  const Int_t decayProductsNo = 5;
+  const Int_t momentumComponentsNo = 3;
+  if (outputs_components.size() != (decayProductsNo * momentumComponentsNo)) {
+    LOG(ERROR) << "Wrong number of row values in a decay file!" << fDecayFilePath << FairLogger::endl;
     return kFALSE;
   }
-  // Fill momentum vectors in CM.
-  TVector3 p3He(std::stod(outputs_components[0]),std::stod(outputs_components[1]),
-               std::stod(outputs_components[2]));
-  TVector3 pp1(std::stod(outputs_components[3]),std::stod(outputs_components[4]),
-               std::stod(outputs_components[5]));
-  TVector3 pp2(std::stod(outputs_components[6]),std::stod(outputs_components[7]),
-               std::stod(outputs_components[8]));
-  TVector3 pp3(std::stod(outputs_components[9]),std::stod(outputs_components[10]),
-               std::stod(outputs_components[11]));
-  TVector3 pp4(std::stod(outputs_components[12]),std::stod(outputs_components[13]),
-               std::stod(outputs_components[14]));
+  // Fill decay products momentum vectors in CM.
+  TVector3 p3He(std::stod(outputs_components[0]), std::stod(outputs_components[1]), std::stod(outputs_components[2]));
+
+  TVector3 pp1(std::stod(outputs_components[3]), std::stod(outputs_components[4]), std::stod(outputs_components[5]));
+
+  TVector3 pp2(std::stod(outputs_components[6]), std::stod(outputs_components[7]), std::stod(outputs_components[8]));
+
+  TVector3 pp3(std::stod(outputs_components[9]), std::stod(outputs_components[10]), std::stod(outputs_components[11]));
+
+  TVector3 pp4(std::stod(outputs_components[12]), std::stod(outputs_components[13]), std::stod(outputs_components[14]));
   // Apply scale factor
-  const auto MeV2GeV = 1./1000.;
+  const auto MeV2GeV = 1. / 1000.;
   p3He *= MeV2GeV;
   pp1 *= MeV2GeV;
   pp2 *= MeV2GeV;
   pp3 *= MeV2GeV;
   pp4 *= MeV2GeV;
-  const auto fill_output_lorentz_vectors_in_lab = 
-      [this](TLorentzVector* lv, const TVector3& p, const Double_t mass) {
-        lv->SetXYZM(p.X(), p.Y(), p.Z(), mass);
-        lv->Boost(fLv7C->BoostVector());
-      };
+  const auto fill_output_lorentz_vectors_in_lab =
+    [this](TLorentzVector* lv, const TVector3& p, const Double_t mass) {
+    lv->SetXYZM(p.X(), p.Y(), p.Z(), mass);
+    lv->Boost(fLv7C->BoostVector());
+    };
   fill_output_lorentz_vectors_in_lab(fLv3He, p3He, f3He->Mass());
   fill_output_lorentz_vectors_in_lab(fLvp1, pp1, fp->Mass());
   fill_output_lorentz_vectors_in_lab(fLvp2, pp2, fp->Mass());
@@ -172,14 +165,15 @@ Bool_t ERDecay7C::DecayPhaseGenerator() {
 
 //-------------------------------------------------------------------------------------------------
 Bool_t ERDecay7C::Stepping() {
-  if(!fTargetDecayFinish && gMC->TrackPid() == 1000060090
-     && TString(gMC->CurrentVolName()).Contains(GetInteractionVolumeName()))
+  if (!fTargetDecayFinish && gMC->TrackPid() == f9C->PdgCode()
+    && TString(gMC->CurrentVolName()).Contains(GetInteractionVolumeName()))
   {
     if (!fIsInterationPointFound) {
       if (!FindInteractionPoint()) {
         fTargetDecayFinish = kTRUE;
         return kTRUE;
-      } else {
+      }
+      else {
         fDistanceFromEntrance = 0;
       }
     }
@@ -190,7 +184,7 @@ Bool_t ERDecay7C::Stepping() {
     fDistanceFromEntrance += trackStep;
     if (fDistanceFromEntrance > fDistanceToInteractPoint) {
       LOG(INFO) << "Start reaction in target. Defined pos: " << fDistanceToInteractPoint << ", current pos: " << curPos.Z() << FairLogger::endl;
-      fLv7C->SetXYZM(0.,0.,0.,fUnstableIon7C->GetMass());
+      fLv7C->SetXYZM(0., 0., 0., G4IonTable::GetIonTable()->GetIonMass(1, 1) * 4 / 1000. + G4IonTable::GetIonTable()->GetIonMass(2, 3) / 1000.);
       TLorentzVector lv9C;
       gMC->TrackMomentum(lv9C);
 
@@ -200,7 +194,7 @@ Bool_t ERDecay7C::Stepping() {
 
       fLv7C->Boost(lv9C.BoostVector());
 
-      if (!DecayPhaseGenerator()){
+      if (!DecayPhaseGenerator()) {
         fTargetDecayFinish = kTRUE;
         return kTRUE;
       }
@@ -209,42 +203,37 @@ Bool_t ERDecay7C::Stepping() {
 
       C9TrackNb = gMC->GetStack()->GetCurrentTrackNumber();
 
-/*       gMC->GetStack()->PushTrack(1, -1, f9C->PdgCode(),
-                                 lv9C.Px(), lv9C.Py(), lv9C.Pz(),
-                                 lv9C.E(), curPos.X(), curPos.Y(), curPos.Z(),
-                                 gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, C9TrackNb, f9C->Mass(), 0); */
-/*       gMC->GetStack()->PushTrack(1, C9TrackNb, f3He->PdgCode(),
-                                 fLv3He->Px(), fLv3He->Py(), fLv3He->Pz(),
-                                 fLv3He->E(), curPos.X(), curPos.Y(), curPos.Z(),
-                                 gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, He3TrackNb, f3He->Mass(), 0);
+      gMC->GetStack()->PushTrack(1, C9TrackNb, f3He->PdgCode(),
+        fLv3He->Px(), fLv3He->Py(), fLv3He->Pz(),
+        fLv3He->E(), curPos.X(), curPos.Y(), curPos.Z(),
+        gMC->TrackTime(), 0., 0., 0.,
+        kPDecay, He3TrackNb, G4IonTable::GetIonTable()->GetIonMass(2, 3) / 1000., 0);
       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
-                                 fLvp1->Px(),fLvp1->Py(),fLvp1->Pz(),
-                                 fLvp1->E(), curPos.X(), curPos.Y(), curPos.Z(),
-                                 gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, p1TrackNb, fp->Mass(), 0);
+        fLvp1->Px(), fLvp1->Py(), fLvp1->Pz(),
+        fLvp1->E(), curPos.X(), curPos.Y(), curPos.Z(),
+        gMC->TrackTime(), 0., 0., 0.,
+        kPDecay, p1TrackNb, G4IonTable::GetIonTable()->GetIonMass(1, 1) / 1000., 0);
       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
-                                 fLvp2->Px(),fLvp2->Py(),fLvp2->Pz(),
-                                 fLvp2->E(), curPos.X(), curPos.Y(), curPos.Z(),
-                                 gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, p2TrackNb, fp->Mass(), 0);
+        fLvp2->Px(), fLvp2->Py(), fLvp2->Pz(),
+        fLvp2->E(), curPos.X(), curPos.Y(), curPos.Z(),
+        gMC->TrackTime(), 0., 0., 0.,
+        kPDecay, p2TrackNb, G4IonTable::GetIonTable()->GetIonMass(2, 3) / 1000., 0);
       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
-                                 fLvp3->Px(),fLvp3->Py(),fLvp3->Pz(),
-                                 fLvp3->E(), curPos.X(), curPos.Y(), curPos.Z(),
-                                 gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, p3TrackNb, fp->Mass(), 0);
+        fLvp3->Px(), fLvp3->Py(), fLvp3->Pz(),
+        fLvp3->E(), curPos.X(), curPos.Y(), curPos.Z(),
+        gMC->TrackTime(), 0., 0., 0.,
+        kPDecay, p3TrackNb, G4IonTable::GetIonTable()->GetIonMass(2, 3) / 1000., 0);
       gMC->GetStack()->PushTrack(1, C9TrackNb, fp->PdgCode(),
-                                 fLvp4->Px(),fLvp4->Py(),fLvp4->Pz(),
-                                 fLvp4->E(), curPos.X(), curPos.Y(), curPos.Z(),
-                                 gMC->TrackTime(), 0., 0., 0.,
-                                 kPDecay, p4TrackNb, fp->Mass(), 0); */
+        fLvp4->Px(), fLvp4->Py(), fLvp4->Pz(),
+        fLvp4->E(), curPos.X(), curPos.Y(), curPos.Z(),
+        gMC->TrackTime(), 0., 0., 0.,
+        kPDecay, p4TrackNb, G4IonTable::GetIonTable()->GetIonMass(2, 3) / 1000., 0);
       gMC->StopTrack();
       fTargetDecayFinish = kTRUE;
       gMC->SetMaxStep(100.);
 
       FairRunSim* run = FairRunSim::Instance();
-      if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecayMCEventHeader")){   
+      if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecayMCEventHeader")) {
         ERDecayMCEventHeader* header = (ERDecayMCEventHeader*)run->GetMCEventHeader();
         header->SetReactionPos(curPos.Vect());
         header->SetInputIon(C9TrackNb);
@@ -254,10 +243,10 @@ Bool_t ERDecay7C::Stepping() {
         header->AddOutputParticle(p2TrackNb);
         header->AddOutputParticle(p3TrackNb);
         header->AddOutputParticle(p4TrackNb);
-      }   
-      if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecay7CEventHeader")){   
+      }
+      if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecay7CEventHeader")) {
         ERDecay7CEventHeader* header = (ERDecay7CEventHeader*)run->GetMCEventHeader();
-        header->SetData(curPos.Vect(), lv9C, *fLv7C,  *fLv3He, *fLvp1, *fLvp2, *fLvp3, *fLvp4, gMC->TrackTime()*1e9);
+        header->SetData(curPos.Vect(), lv9C, *fLv7C, *fLv3He, *fLvp1, *fLvp2, *fLvp3, *fLvp4, gMC->TrackTime() * 1e9);
         header->SetReactionPos(curPos.Vect());
         header->SetInputIon(C9TrackNb);
         header->AddOutputParticle(C7TrackNb);
@@ -268,13 +257,13 @@ Bool_t ERDecay7C::Stepping() {
         header->AddOutputParticle(p4TrackNb);
         header->SetTrigger(1);
       }
-      }
     }
+  }
   return kTRUE;
 }
 
 //-------------------------------------------------------------------------------------------------
-void ERDecay7C::BeginEvent() { 
+void ERDecay7C::BeginEvent() {
   fTargetDecayFinish = kFALSE;
   fIsInterationPointFound = kFALSE;
   //Seems like it is not used
@@ -285,11 +274,11 @@ void ERDecay7C::BeginEvent() {
 //-------------------------------------------------------------------------------------------------
 void ERDecay7C::FinishEvent() {
   FairRunSim* run = FairRunSim::Instance();
-  if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecayMCEventHeader")){   
+  if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecayMCEventHeader")) {
     ERDecayMCEventHeader* header = (ERDecayMCEventHeader*)run->GetMCEventHeader();
     header->Clear();
   }
-  if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecay7CEventHeader")){   
+  if (TString(run->GetMCEventHeader()->ClassName()).Contains("ERDecay7CEventHeader")) {
     ERDecay7CEventHeader* header = (ERDecay7CEventHeader*)run->GetMCEventHeader();
     header->Clear();
   }

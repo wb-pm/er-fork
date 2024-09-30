@@ -20,13 +20,13 @@
 
 #endif
 
-void sim_C7_new_detector(Int_t nEvents = 10000)
+void sim_C7_new_detector(Int_t nEvents = 100)
 {
   Double_t beamStartPosition = -20.; // [cm]
   //now should create a simulation with spread beam
- // TString appendName = "twoProtons_defCuts1mm_BERTPhysList_spreadBeam.root";
-  TString appendName = "noProducts_cuts10meters_spreadBeam20cm.root";
-  TString outFile = "outputFootMuSi/CorrectedBeam/" + appendName;
+//  TString appendName = "noProducts_cuts10meters_spreadBeam20cm.root";
+  TString appendName = "sim_test.root";
+  TString outFile = "test_ground/" + appendName;
   TString decayDatFile = "input/PureDecay7C.txt";
   TString parFile = "parametersFootMuSi/par_" + appendName;
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
@@ -90,9 +90,9 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   z_stations = 15.;
   TVector3 fZeroRotation(0., 0., 0.);
 
-  ERGeoSubAssembly *C7_first_pair = new ERGeoSubAssembly("C7_first_pair", TVector3(x,y,z),fZeroRotation);
-  ERGeoSubAssembly *C7_second_pair = new ERGeoSubAssembly("C7_second_pair", TVector3(x,y,z+z_pair+z_stations),fZeroRotation);
-  ERGeoSubAssembly *C7_third_pair = new ERGeoSubAssembly("C7_third_pair", TVector3(x,y,z + 2*z_pair+2*z_stations),fZeroRotation);
+  ERGeoSubAssembly *C7_1st_pair = new ERGeoSubAssembly("C7_1st_pair", TVector3(x,y,z),fZeroRotation);
+  ERGeoSubAssembly *C7_2nd_pair = new ERGeoSubAssembly("C7_2nd_pair", TVector3(x,y,z+z_pair+z_stations),fZeroRotation);
+  ERGeoSubAssembly *C7_3rd_pair = new ERGeoSubAssembly("C7_3rd_pair", TVector3(x,y,z + 2*z_pair+2*z_stations),fZeroRotation);
 
   ERFootMuSiGeoComponentSingleSi *det_C7_X1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_1", TVector3(0., 0., 0.), TVector3(), "X");
   ERFootMuSiGeoComponentSingleSi *det_C7_Y1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_2",  TVector3(0., 0., z_pair), TVector3(), "Y");
@@ -100,16 +100,16 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   ERFootMuSiGeoComponentSingleSi *det_C7_Y2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_4", TVector3(0., 0., z_pair), TVector3(), "Y");
   ERFootMuSiGeoComponentSingleSi *det_C7_X3 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_5", TVector3(0., 0., 0.), TVector3(), "X");
   ERFootMuSiGeoComponentSingleSi *det_C7_Y3 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_6", TVector3(0., 0., z_pair), TVector3(), "Y");
-  C7_first_pair->AddComponent(det_C7_X1);
-  C7_first_pair->AddComponent(det_C7_Y1);
-  C7_second_pair->AddComponent(det_C7_X2);
-  C7_second_pair->AddComponent(det_C7_Y2);
-  C7_third_pair->AddComponent(det_C7_X3);
-  C7_third_pair->AddComponent(det_C7_Y3);
+  C7_1st_pair->AddComponent(det_C7_X1);
+  C7_1st_pair->AddComponent(det_C7_Y1);
+  C7_2nd_pair->AddComponent(det_C7_X2);
+  C7_2nd_pair->AddComponent(det_C7_Y2);
+  C7_3rd_pair->AddComponent(det_C7_X3);
+  C7_3rd_pair->AddComponent(det_C7_Y3);
 
-  setupFootMuSi->AddSubAssembly(C7_first_pair);
-  setupFootMuSi->AddSubAssembly(C7_second_pair);
-  setupFootMuSi->AddSubAssembly(C7_third_pair);
+  setupFootMuSi->AddSubAssembly(C7_1st_pair);
+  setupFootMuSi->AddSubAssembly(C7_2nd_pair);
+  setupFootMuSi->AddSubAssembly(C7_3rd_pair);
   // ------FootMuSi -------------------------------------------------------
   ERFootMuSi *footMuSi = new ERFootMuSi("ERFootMuSi", kTRUE, verbose);
   run->AddModule(footMuSi);
@@ -175,7 +175,7 @@ void sim_C7_new_detector(Int_t nEvents = 10000)
   rtdb->saveOutput();
   rtdb->print();
   //Since the geometry of the experiment isn't going to be changed for a while, let's have just one setup file
-  TString setup_name = "outputFootMuSi/CorrectedBeam/setup_threeStraightPairs.root"; 
+  TString setup_name = "outputFootMuSi/setup_threeStraightPairs.root"; 
 /*   TString setup_name = outFile;
   Ssiz_t p1 = setup_name.Last('/');
   setup_name.Insert(p1 + 1, "setup_"); */

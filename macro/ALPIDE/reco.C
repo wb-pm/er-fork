@@ -1,4 +1,5 @@
 #if !defined(__CLING__)
+
 #include "TString.h"
 #include "TSystem.h"
 #include "TStopwatch.h"
@@ -13,27 +14,23 @@
 #include "ERFootMuSiMatcher.h"
 
 #endif
-void reco_C7_new_detector()
-{
-  //---------------------Files-----------------------------------------------
-  TString appendName = "threeProtons_cuts10meters_spreadBeam.root";
-  TString inFile = "outputFootMuSi/" + appendName;
-  TString outFile = "outputFootMuSi/testFakeTracks_reco_edepCutProtons_AngleCut0p025_" + appendName;
-  TString parFile = "parametersFootMuSi/par_" + appendName;
 
-  TFile *file = TFile::Open(inFile.Data());
-  TTree *tree = (TTree *)file->Get("er");
-  Int_t nEvents = tree->GetEntriesFast();
-//  nEvents = 500;
-   TString geoFile = "outputFootMuSi/CorrectedBeam/setup_threeStraightPairs.root";
-/*   TString geoFile = inFile;
-  Ssiz_t p1 = geoFile.Last('/');
-  geoFile.Insert(p1 + 1, "setup_"); */
+void reco()
+{
+    //File paths
+    TString appendName = "";
+    TString inFile = "sim/sim.root" + appendName;
+    TString outFile = "reco/reco.root" + appendName;
+    TString parFile = "par/reco_par.root" + appendName;
+    TString geoFile = "geo/setup_alpide.root";
+    //Open simulation
+    TFile* file = TFile::Open(inFile.Data());
+    TTree* tree = (TTree*)file->Get("er");
+    Int_t nEvents = tree->GetEntriesFast();
 
   // -----   Timer   --------------------------------------------------------
   TStopwatch timer;
   timer.Start();
-
   // -----   Digitization run   ---------------------------------------------
   ERRunAna *run = ERRunAna::Instance();
   run->HoldEventsCount(); // forbid different entry number in the input and output file
@@ -43,7 +40,6 @@ void reco_C7_new_detector()
   run->SetInputFile(inFile);
   run->SetOutputFile(outFile);
   // ------------------------------------------------------------------------
-
   // ------- FootMuSi TrackFinder -------------------------------------------
 Int_t verbose = 1; // 1 - only standard log print, 2 - print digi information 
 ERFootMuSiTrackFinder* FootMuSiTrackFinder = new ERFootMuSiTrackFinder(verbose);
@@ -63,6 +59,7 @@ FootMuSiTrackFinder->SetAngleBetweenHitsCut(0.025);
 FootMuSiTrackFinder->SetHitStation("C7_1st_pair", "C7_1st_pair_SingleSi_SSD150_1_X", "C7_1st_pair_SingleSi_SSD150_2_Y");
 FootMuSiTrackFinder->SetHitStation("C7_2nd_pair", "C7_2nd_pair_SingleSi_SSD150_3_X", "C7_2nd_pair_SingleSi_SSD150_4_Y");
 FootMuSiTrackFinder->SetHitStation("C7_3rd_pair", "C7_3rd_pair_SingleSi_SSD150_5_X", "C7_3rd_pair_SingleSi_SSD150_6_Y");
+FootMuSiTrackFinder->SetHitStation("C7_4th_pair", "C7_4th_pair_SingleSi_SSD150_5_X", "C7_4th_pair_SingleSi_SSD150_6_Y");
 run->AddTask(FootMuSiTrackFinder);
 // ------   FootMuSi VertexFinder -----------------------------------------
 ERFootMuSiVertexFinder* FootMuSiVertexFinder = new ERFootMuSiVertexFinder(verbose);
@@ -70,19 +67,7 @@ ERFootMuSiVertexFinder* FootMuSiVertexFinder = new ERFootMuSiVertexFinder(verbos
 FootMuSiVertexFinder->SetTrackDistanceCut(100.);
 FootMuSiVertexFinder->SetVerticesMergeDistanceCut(0.001);
 run->AddTask(FootMuSiVertexFinder);
-  // ------------------------------------------------------------------------
-// ------   FootMuSi Matcher -----------------------------------------
-/* ERFootMuSiMatcher* FootMuSiMatcher = new ERFootMuSiMatcher(verbose);
-run->AddTask(FootMuSiMatcher); */
-  // ------   FootMuSi TrackPID -----------------------------------------
-/* ERFootMuSiPID* FootMuSiPID = new ERFootMuSiPID(verbose);
-Double_t normalizedThickness = 0.015; // [cm]
 
-FootMuSiPID->SetParticle("C7_first_pair_SingleSi_SSD150_1_XC7_first_pair_SingleSi_SSD150_2_Y", 1000010010, "SSD150_1", {"SSD150_1","SSD150_2","SSD150_3","SSD150_4","SSD150_5","SSD150_6"}, normalizedThickness, {});
-FootMuSiPID->SetParticle("C7_first_pair_SingleSi_SSD150_1_XC7_first_pair_SingleSi_SSD150_2_Y", 1000020030, "SSD150_1", {"SSD150_1","SSD150_2","SSD150_3","SSD150_4","SSD150_5","SSD150_6"}, normalizedThickness, {});
-FootMuSiPID->SetEdepAccountingStrategy("1_X", ERFootMuSiPID::EdepAccountingStrategy::EdepFromXChannel);
-run->AddTask(FootMuSiPID); */
-  
 FairLogger::GetLogger()->SetLogScreenLevel("DEBUG");
   // -----------Runtime DataBase info ---------------------------------------
 FairRuntimeDb* rtdb = run->GetRuntimeDb();

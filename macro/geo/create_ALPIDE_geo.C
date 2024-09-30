@@ -89,7 +89,7 @@ void create_ALPIDE_geo()
     TGeoVolume* siliconPlate = gGeoMan->MakeBox("SiliconPlate", gGeoMan->GetMedium("silicon"), carbonPlateSize / 2, carbonPlateSize / 2, carbonPlateThickness / 2);
     ALPIDE->AddNode(siliconPlate, 1, new TGeoTranslation(0, 0, 0));
 
-    //aluminium frame around the carbon plate (1 cm wide, 0.5 mm thick)
+    //Aluminium frame around the carbon plate (1 cm wide, 0.5 mm thick)
     TGeoVolume* aluminiumFrameLeft = gGeoMan->MakeBox("AlFrameL", gGeoMan->GetMedium("aluminium"), frameWidth / 2, carbonPlateSize / 2, frameThickness / 2);
     TGeoVolume* aluminiumFrameRight = gGeoMan->MakeBox("AlFrameR", gGeoMan->GetMedium("aluminium"), frameWidth / 2, carbonPlateSize / 2, frameThickness / 2);
     TGeoVolume* aluminiumFrameTop = gGeoMan->MakeBox("AlFrameT", gGeoMan->GetMedium("aluminium"), carbonPlateSize / 2, frameWidth / 2, frameThickness / 2);
@@ -125,7 +125,7 @@ void create_ALPIDE_geo()
             } */
 /*         }
     } */
-    top->AddNode(ALPIDE, 0, new TGeoTranslation(0., 0., 5.));
+    top->AddNode(ALPIDE, 0, new TGeoTranslation(0., 0., 10.));
     // ---------------   Finish   -----------------------------------------------
     gGeoMan->CloseGeometry();
     gGeoMan->CheckOverlaps(0.001);

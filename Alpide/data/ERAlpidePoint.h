@@ -13,7 +13,7 @@
 
 /** @class ERAlpidePoint
  ** @brief The data class for storing pieces of charged tracks in sensitive volumes of Alpide pixel detector 
- ** @author B.Khamidullin <brkhamidullin@jinr.ru>
+ ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
 **/
 
@@ -67,6 +67,8 @@ public:
   Double_t GetPzOut()             const { return fPz_out; }
   Double_t GetMass()              const { return fMass; }
   Int_t GetPixelNoX()              const { return fPixelNoX;}
+  Int_t GetPixelNoY()             const { return fPixelNoY;}
+  Double_t GetELoss()              const { return fELoss;}
   void PositionIn(TVector3& pos)  const { pos.SetXYZ(fX, fY, fZ); }
   void PositionOut(TVector3& pos) const { pos.SetXYZ(fX_out,fY_out,fZ_out); }
   void MomentumOut(TVector3& mom) const { mom.SetXYZ(fPx_out,fPy_out,fPz_out); }

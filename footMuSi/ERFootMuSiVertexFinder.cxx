@@ -85,7 +85,7 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
   LOG(DEBUG) << "[ERFootMuSiVertexFinder]------------Started--------------------------------------"
     << FairLogger::endl;
   Reset();
-  //temporary for storing the previously found vertex
+  //temporary vertex object for storing the vertex found at the previous iteration
   ERFootMuSiVertex* tempVertex = new ERFootMuSiVertex(-10000., -10000., -10000.);
   if (fFootMuSiTracks->GetEntriesFast() != 9)
   {

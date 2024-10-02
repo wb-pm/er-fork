@@ -105,7 +105,7 @@ void ERAlpideStep::Print()
   }
   
   LOG(INFO) << "STEP = " << fStepNr << " particle = "<< sParticle << "( PDG = " << fPID << " ) Edep = " 
-            << fEloss << " [KeV]" << FairLogger::endl;
+            << fEloss << " [MeV]" << FairLogger::endl;
   LOG(INFO) << "track_status = "  << flag.Data() << " track_charge = " << fCharge 
             << " track_nb = " << fTrackID << FairLogger::endl;
   LOG(INFO) << "track_pos = (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;

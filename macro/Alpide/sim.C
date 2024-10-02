@@ -20,19 +20,23 @@
 #include "ERFootMuSi.h"
 #endif
 
-void sim(Int_t nEvents = 100000)
+void sim(Int_t nEvents = 10)
 {
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
+  TString nameAppend = "Alpide_3foot_ranges0p01mm";
   //Simulation output
-  TString outFile = "sim/sim_Alpide_4foot_ranges1m.root";
+  TString outFile = "sim/sim_"+nameAppend+".root";
   //Decay products file
   TString decayDatFile = workDirPath + "/input/generators/PureDecay7C.txt";
   //Output parameters
-  TString parFile = "par/par.root";
+  TString parFile = "par/par_"+nameAppend+".root";
   //FOOT detector setup
   TString paramFileFootMuSi = workDirPath + "/db/footMuSi/footMuSiParts_7C.xml";
   //Target geometry
   TString targetGeoFileName = workDirPath + "/geometry/target_9Be_5cm_geo.root";
+  //Output geometry setup
+  TString setup_name = "setup/setup_"+nameAppend+".root";
+
   //-------Set LOG verbosity  -----------------------------------------------
   FairLogger::GetLogger()->SetLogScreenLevel("DEBUG"); // для отладки
   FairLogger::GetLogger()->SetLogVerbosityLevel("HIGH");
@@ -67,7 +71,7 @@ void sim(Int_t nEvents = 100000)
   // -----   Create Alpide detector  --------------------------------------------
   ERAlpide* Alpide = new ERAlpide("ERAlpide", kTRUE, detectorVerbosity);
   Alpide->SetGeometryFileName(workDirPath + "/geometry/Alpide_nochips.geo.root");
-  Alpide->SetStoreSteps();
+  //Alpide->SetStoreSteps();
   run->AddModule(Alpide);
   //----------  Create FOOT detector --------------------------------------------
   ERFootMuSiSetup* setupFootMuSi = ERFootMuSiSetup::Instance();
@@ -107,10 +111,10 @@ void sim(Int_t nEvents = 100000)
   setupFootMuSi->AddSubAssembly(C7_1st_pair);
   setupFootMuSi->AddSubAssembly(C7_2nd_pair);
   setupFootMuSi->AddSubAssembly(C7_3rd_pair);
-  setupFootMuSi->AddSubAssembly(C7_4th_pair);
+/*   setupFootMuSi->AddSubAssembly(C7_4th_pair); */
   // ------FootMuSi -------------------------------------------------------
   ERFootMuSi* footMuSi = new ERFootMuSi("ERFootMuSi", kTRUE, detectorVerbosity);
-  //run->AddModule(footMuSi);
+  run->AddModule(footMuSi);
   //-------------------------------------------------------------------------
 
   //----------  Generate initial beam --------------------------------------------
@@ -165,7 +169,6 @@ void sim(Int_t nEvents = 100000)
   rtdb->saveOutput();
   rtdb->print();
 
-  TString setup_name = "geo/setup_Alpide.root";
   run->CreateGeometryFile(setup_name);
 
   // -----   Run simulation  ------------------------------------------------

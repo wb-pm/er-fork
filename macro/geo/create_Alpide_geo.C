@@ -68,7 +68,7 @@ void create_Alpide_geo()
     const Double_t carbonPlateSize = 10.;
     const Double_t carbonPlateThickness = 0.1;
 
-    const Double_t chipThickness = 0.01;
+    const Double_t chipThickness = 0.005; // 50 microns
     const Double_t chipGap = 0.001;
     const Double_t chipWidth = (carbonPlateSize - 5 * chipGap) / 6;
     const Double_t chipHeight = (carbonPlateSize - 2 * chipGap) / 3;
@@ -86,7 +86,7 @@ void create_Alpide_geo()
 /*     TGeoVolume* carbonPlate = gGeoMan->MakeBox("CarbonPlate", pC, carbonPlateSize / 2, carbonPlateSize / 2, carbonPlateThickness / 2);
     Alpide->AddNode(carbonPlate, 1, new TGeoTranslation(0, 0, 0)); */
     //Silicon plate, for now substituting the planned chips
-    TGeoVolume* siliconPlate = gGeoMan->MakeBox("SiliconPlate", gGeoMan->GetMedium("silicon"), carbonPlateSize / 2, carbonPlateSize / 2, carbonPlateThickness / 2);
+    TGeoVolume* siliconPlate = gGeoMan->MakeBox("SiliconPlate", gGeoMan->GetMedium("silicon"), carbonPlateSize / 2, carbonPlateSize / 2, chipThickness / 2);
     Alpide->AddNode(siliconPlate, 1, new TGeoTranslation(0, 0, 0));
 
     //Aluminium frame around the carbon plate (1 cm wide, 0.5 mm thick)

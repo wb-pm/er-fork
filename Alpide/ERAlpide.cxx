@@ -94,8 +94,8 @@ Bool_t ERAlpide::ProcessHits(FairVolume* vol) {
 
   const Double_t plateXlength = 10.; ///< size of carbon plate along X axis
   const Double_t plateYlength = 10.; ///< size of carbon plate along Y axis
-  const Double_t pixelXlength = 10./(6.*512.); ///<size of one pixel along X axis
-  const Double_t pixelYlength = 10./(6.*1024.); ///<size of one pixel along Y axis
+  const Double_t pixelXlength = 10. / (6. * 512.); ///<size of one pixel along X axis
+  const Double_t pixelYlength = 10. / (6. * 1024.); ///<size of one pixel along Y axis
   //Start point
   if (gMC->IsTrackEntering()) { // Return true if this is the first step of the track in sensitive volume
     eLoss = 0.;
@@ -111,24 +111,25 @@ Bool_t ERAlpide::ProcessHits(FairVolume* vol) {
     length = gMC->TrackLength(); // Return the length of the current track from its origin (in cm)
     mot0TrackID = gMC->GetStack()->GetCurrentTrack()->GetMother(0);
     mass = gMC->ParticleMass(gMC->TrackPid()); // GeV/c2
+    LOG(INFO) << "mother id " << mot0TrackID << ", mass " << mass << FairLogger::endl;
 
     pdg = gMC->TrackPid();
     stepNumber = 0;
   }
   if (fStoreSteps) {
-  static TLorentzVector posStep, momStep;
-  static ExpertTrackingStatus trackStatus;
-  static TArrayI processesID;
-  static Int_t pixelNoXStep, pixelNoYStep;
-  pixelNoXStep = Int_t((posStep.X() + plateXlength / 2) / pixelXlength);
-  pixelNoYStep = Int_t((posStep.Y() + plateYlength / 2) / pixelYlength);
+    static TLorentzVector posStep, momStep;
+    static ExpertTrackingStatus trackStatus;
+    static TArrayI processesID;
+    static Int_t pixelNoXStep, pixelNoYStep;
+    pixelNoXStep = Int_t((posStep.X() + plateXlength / 2) / pixelXlength);
+    pixelNoYStep = Int_t((posStep.Y() + plateYlength / 2) / pixelYlength);
 
-  gMC->TrackPosition(posStep);
-  gMC->TrackMomentum(momStep);
-  trackStatus = ERAlpideStep::GetTrackStatus();
-  gMC->StepProcesses(processesID);
-  ERAlpideStep *AlpideStep = AddAlpideStep(eventID,stepNumber,trackID,TVector3(posStep.X(),posStep.Y(),posStep.Z()),TVector3(momStep.X(),momStep.Y(),momStep.Z()), pixelNoXStep, pixelNoYStep, gMC->TrackTime()*1e9,gMC->TrackStep(),gMC->TrackPid(),gMC->TrackMass(),trackStatus,gMC->Edep(),gMC->TrackCharge(),processesID);
-  if(fVerboseLevel > 1) AlpideStep->Print();
+    gMC->TrackPosition(posStep);
+    gMC->TrackMomentum(momStep);
+    trackStatus = ERAlpideStep::GetTrackStatus();
+    gMC->StepProcesses(processesID);
+    ERAlpideStep* AlpideStep = AddAlpideStep(eventID, stepNumber, trackID, TVector3(posStep.X(), posStep.Y(), posStep.Z()), TVector3(momStep.X(), momStep.Y(), momStep.Z()), pixelNoXStep, pixelNoYStep, gMC->TrackTime() * 1e9, gMC->TrackStep(), gMC->TrackPid(), gMC->TrackMass(), trackStatus, gMC->Edep()*1e3, gMC->TrackCharge(), processesID);
+    if (fVerboseLevel > 1) AlpideStep->Print();
 
   }
   eLoss += gMC->Edep() * 1e3; // MeV //Return the energy lost in the current step
@@ -142,12 +143,12 @@ Bool_t ERAlpide::ProcessHits(FairVolume* vol) {
     pixelNoX_out = Int_t((posOut.X() + plateXlength / 2) / pixelXlength);
     pixelNoY_out = Int_t((posOut.Y() + plateYlength / 2) / pixelYlength);
     if (eLoss > 0.) {
-      AddAlpidePoint( eventID, trackID, mot0TrackID, mass,
-                TVector3(posIn.X(),   posIn.Y(),   posIn.Z()),
-                TVector3(posOut.X(),  posOut.Y(),  posOut.Z()),
-                TVector3(momIn.Px(),  momIn.Py(),  momIn.Pz()),
-                TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
-                time, length, eLoss, pdg, pixelNoX,pixelNoY,pixelNoX_out,pixelNoY_out);
+      AddAlpidePoint(eventID, trackID, gMC->GetStack()->GetCurrentTrack()->GetMother(0), gMC->TrackMass(),
+        TVector3(posIn.X(), posIn.Y(), posIn.Z()),
+        TVector3(posOut.X(), posOut.Y(), posOut.Z()),
+        TVector3(momIn.Px(), momIn.Py(), momIn.Pz()),
+        TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
+        time, length, eLoss, pdg, pixelNoX, pixelNoY, pixelNoX_out, pixelNoY_out);
     }
   }
   return kTRUE;

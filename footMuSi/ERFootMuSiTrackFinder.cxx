@@ -387,9 +387,9 @@ if(isProtonDebug)
   TClonesArray* hitsFirstStationPair = fFootMuSiHit.begin()->second;
   TClonesArray* hitsSecondStationPair = std::next(fFootMuSiHit.begin())->second;
   TClonesArray* hitsThirdStationPair = std::next(fFootMuSiHit.begin(), 2)->second;
-  LOG(INFO) << "First stations pair name" << fFootMuSiHit.begin()->first << FairLogger::endl;
-  LOG(INFO) << "Second stations pair name" << std::next(fFootMuSiHit.begin())->first << FairLogger::endl;
-  LOG(INFO) << "Third stations pair name" << std::next(fFootMuSiHit.begin(), 2)->first << FairLogger::endl;
+  LOG(INFO) << "First stations pair name is " << fFootMuSiHit.begin()->first << FairLogger::endl;
+  LOG(INFO) << "Second stations pair name is " << std::next(fFootMuSiHit.begin())->first << FairLogger::endl;
+  LOG(INFO) << "Third stations pair name is" << std::next(fFootMuSiHit.begin(), 2)->first << FairLogger::endl;
   for (int iHitFirstPair = 0; iHitFirstPair < hitsFirstStationPair->GetEntriesFast(); ++iHitFirstPair)
   {
         ERFootMuSiHit* hitFirstPair = (ERFootMuSiHit*)hitsFirstStationPair->At(iHitFirstPair);

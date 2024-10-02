@@ -203,6 +203,7 @@ Bool_t ERDecay7C::Stepping() {
 
       C9TrackNb = gMC->GetStack()->GetCurrentTrackNumber();
 
+      //Create tracks of decay's products
       gMC->GetStack()->PushTrack(1, C9TrackNb, f3He->PdgCode(),
         fLv3He->Px(), fLv3He->Py(), fLv3He->Pz(),
         fLv3He->E(), curPos.X(), curPos.Y(), curPos.Z(),

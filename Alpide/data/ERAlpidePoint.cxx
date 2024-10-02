@@ -41,6 +41,8 @@ void ERAlpidePoint::Print(const Option_t* opt) const {
   LOG(INFO) << "ERAlpidePoint: track " << fTrackID;
   LOG(INFO) << "    Position (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;
   LOG(INFO) << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
+  LOG(INFO) << "Mother track ID " << fMot0TrackID << FairLogger::endl;
+  LOG(INFO) << "Mass " << fMass << FairLogger::endl;
   LOG(INFO) << "    Time " << fTime << " ns,  Length " << fLength << " cm" << FairLogger::endl;
   LOG(INFO) << "    Energy loss " << fELoss << " MeV "<< FairLogger::endl;
   LOG(INFO) << "    Pixel number along x axis (entrance): " << fPixelNoX << " along y axis (entrance): " << fPixelNoY << FairLogger::endl;

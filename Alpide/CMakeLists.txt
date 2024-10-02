@@ -23,8 +23,11 @@ link_directories( ${LINK_DIRECTORIES})
 
 set(SRCS 
 ERAlpide.cxx
+ERAlpideDigitizer.cxx
 ERAlpideGeoPar.cxx
 ERAlpideSetup.cxx
+
+data/ERAlpideDigi.cxx
 data/ERAlpidePoint.cxx
 data/ERAlpideStep.cxx
 data/ERAlpideHit.cxx

@@ -36,7 +36,7 @@ public:
   /** Virtual method ProcessHits
    **
    ** Defines the action to be taken when a step is inside the
-   ** active volume. Creates a ERTelescopePoint and adds it to the
+   ** active volume. Creates a ERPoint and adds it to the
    ** collection.
    *@param vol  Pointer to the active volume
    **/
@@ -106,8 +106,8 @@ private:
   Int_t                     fTrackID = -2;           //!  track index
   Int_t                     fMot0TrackID = -2;       //!  0th mother track index
   Double_t                  fMass = 0.;              //!  mass
-  TLorentzVector            fPosIn, fPosOut;    //!  position
-  TLorentzVector            fMomIn, fMomOut;    //!  momentum
+  TLorentzVector            fPosIn, fPosOut;         //!  position
+  TLorentzVector            fMomIn, fMomOut;         //!  momentum
   Double32_t                fTime = 0.;              //!  time
   Double32_t                fLength = 0.;            //!  length
   Double32_t                fEloss = 0.;             //!  energy loss

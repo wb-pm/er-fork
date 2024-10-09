@@ -17,7 +17,7 @@
 
 /** @class ERFootMuSiTrack
  ** @brief 
- ** @author B. Khamidullin
+ ** @author B. Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
 **/
 
@@ -29,7 +29,7 @@ public:
   /** @brief Constructor 
    **/
 /*     ERFootMuSiTrack(ERFootMuSiHit* firstHit, ERFootMuSiHit* secondHit,ERFootMuSiHit* thirdHit, Double_t HitsFitChi2 = 0.0); */
-    ERFootMuSiTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit);
+    ERFootMuSiTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit, const std::vector<Double_t> distancesToPixels);
 
 /*     ERFootMuSiHit* GetFirstHit() const {return fFirstHit;}
     ERFootMuSiHit* GetSecondHit() const {return fSecondHit;}
@@ -57,6 +57,7 @@ private:
     Int_t fThirdHitRefIndex;
     Double_t fFirstAngleComparison;
     Double_t fSecondAngleComparison;
+    std::vector<Double_t> fDistancesToPixels;
 /*     ERFootMuSiHit* fFirstHit;
     ERFootMuSiHit* fSecondHit;
     ERFootMuSiHit* fThirdHit;

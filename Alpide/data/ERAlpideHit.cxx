@@ -9,7 +9,7 @@
 #include "ERAlpideHit.h"
 
 #include "FairLogger.h"
-
+//Currently not used. Not sure if the class is needed at all
 // -----   Default constructor   -------------------------------------------
 ERAlpideHit::ERAlpideHit() :
   fFlag(-1)

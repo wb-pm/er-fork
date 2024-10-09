@@ -23,6 +23,16 @@
  ** transport simulation. It constructs the Alpide transport geometry
  ** and creates objects of type ERAlpidePoints and ERAlpideSteps if requested.
 **/
+//Temporary namespace for keeping the dimensions of Alpide geometry and number of chips
+namespace AlpideSpecs {
+  const  Double_t plateXlength = 10.; ///< size of silicon plate along X axis
+  const  Double_t plateYlength = 10.; ///< size of silicon plate along Y axis
+  const  Int_t chipsNumber = 6; ///< number of chips on the plate
+  const  Int_t pixelsXNumber = 512; ///< number of pixels along X axis
+  const  Int_t pixelsYNumber = 1024; ///< number of pixels along Y axis
+  const  Double_t pixelXlength = plateXlength / (chipsNumber * pixelsXNumber); ///<size of one pixel along X axis
+  const  Double_t pixelYlength = plateYlength / (chipsNumber * pixelsYNumber); ///<size of one pixel along Y axis
+}
 
 class ERAlpide : public ERDetector
 {
@@ -115,11 +125,19 @@ public:
   // Constructs the Alpide geometry
   virtual void ConstructGeometry();  
 
+protected:
+
+  /** @brief Calculate the pixel number from the coordinates **/
+  void LocalToPixel(Double_t globalX, Double_t globalY, Int_t& pixelNoX, Int_t& pixelNoY);
+  
+  void PixelToLocal(Int_t pixelNoX, Int_t pixelNoY,Double_t& globalX, Double_t& globalY);
+
 private:
 
   /** @brief Adds an AlpidePoint to the Point Collection **/
   ERAlpidePoint* AddAlpidePoint(Int_t eventID, Int_t trackID,  Int_t mot0TrackID, Double_t mass,
               const TVector3& posIn,
+              const TVector3& posInLocal,
               const TVector3& posOut,
               const TVector3& momIn,
               const TVector3& momOut,
@@ -160,6 +178,4 @@ private:
 
 ClassDef(ERAlpide, 1);
 };
-
-
 #endif

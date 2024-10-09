@@ -47,9 +47,9 @@ protected:
 
     ERAlpideSetup* fAlpideSetup = nullptr;
 
-    Double_t fEnergyThreshold;
+    Double_t fEnergyThreshold; //! Energy threshold for activating a pixel
   
-    ERAlpideDigi* AddAlpideDigi(Int_t pixelNoX, Int_t pixelNoY, Double_t edep, Int_t chipID = -1);
+    ERAlpideDigi* AddAlpideDigi(Int_t pixelNoX, Int_t pixelNoY, Double_t pixelZ, Double_t edep, Int_t chipID = -1);
 private:
   virtual void SetParContainers();
 

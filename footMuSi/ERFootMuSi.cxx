@@ -127,7 +127,7 @@ void ERFootMuSi::EndOfEvent() {
 void ERFootMuSi::Register() {
   FairRootManager* ioman = FairRootManager::Instance();
   if (!ioman)
-    Fatal("Init", "IO manager is not set");
+    LOG(FATAL) << "IO manager is not set" << FairLogger::endl;
   for (const auto* component : fFootMuSiSetup->GetAllComponents()) {
     if (!dynamic_cast<const ERFootMuSiGeoComponentSensitive*>(component))
       continue;
@@ -141,6 +141,7 @@ void ERFootMuSi::Register() {
   }
 }
 //-------------------------------------------------------------------------------------------------
+//TODO: Implement return of FootMuSi points
 TClonesArray* ERFootMuSi::GetCollection(Int_t iColl) const {
  /* if (iColl == 0)
     return fSiPoint;
@@ -150,7 +151,6 @@ TClonesArray* ERFootMuSi::GetCollection(Int_t iColl) const {
   return NULL;
 }
 //-------------------------------------------------------------------------------------------------
-//TODO Add Print Implementation for points
 void ERFootMuSi::Print(Option_t *option) const {
   LOG(DEBUG) << "======== Si Points ==================" << FairLogger::endl;
   for (auto& componentPoints : fPoints) {
@@ -188,6 +188,7 @@ void ERFootMuSi::CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset) 
 */
 }
 //-------------------------------------------------------------------------------------------------
+//TODO Maybe a better name convention for the names of sensitive volumes of Foot
 Bool_t ERFootMuSi::CheckIfSensitive(std::string name) {
   TString volName = name;
   if(volName.BeginsWith("Sensitive")) {

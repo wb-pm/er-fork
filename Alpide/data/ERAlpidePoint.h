@@ -25,24 +25,26 @@ public:
   ERAlpidePoint();
 
   /** @brief Standard constructor
-   ** @param EventID  Index of Event
+   ** @param EventId  Index of Event
    ** @param trackID  Index of MCTrack
    ** @param mot0trackID Index of Mother MCTrack
-   ** @param posIn    Ccoordinates at entrance of point [cm]
+   ** @param posIn    Coordinates at entrance of point [cm]
+   ** @param posInLocal Coordinates at entance of point in local system [cm]
    ** @param posOut   Coordinates at exit of point [cm]
    ** @param momIn    Momentum of track at entrance [GeV]
    ** @param momOut   Momentum of track at exit [GeV]
    ** @param tof      Time since event start [ns]
    ** @param length   Track length since creation [cm]
-   ** @param eLoss    Energy deposit [KeV]
+   ** @param eLoss    Energy deposit [MeV]
    ** @param pdg      PDG of point particle
    ** @param pixelNoX Number of pixel along the x axis 
    ** @param pixelNoY Number of pixel along the y axis 
   **/
 
-  ERAlpidePoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
+  ERAlpidePoint(Int_t eventId, Int_t trackID, Int_t mot0TrackID,
       Double_t mass,
       TVector3 posIn,
+      TVector3 posInLocal,
       TVector3 posOut, TVector3 momIn, TVector3 momOut,
       Double_t tof, Double_t length, Double_t eLoss, Int_t pdg,
       Int_t pixelNoX,Int_t pixelNoY, Int_t pixelNoX_out, Int_t pixelNoY_out);
@@ -55,7 +57,6 @@ public:
 
   /** Accessors **/
 
-  Int_t GetEventID()              const { return fEventID; }
   Double_t GetXIn()               const { return fX; }
   Double_t GetYIn()               const { return fY; }
   Double_t GetZIn()               const { return fZ; }
@@ -68,7 +69,6 @@ public:
   Double_t GetMass()              const { return fMass; }
   Int_t GetPixelNoX()              const { return fPixelNoX;}
   Int_t GetPixelNoY()             const { return fPixelNoY;}
-  Double_t GetELoss()              const { return fELoss;}
   void PositionIn(TVector3& pos)  const { pos.SetXYZ(fX, fY, fZ); }
   void PositionOut(TVector3& pos) const { pos.SetXYZ(fX_out,fY_out,fZ_out); }
   void MomentumOut(TVector3& mom) const { mom.SetXYZ(fPx_out,fPy_out,fPz_out); }
@@ -87,9 +87,9 @@ public:
 
 protected:
   
-  Int_t fEventID;                                       ///< event index
   Int_t fMot0TrackID;                                   ///< 0th mother track index
   Double_t fMass;                                       ///< mass
+  Double32_t fX_in_local,fY_in_local,fZ_in_local;       ///< point in coordinate (local coordinate system)
   Double32_t fX_out,  fY_out,  fZ_out;                  ///< point out coordinate
   Double32_t fPx_out, fPy_out, fPz_out;                 ///< point out momentum
   Int_t fPDG;                                           ///< particle PDG

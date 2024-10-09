@@ -14,12 +14,13 @@
 #include "FairMultiLinkedData.h"
 #include "FairHit.h"
 
-/** @class ERFootMuSiHitFinder
+/** @class ERFootMuSiHit
  ** @brief 
  ** @author 
  ** @version 1.0
 **/
 
+//TODO Create a Print method
 class ERFootMuSiHit : public FairHit{
 
 public:

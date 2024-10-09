@@ -20,14 +20,14 @@
 #include "ERFootMuSi.h"
 #endif
 
-void sim(Int_t nEvents = 10)
+void sim(Int_t nEvents = 100000)
 {
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
-  TString nameAppend = "Alpide_3foot_ranges0p01mm";
+  TString nameAppend = "UniformDecayerTest_Alpide_3foot_ranges1000mm";
   //Simulation output
   TString outFile = "sim/sim_"+nameAppend+".root";
   //Decay products file
-  TString decayDatFile = workDirPath + "/input/generators/PureDecay7C.txt";
+  TString decayDatFile = workDirPath + "/input/generators/Decay7C.dat";
   //Output parameters
   TString parFile = "par/par_"+nameAppend+".root";
   //FOOT detector setup
@@ -111,6 +111,7 @@ void sim(Int_t nEvents = 10)
   setupFootMuSi->AddSubAssembly(C7_1st_pair);
   setupFootMuSi->AddSubAssembly(C7_2nd_pair);
   setupFootMuSi->AddSubAssembly(C7_3rd_pair);
+  //Currently working with 3 pairs
 /*   setupFootMuSi->AddSubAssembly(C7_4th_pair); */
   // ------FootMuSi -------------------------------------------------------
   ERFootMuSi* footMuSi = new ERFootMuSi("ERFootMuSi", kTRUE, detectorVerbosity);
@@ -147,6 +148,7 @@ void sim(Int_t nEvents = 10)
 
   Double_t target_thickness = 5.;
 
+  targetDecay->Set7CUniformExcitation(0.,20.);
   targetDecay->SetInteractionVolumeName(interactionVol);
   targetDecay->SetMinStep(1e-2);
   targetDecay->SetDecayFile(decayDatFile.Data());
@@ -164,7 +166,7 @@ void sim(Int_t nEvents = 10)
   // -----   Runtime database   ---------------------------------------------
   Bool_t kParameterMerged = kTRUE;
   FairParRootFileIo* parOut = new FairParRootFileIo(kParameterMerged);
-  parOut->open(parFile.Data());
+  parOut->open(parFile.Data(),"RECREATE");
   rtdb->setOutput(parOut);
   rtdb->saveOutput();
   rtdb->print();
@@ -185,4 +187,7 @@ void sim(Int_t nEvents = 10)
   std::cout << "Real time " << rtime << " s, CPU time " << ctime
     << "s" << std::endl
     << std::endl;
+  //TODO: Strange error after the simulation is finished, check the reason
+  // ***Error in `/opt/FairSoft/bin/root.exe': free(): invalid pointer: 0x0000000003749d90 ***
+
 }

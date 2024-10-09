@@ -28,7 +28,8 @@
 #include "ERDecay7CEventHeader.h"
 #include "ERDecayMCEventHeader.h"
 #include "ERMCTrack.h"
-
+#include "ERAlpideDigi.h"
+#include "ERAlpide.h"
  //--------------------------------------------------------------------------------------------------
 ERFootMuSiTrackFinder::ERFootMuSiTrackFinder()
   : ERTask("ER FootMuSi track finding scheme")
@@ -89,8 +90,8 @@ GetGlobalHitPositionByStrip(const TString& branch_name, const ERChannel channel)
     const TString station_name = station_to_channels.first;
     if (!branch_name.Contains(station_name))
       continue;
-    const std::map<ERChannel,float> channel_to_position_correction = station_to_channels.second;
-    const std::map<ERChannel,float>::const_iterator channel_and_correction = channel_to_position_correction.find(channel);
+    const std::map<ERChannel, float> channel_to_position_correction = station_to_channels.second;
+    const std::map<ERChannel, float>::const_iterator channel_and_correction = channel_to_position_correction.find(channel);
     if (channel_and_correction == channel_to_position_correction.end())
       continue;
     const float correction = channel_and_correction->second;
@@ -125,11 +126,12 @@ InitStatus ERFootMuSiTrackFinder::Init()
       fFootMuSiDigi[brName] = (TClonesArray*)ioman->GetObject(bFullName);
     }
   }
-//For testing the idea with sending unchanged proton coordinates into the tracks
+  //For testing the idea with sending unchanged proton coordinates into the tracks
   fMCTracks = (TClonesArray*)ioman->GetObject("MCTrack");
-  fMCEventHeader = (TClonesArray*)ioman->GetObject("MCEventHeader."); 
+  fMCEventHeader = (TClonesArray*)ioman->GetObject("MCEventHeader.");
+  fAlpideDigis = (TClonesArray*)ioman->GetObject("AlpideDigi");
 
-  // Register output track branches only for stations that are setted by interface SetStation(){
+  // Register output track branches only for stations that are set by interface SetStation(){
   for (const auto itSubassemblies : fSiHitStationsPair)
   {
     for (const auto itComponent : itSubassemblies.second)
@@ -141,17 +143,18 @@ InitStatus ERFootMuSiTrackFinder::Init()
 
   fFootMuSiTrack = new TClonesArray("ERFootMuSiTrack", 100);
   ioman->Register("FootMuSiTrack", "FootMuSi", fFootMuSiTrack, kTRUE);
-  ioman->Register("MCEventHeader.","FootMuSi",fMCEventHeader,kTRUE);
+  ioman->Register("MCEventHeader.", "FootMuSi", fMCEventHeader, kTRUE);
   fFootMuSiSetup->ERFootMuSiSetup::ReadGeoParamsFromParContainer();
 
-  //@TODO check setup and digi branch names
+  //@TODO: check setup and digi branch names
 
   return kSUCCESS;
 }
 //--------------------------------------------------------------------------------------------------
 void ERFootMuSiTrackFinder::Exec(Option_t* opt)
 {
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder]------------Started--------------------------------------"
+  //TODO: Deal with two pairs of energy ranges
+  LOG(INFO) << "[ERFootMuSiTrackFinder]------------Started--------------------------------------"
     << FairLogger::endl;
   Reset();
   for (const auto& itSubassemblies : fSiHitStationsPair)
@@ -172,6 +175,8 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
       }
       const TClonesArray* xDigi = fFootMuSiDigi[xDigiBranchName];
       const TClonesArray* yDigi = fFootMuSiDigi[yDigiBranchName];
+      LOG(DEBUG) << "Number of digis in a X branch " << xDigiBranchName << " = " << xDigi->GetEntriesFast() << FairLogger::endl;
+      LOG(DEBUG) << "Number of digis in a Y branch " << yDigiBranchName << " = " << yDigi->GetEntriesFast() << FairLogger::endl;
       if (!xDigi || !yDigi)
       {
         continue;
@@ -196,6 +201,8 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
           correctStripsY.push_back(iYDigi);
         }
       }
+      LOG(DEBUG) << "(After application of energy deposition cuts) Number of digis in a X branch " << xDigiBranchName << " = " << correctStripsX.size() << FairLogger::endl;
+      LOG(DEBUG) << "(After application of energy deposition cuts) Number of digis in a Y branch " << yDigiBranchName << " = " << correctStripsY.size() << FairLogger::endl;
       for (const auto itCorrectStripsX : correctStripsX)
       {
         const Double_t xStripEdep = ((ERDigi*)xDigi->At(itCorrectStripsX))->Edep();
@@ -208,9 +215,10 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
           }
         }
       }
-      LOG(DEBUG) << FairLogger::endl << "[ERFootMuSiTrackFinder] Strips array pair " << itComponent.second.first << " "
+      LOG(DEBUG) << FairLogger::endl << " Strips array pair " << itComponent.second.first << " "
         << itComponent.second.second << FairLogger::endl;
-      LOG(DEBUG) << "[ERFootMuSiTrackFinder] Hits count on pair " << hitFootMuSiPoint.size() << FairLogger::endl;
+      LOG(DEBUG) << " Hits count on pair " << hitFootMuSiPoint.size() << FairLogger::endl;
+      LOG(DEBUG) << "The lower energy cut = " << fSiDigiEdepMin << " the upper energy cut = " << fSiDigiEdepMax << FairLogger::endl;
       for (const auto& itHitPoint : hitFootMuSiPoint)
       {
         const Int_t xChannelIndex = itHitPoint.first;
@@ -221,11 +229,10 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
           continue;
         const ERChannel xChannel = xStrip->Channel();
         const ERChannel yChannel = yStrip->Channel();
-        LOG(DEBUG) << "[ERFootMuSiTrackFinder] The X channel of the hit: " << xChannel << " The Y channel of the hit: " << yChannel << FairLogger::endl;
-        //Use the condition for energy deposition in order to choose a specific particle, proton or he3 in the case of 7C decay
-        if (fLowerEdepCut > xStrip->Edep() || fUpperEdepCut < xStrip->Edep() || fLowerEdepCut > yStrip->Edep() || fUpperEdepCut < yStrip->Edep())
+        //The condition for energy deposition in order to choose a specific ion (proton or he3 in the case of 7C decay)
+        if ((fLowerEdepCut > xStrip->Edep()) || (fUpperEdepCut < xStrip->Edep()) || (fLowerEdepCut > yStrip->Edep()) || (fUpperEdepCut < yStrip->Edep()))
         {
-          LOG(INFO) << "[ERFootMuSiTrackFinder] Hit energy is not in the set energy deposition range, skipping the hit" << FairLogger::endl;
+          LOG(DEBUG) << " Hit energy is not in the set energy deposition range, skipping the hit" << FairLogger::endl;
           continue;
         }
         if (fFootMuSiSetup->GetStationType(xDigiBranchName) == ERFootMuSiSetup::StationType::QStation && fFootMuSiSetup->GetStationType(yDigiBranchName) == ERFootMuSiSetup::StationType::QStation)
@@ -236,227 +243,101 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
         }
         else
         {
-          LOG(ERROR) << "[ERFootMuSiTrackFinder] The station is not a Q type" << FairLogger::endl;
+          LOG(ERROR) << " The station is not a Q type" << FairLogger::endl;
         }
       }
     }
   }
-Bool_t isProtonDebug = true;  
-std::vector<TVector3> p1Xp1YHits(3);
-std::vector<TVector3> p1Xp2YHits(3);
-std::vector<TVector3> p1Yp2XHits(3);
-std::vector<TVector3> p2Xp2YHits(3);
-#if isProtonDebug
-#endif
-
-  //Test by putting coordinates of protons' continued trajectories from reaction position into the track finder
-if(isProtonDebug)
-{
-  ERDecay7CEventHeader *decayEventHeader = (ERDecay7CEventHeader*)fMCEventHeader;
-  ERDecayMCEventHeader *decayMCEventHeader = (ERDecayMCEventHeader*)fMCEventHeader;
-  TVector3 initialPosition = decayMCEventHeader->GetReactionPos();
-  TLorentzVector firstProton = decayEventHeader->Getp1();
-  TLorentzVector secondProton = decayEventHeader->Getp2();
-  //Having four different combinations of protons' X and Y coordinates correspondence
-  //In order to check the granularity let's make an arbitrary strips division. The size of one strip is t = 0.015 cm
-  // We should take the existing coordinate and turn it to the nearest multiple of t
-  // The zero of the axis is located in strip number 300
-  // The 1st strip center should be located at -5 + t/2
-  // So if the strip is inside the region of -5 + t, it should go to the first strip and so on
-  // the formula should look something like this: -5 + t/2(1 + floor((5 + y)/(t))) 
-  // Now we should modify the X coordinate at each station and only then imply this formula
-  //Left and right coordinates of the detectors
-  Bool_t isGranularity = true;
-  Double_t detectorNegativeEdge = -5.;
-  Double_t detectorPositiveEdge = 5.;
-  Double_t stripSize = 0.015;
-  std::vector<Double_t> detectorsZ = {20.,21.,36.,37.,52.,53.};
-  // Testing the algorithm for projecting the coordinate from X detector to Y detector at each pairs
-
-  //First proton coordinates at respective detectors
-  Double_t p1FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
-  Double_t p1SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
-  Double_t p1ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
-  Double_t p1FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y();
-  Double_t p1FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(firstProton.Px()/firstProton.Pz())+initialPosition.X();
-  Double_t p1SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(firstProton.Py()/firstProton.Pz())+initialPosition.Y(); 
-
-  //Accounting the granularity of the detectors for the first proton coordinates
-  Double_t p1FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FirstDetectorX)/(stripSize));
-  Double_t p1SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SecondDetectorY)/(stripSize));
-  Double_t p1ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1ThirdDetectorX)/(stripSize));
-  Double_t p1FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FourthDetectorY)/(stripSize));
-  Double_t p1FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1FifthDetectorX)/(stripSize));
-  Double_t p1SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p1SixthDetectorY)/(stripSize));
-
-  //Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
-  Double_t p1Slope = (p1FifthDetectorX - p1FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
-  Double_t p1SlopeCentered = (p1FifthDetectorXCentered - p1FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
-  Double_t p1Intercept = (p1FirstDetectorX + p1FifthDetectorX - p1Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
-  Double_t p1InterceptCentered = (p1FirstDetectorXCentered + p1FifthDetectorXCentered - p1SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
-
-  //Second proton coordinates at respective detectors
-
-  Double_t p2FirstDetectorX = (detectorsZ.at(0)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
-  Double_t p2SecondDetectorY = (detectorsZ.at(1)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
-  Double_t p2ThirdDetectorX = (detectorsZ.at(2)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
-  Double_t p2FourthDetectorY = (detectorsZ.at(3)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y();
-  Double_t p2FifthDetectorX = (detectorsZ.at(4)-initialPosition.Z())*(secondProton.Px()/secondProton.Pz())+initialPosition.X();
-  Double_t p2SixthDetectorY = (detectorsZ.at(5)-initialPosition.Z())*(secondProton.Py()/secondProton.Pz())+initialPosition.Y(); 
-
-  //Accounting the granularity of the detectors for the second proton coordinates
-  Double_t p2FirstDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FirstDetectorX)/(stripSize));
-  Double_t p2SecondDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SecondDetectorY)/(stripSize));
-  Double_t p2ThirdDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2ThirdDetectorX)/(stripSize));
-  Double_t p2FourthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FourthDetectorY)/(stripSize));
-  Double_t p2FifthDetectorXCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2FifthDetectorX)/(stripSize));
-  Double_t p2SixthDetectorYCentered = detectorNegativeEdge + stripSize/2 + stripSize*floor((detectorPositiveEdge+p2SixthDetectorY)/(stripSize));
-
-  //Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
-  Double_t p2Slope = (p2FifthDetectorX - p2FirstDetectorX)/(detectorsZ.at(4) - detectorsZ.at(0));
-  Double_t p2SlopeCentered = (p2FifthDetectorXCentered - p2FirstDetectorXCentered)/(detectorsZ.at(4) - detectorsZ.at(0));
-  Double_t p2Intercept = (p2FirstDetectorX + p2FifthDetectorX - p2Slope*(detectorsZ.at(0) + detectorsZ.at(4)))/2;
-  Double_t p2InterceptCentered = (p2FirstDetectorXCentered + p2FifthDetectorXCentered - p2SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4)))/2;
-
-  //Setting the vectors of each protons combination, depending on whether the granularity is taken into account
-  if(isGranularity){
-    p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
-    p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
-    p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
-
-    p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1SlopeCentered+p1InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
-    p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1SlopeCentered+p1InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
-    p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1SlopeCentered+p1InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
-
-    p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p1SecondDetectorYCentered,detectorsZ.at(1));
-    p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p1FourthDetectorYCentered,detectorsZ.at(3));
-    p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p1SixthDetectorYCentered,detectorsZ.at(5));
-
-    p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2SlopeCentered+p2InterceptCentered,p2SecondDetectorYCentered,detectorsZ.at(1));
-    p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2SlopeCentered+p2InterceptCentered,p2FourthDetectorYCentered,detectorsZ.at(3));
-    p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2SlopeCentered+p2InterceptCentered,p2SixthDetectorYCentered,detectorsZ.at(5));
-  }
-  else{
-    p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p1SecondDetectorY,detectorsZ.at(1));
-    p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p1FourthDetectorY,detectorsZ.at(3));
-    p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p1SixthDetectorY,detectorsZ.at(5));
-
-    p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p1Slope+p1Intercept,p2SecondDetectorY,detectorsZ.at(1));
-    p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p1Slope+p1Intercept,p2FourthDetectorY,detectorsZ.at(3));
-    p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p1Slope+p1Intercept,p2SixthDetectorY,detectorsZ.at(5));
-
-    p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p1SecondDetectorY,detectorsZ.at(1));
-    p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p1FourthDetectorY,detectorsZ.at(3));
-    p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p1SixthDetectorY,detectorsZ.at(5));
-
-    p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1)*p2Slope+p2Intercept,p2SecondDetectorY,detectorsZ.at(1));
-    p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3)*p2Slope+p2Intercept,p2FourthDetectorY,detectorsZ.at(3));
-    p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5)*p2Slope+p2Intercept,p2SixthDetectorY,detectorsZ.at(5));
-  }
-
-
-  // Conditions for accounting the size of detectors
-  Bool_t p1Xp1YCondition = (fabs(p1Xp1YHits.at(0).X()) <= 5) && (fabs(p1Xp1YHits.at(0).Y()) <= 5) && (fabs(p1Xp1YHits.at(1).X()) <= 5) && (fabs(p1Xp1YHits.at(1).Y()) <= 5) && (fabs(p1Xp1YHits.at(2).X()) <= 5) && (fabs(p1Xp1YHits.at(2).Y()) <= 5);
-
-  Bool_t p1Xp2YCondition = (fabs(p1Xp2YHits.at(0).X()) <= 5) && (fabs(p1Xp2YHits.at(0).Y()) <= 5) && (fabs(p1Xp2YHits.at(1).X()) <= 5) && (fabs(p1Xp2YHits.at(1).Y()) <= 5) && (fabs(p1Xp2YHits.at(2).X()) <= 5) && (fabs(p1Xp2YHits.at(2).Y()) <= 5);
-
-  Bool_t p1Yp2XCondition = (fabs(p1Yp2XHits.at(0).X()) <= 5) && (fabs(p1Yp2XHits.at(0).Y()) <= 5) && (fabs(p1Yp2XHits.at(1).X()) <= 5) && (fabs(p1Yp2XHits.at(1).Y()) <= 5) && (fabs(p1Yp2XHits.at(2).X()) <= 5) && (fabs(p1Yp2XHits.at(2).Y()) <= 5);
-
-  Bool_t p2Xp2YCondition = (fabs(p2Xp2YHits.at(0).X()) <= 5) && (fabs(p2Xp2YHits.at(0).Y()) <= 5) && (fabs(p2Xp2YHits.at(1).X()) <= 5) && (fabs(p2Xp2YHits.at(1).Y()) <= 5) && (fabs(p2Xp2YHits.at(2).X()) <= 5) && (fabs(p2Xp2YHits.at(2).Y()) <= 5);
-
-  if(p2Xp2YCondition)
-  {
-    ERFootMuSiTrack *track = AddTrack(p2Xp2YHits.at(0),p2Xp2YHits.at(1),p2Xp2YHits.at(2));
-  }
-  if(p1Yp2XCondition)
-  {
-    ERFootMuSiTrack *track = AddTrack(p1Yp2XHits.at(0),p1Yp2XHits.at(1),p1Yp2XHits.at(2));
-  }
-  if(p1Xp2YCondition)
-  {
-    ERFootMuSiTrack *track = AddTrack(p1Xp2YHits.at(0),p1Xp2YHits.at(1),p1Xp2YHits.at(2));
-  }
-  if(p1Xp1YCondition)
-  {
-    ERFootMuSiTrack *track = AddTrack(p1Xp1YHits.at(0),p1Xp1YHits.at(1),p1Xp1YHits.at(2));
-  }
-}
-//..........................
+  //..........................
   Int_t numberOfPairs = std::distance(fFootMuSiHit.begin(), fFootMuSiHit.end());
+  LOG(INFO) << "Overall number of FOOT stations =  " << numberOfPairs << FairLogger::endl;
   //TODO: for now the rest part of the code, responsible for track recreation, will be hardcoded to 3 pairs of stations
+  //Idea is to set numbers of track finding stations from the script and use them here for getting the necessary stations
   TClonesArray* hitsFirstStationPair = fFootMuSiHit.begin()->second;
   TClonesArray* hitsSecondStationPair = std::next(fFootMuSiHit.begin())->second;
   TClonesArray* hitsThirdStationPair = std::next(fFootMuSiHit.begin(), 2)->second;
   LOG(INFO) << "First stations pair name is " << fFootMuSiHit.begin()->first << FairLogger::endl;
   LOG(INFO) << "Second stations pair name is " << std::next(fFootMuSiHit.begin())->first << FairLogger::endl;
-  LOG(INFO) << "Third stations pair name is" << std::next(fFootMuSiHit.begin(), 2)->first << FairLogger::endl;
+  LOG(INFO) << "Third stations pair name is " << std::next(fFootMuSiHit.begin(), 2)->first << FairLogger::endl;
+  LOG(INFO) << "Number of hits at first pair = " << hitsFirstStationPair->GetEntriesFast() << FairLogger::endl;
+  LOG(INFO) << "Number of hits at second pair = " << hitsSecondStationPair->GetEntriesFast() << FairLogger::endl;
+  LOG(INFO) << "Number of hits at third pair = " << hitsThirdStationPair->GetEntriesFast() << FairLogger::endl;
+  //Algorithm for going through the hits, projecting them onto a single detector of a pair and constructing tracks from segments...
+  //TODO: For now the algorithm is halted if there are no digis in Alpide. Make choice to use two track constructors, depending on whether the alpide digi information is available
+  if (fAlpideDigis->GetEntriesFast() == 0)
+  {
+    LOG(DEBUG) << "There are no digis in AlpideDigis, reconstruction of track is not possible" << FairLogger::endl;
+    return;
+  }
   for (int iHitFirstPair = 0; iHitFirstPair < hitsFirstStationPair->GetEntriesFast(); ++iHitFirstPair)
   {
-        ERFootMuSiHit* hitFirstPair = (ERFootMuSiHit*)hitsFirstStationPair->At(iHitFirstPair);
+    ERFootMuSiHit* hitFirstPair = (ERFootMuSiHit*)hitsFirstStationPair->At(iHitFirstPair);
     for (int iHitSecondPair = 0; iHitSecondPair < hitsSecondStationPair->GetEntriesFast(); ++iHitSecondPair)
     {
-        ERFootMuSiHit* hitSecondPair = (ERFootMuSiHit*)hitsSecondStationPair->At(iHitSecondPair);
-        TVector3 vectorFirstPairX = hitFirstPair->GetXStationHit();
-        TVector3 vectorFirstPairY = hitFirstPair->GetYStationHit();
-        TVector3 vectorSecondPairX = hitSecondPair->GetXStationHit();
-        TVector3 vectorSecondPairY = hitSecondPair->GetYStationHit();
-        const Double_t kxFirst = (vectorSecondPairX.X() - vectorFirstPairX.X())/(vectorSecondPairX.Z()-vectorFirstPairX.Z());
-        const Double_t bxFirst = (vectorFirstPairX.X() + vectorSecondPairX.X() - kxFirst*(vectorFirstPairX.Z()+vectorSecondPairX.Z()))/2; 
+      ERFootMuSiHit* hitSecondPair = (ERFootMuSiHit*)hitsSecondStationPair->At(iHitSecondPair);
+      TVector3 vectorFirstPairX = hitFirstPair->GetXStationHit();
+      TVector3 vectorFirstPairY = hitFirstPair->GetYStationHit();
+      TVector3 vectorSecondPairX = hitSecondPair->GetXStationHit();
+      TVector3 vectorSecondPairY = hitSecondPair->GetYStationHit();
 
-        vectorFirstPairY.SetX(kxFirst*vectorFirstPairY.Z()+bxFirst);
-        vectorSecondPairY.SetX(kxFirst*vectorSecondPairY.Z()+bxFirst);
-        TVector3 firstSegment = vectorSecondPairY - vectorFirstPairY;
+      const Double_t kxFirst = (vectorSecondPairX.X() - vectorFirstPairX.X()) / (vectorSecondPairX.Z() - vectorFirstPairX.Z());
+      const Double_t bxFirst = (vectorFirstPairX.X() + vectorSecondPairX.X() - kxFirst * (vectorFirstPairX.Z() + vectorSecondPairX.Z())) / 2;
+
+      const Double_t kyFirst = (vectorSecondPairY.Y() - vectorFirstPairY.Y()) / (vectorSecondPairY.Z() - vectorFirstPairY.Z());
+      const Double_t byFirst = (vectorFirstPairY.Y() + vectorSecondPairY.Y() - kyFirst * (vectorFirstPairY.Z() + vectorSecondPairY.Z())) / 2;
+
+      vectorFirstPairY.SetX(kxFirst * vectorFirstPairY.Z() + bxFirst);
+      vectorSecondPairY.SetX(kxFirst * vectorSecondPairY.Z() + bxFirst);
+
+      TVector3 firstSegment = vectorSecondPairY - vectorFirstPairY;
       for (int iHitThirdPair = 0; iHitThirdPair < hitsThirdStationPair->GetEntriesFast(); ++iHitThirdPair)
       {
         ERFootMuSiHit* hitThirdPair = (ERFootMuSiHit*)hitsThirdStationPair->At(iHitThirdPair);
         TVector3 vectorThirdPairX = hitThirdPair->GetXStationHit();
         TVector3 vectorThirdPairY = hitThirdPair->GetYStationHit();
 
-        const Double_t kxSecond = (vectorThirdPairX.X()-vectorSecondPairX.X())/(vectorThirdPairX.Z()-vectorSecondPairX.Z());
-        const Double_t bxSecond = (vectorSecondPairX.X() + vectorThirdPairX.X() - kxSecond*(vectorSecondPairX.Z()+vectorThirdPairX.Z()))/2;
-        vectorThirdPairY.SetX(kxSecond*vectorThirdPairY.Z() + bxSecond);
+        const Double_t kxSecond = (vectorThirdPairX.X() - vectorSecondPairX.X()) / (vectorThirdPairX.Z() - vectorSecondPairX.Z());
+        const Double_t bxSecond = (vectorSecondPairX.X() + vectorThirdPairX.X() - kxSecond * (vectorSecondPairX.Z() + vectorThirdPairX.Z())) / 2;
+        vectorThirdPairY.SetX(kxSecond * vectorThirdPairY.Z() + bxSecond);
         TVector3 secondSegment = vectorThirdPairY - vectorSecondPairY;
+        //Prolongation of the track to Alpide plane and comparison of distance to the activated pixels
+        std::vector<Double_t> distancesToPixels;
         if (secondSegment.Angle(firstSegment) < fAngleBetweenHitsCut) {
-            ERFootMuSiTrack* track = AddTrack(vectorFirstPairY,vectorSecondPairY,vectorThirdPairY);
-            track->SetAnglesWithInitialP(secondSegment.Angle(firstSegment),0.);
-        }
-// Let's implement a new condition getting rid of fake hits and other unwanted hits, by continuing the momentum from the initial protons and comparing the angle between this prolonged tracks and hits 
-        if(isProtonDebug)
-        {
-          TVector3 p1FirstSegmentComparison = p1Xp1YHits[1] - p1Xp1YHits[0];
-          TVector3 p1SecondSegmentComparison = p1Xp1YHits[2] - p1Xp1YHits[1];
-          Double_t p1FirstAngleComparison = p1FirstSegmentComparison.Angle(firstSegment);
-          Double_t p1SecondAngleComparison = p1SecondSegmentComparison.Angle(secondSegment);
-          TVector3 p2FirstSegmentComparison = p2Xp2YHits[1] - p2Xp2YHits[0];
-          TVector3 p2SecondSegmentComparison = p2Xp2YHits[2] - p2Xp2YHits[1];
-          Double_t p2FirstAngleComparison = p2FirstSegmentComparison.Angle(firstSegment);
-          Double_t p2SecondAngleComparison = p2SecondSegmentComparison.Angle(secondSegment);
-          if ( secondSegment.Angle(firstSegment) < fAngleBetweenHitsCut && p1FirstAngleComparison < 0.035 && p2FirstAngleComparison < 0.035)
+
+          for (size_t iAlpideDigi = 0; iAlpideDigi < fAlpideDigis->GetEntriesFast(); iAlpideDigi++)
           {
-            ERFootMuSiTrack* track = AddTrack(vectorFirstPairY,vectorSecondPairY,vectorThirdPairY);
-            track->SetFirstHitRefIndex(hitFirstPair->GetRefIndex());
-            track->SetSecondHitRefIndex(hitSecondPair->GetRefIndex());
-            track->SetThirdHitRefIndex(hitThirdPair->GetRefIndex());
-            track->SetAnglesWithInitialP(p1FirstAngleComparison,p1SecondAngleComparison);
+            ERAlpideDigi* digiAlpide = (ERAlpideDigi*)fAlpideDigis->At(iAlpideDigi);
+            Double_t pixelLocalX = 0.0;
+            Double_t pixelLocalY = 0.0;
+            Double_t distanceToPixel = 0.0;
+            PixelToLocal(digiAlpide->GetPixelNoX(), digiAlpide->GetPixelNoY(), pixelLocalX, pixelLocalY);
+            //distanceToPixel = fabs(pixelLocalX - (kxFirst * digiAlpide->GetPixelZ() + bxFirst));
+            distanceToPixel = sqrt(pow(pixelLocalX - (kxFirst * digiAlpide->GetPixelZ() + bxFirst), 2) + pow(pixelLocalY - (kyFirst * digiAlpide->GetPixelZ() + byFirst), 2));
+            distancesToPixels.push_back(distanceToPixel);
+
+          }
+          std::vector <Double_t> minDistance = { *std::min_element(distancesToPixels.begin(),distancesToPixels.end()) };
+          if (*std::min_element(distancesToPixels.begin(), distancesToPixels.end()) < fMaxDistanceToPixel) {
+            ERFootMuSiTrack* track = AddTrack(vectorFirstPairY, vectorSecondPairY, vectorThirdPairY, minDistance);
+            track->SetAnglesWithInitialP(secondSegment.Angle(firstSegment), 0.);
           }
         }
+
       }
     }
   }
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder]------------Finished--------------------------------------"
-  << "The number of tracks is: " << fFootMuSiTrack->GetEntriesFast()
+  LOG(INFO) << "[ERFootMuSiTrackFinder]------------Finished--------------------------------------"
+    << "The number of tracks is: " << fFootMuSiTrack->GetEntriesFast()
     << FairLogger::endl;
 }
 //--------------------------------------------------------------------------------------------------
+//TODO: Implement writing the index of digi (xChannelIndex,yChannelIndex)
 void ERFootMuSiTrackFinder::CreateHitInFootMuSi(
   const Int_t xChannelIndex, const Int_t yChannelIndex, const Int_t xChannel, const Int_t yChannel,
   const Double_t xEdep, const Double_t yEdep, const TString& xDigiBranchName, const TString& yDigiBranchName,
   const TString& hitBranchName)
 {
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Branch names X:" << xDigiBranchName
-    << " Y: " << yDigiBranchName << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Strips pair numbers " << xChannel << " "
-    << yChannel << FairLogger::endl;
+  LOG(DEBUG) << " The X channel of the hit: " << xChannel << " The Y channel of the hit: " << yChannel << " The X channel edep: " << xEdep << " The Y channel edep: " << yEdep << FairLogger::endl;
   // Let's remove calculation of an unknown coordinate here, so we can use the projection later, when we have multiple pairs of stations
   const bool xStationIsClosest = fFootMuSiSetup->GetStripGlobalZ(xDigiBranchName, xChannel) < fFootMuSiSetup->GetStripGlobalZ(yDigiBranchName, yChannel);
   // We know all about z coordinate, so
@@ -466,47 +347,30 @@ void ERFootMuSiTrackFinder::CreateHitInFootMuSi(
   const double z2 = xStationIsClosest
     ? fFootMuSiSetup->GetStripGlobalZ(yDigiBranchName, yChannel)
     : fFootMuSiSetup->GetStripGlobalZ(xDigiBranchName, xChannel);
-  double x1 = 0.,y1 = 0., x2 = 0., y2 = 0.;  
+  double x1 = 0., y1 = 0., x2 = 0., y2 = 0.;
   if (xStationIsClosest)
-  { 
-/*     TVector3 xDetectorGlobalHit = GetGlobalHitPositionByStrip(xDigiBranchName, xChannel);
-    TVector3 yDetectorGlobalHit = GetGlobalHitPositionByStrip(yDigiBranchName, yChannel); */
-
-/*     x1 = xDetectorGlobalHit.X();
-    y1 = xDetectorGlobalHit.Y();
-    x2 = yDetectorGlobalHit.X();
-    y2 = yDetectorGlobalHit.Y(); */
+  {
     x1 = fFootMuSiSetup->GetStripGlobalX(xDigiBranchName, xChannel);
-/*     y1 = fFootMuSiSetup->GetStripGlobalY(xDigiBranchName, xChannel);
-    x2 = fFootMuSiSetup->GetStripGlobalX(yDigiBranchName, yChannel); */
     y2 = fFootMuSiSetup->GetStripGlobalY(yDigiBranchName, yChannel);
 
   }
   else
-  { 
-/*     TVector3 xDetectorGlobalHit = GetGlobalHitPositionByStrip(xDigiBranchName, xChannel);
-    TVector3 yDetectorGlobalHit = GetGlobalHitPositionByStrip(yDigiBranchName, yChannel); */
-/*     x1 = yDetectorGlobalHit.X();
-    y1 = yDetectorGlobalHit.Y();
-    x2 = xDetectorGlobalHit.X();
-    y2 = xDetectorGlobalHit.Y(); */
-/*     x1 = fFootMuSiSetup->GetStripGlobalX(yDigiBranchName, yChannel); */
+  {
     y1 = fFootMuSiSetup->GetStripGlobalY(yDigiBranchName, yChannel);
     x2 = fFootMuSiSetup->GetStripGlobalX(xDigiBranchName, xChannel);
-/*     y2 = fFootMuSiSetup->GetStripGlobalY(xDigiBranchName, xChannel); */
   }
   const TVector3& xStationHit = xStationIsClosest ? TVector3(x1, y1, z1) : TVector3(x2, y2, z2);
   const TVector3& yStationHit = xStationIsClosest ? TVector3(x2, y2, z2) : TVector3(x1, y1, z1);
   const TVector3& xStationLocalHit = fFootMuSiSetup->ToStationCoordinateSystem(xDigiBranchName, xStationHit);
   const TVector3& yStationLocalHit = fFootMuSiSetup->ToStationCoordinateSystem(yDigiBranchName, yStationHit);
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] X Station Vertex (" << xStationHit.x() << " " << xStationHit.y()
+  LOG(DEBUG) << " X Station Vertex (" << xStationHit.x() << " " << xStationHit.y()
     << " " << xStationHit.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Y Station Vertex (" << yStationHit.x() << " " << yStationHit.y()
+  LOG(DEBUG) << " Y Station Vertex (" << yStationHit.x() << " " << yStationHit.y()
     << " " << yStationHit.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] X Station Vertex in station CS (" << xStationLocalHit.x() << " " << xStationLocalHit.y()
+  LOG(DEBUG) << " X Station Vertex in station CS (" << xStationLocalHit.x() << " " << xStationLocalHit.y()
     << " " << xStationLocalHit.z() << ")" << FairLogger::endl;
-  LOG(DEBUG) << "[ERFootMuSiTrackFinder] Y Station Vertex in station CS (" << yStationLocalHit.x() << " " << yStationLocalHit.y()
-    << " " << yStationLocalHit.z() << ")" << FairLogger::endl;
+  LOG(DEBUG) << " Y Station Vertex in station CS (" << yStationLocalHit.x() << " " << yStationLocalHit.y()
+    << " " << yStationLocalHit.z() << ")" << FairLogger::endl << FairLogger::endl;
   ERFootMuSiHit* hit = AddHit(xStationHit, yStationHit,
     xStationLocalHit, yStationLocalHit, xChannel, yChannel, xEdep, yEdep,
     hitBranchName);
@@ -522,10 +386,10 @@ void ERFootMuSiTrackFinder::Reset()
       itHitBranches.second->Delete();
     }
   }
-   if(fFootMuSiTrack)
+  if (fFootMuSiTrack)
   {
     fFootMuSiTrack->Delete();
-  } 
+  }
 }
 //--------------------------------------------------------------------------------------------------
 ERFootMuSiHit* ERFootMuSiTrackFinder::AddHit(
@@ -545,10 +409,184 @@ ERFootMuSiHit* ERFootMuSiTrackFinder::AddHit(
     ERFootMuSiTrack(firstHit, secondHit, thirdHit,hitsFitChi2);
 } */
 //--------------------------------------------------------------------------------------------------
-ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit)
+ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(const TVector3& firstHit, const TVector3& secondHit, const TVector3& thirdHit, const std::vector<Double_t> distancesToPixels)
 {
   return new ((*fFootMuSiTrack)[fFootMuSiTrack->GetEntriesFast()])
-    ERFootMuSiTrack(firstHit,secondHit,thirdHit);
+    ERFootMuSiTrack(firstHit, secondHit, thirdHit, distancesToPixels);
+}
+//--------------------------------------------------------------------------------------------------
+//TODO: Make it more concise
+void ERFootMuSiTrackFinder::AddProtonDebugTracks()
+{
+  Bool_t isProtonDebug = true;
+  std::vector<TVector3> p1Xp1YHits(3);
+  std::vector<TVector3> p1Xp2YHits(3);
+  std::vector<TVector3> p1Yp2XHits(3);
+  std::vector<TVector3> p2Xp2YHits(3);
+  //Test by putting coordinates of protons' continued trajectories from reaction position into the track finder
+  if (isProtonDebug)
+  {
+    ERDecay7CEventHeader* decayEventHeader = (ERDecay7CEventHeader*)fMCEventHeader;
+    ERDecayMCEventHeader* decayMCEventHeader = (ERDecayMCEventHeader*)fMCEventHeader;
+    TVector3 initialPosition = decayMCEventHeader->GetReactionPos();
+    TLorentzVector firstProton = decayEventHeader->Getp1();
+    TLorentzVector secondProton = decayEventHeader->Getp2();
+    //Having four different combinations of protons' X and Y coordinates correspondence
+    //In order to check the granularity let's make an arbitrary strips division. The size of one strip is t = 0.015 cm
+    // We should take the existing coordinate and turn it to the nearest multiple of t
+    // The zero of the axis is located in strip number 300
+    // The 1st strip center should be located at -5 + t/2
+    // So if the strip is inside the region of -5 + t, it should go to the first strip and so on
+    // the formula should look something like this: -5 + t/2(1 + floor((5 + y)/(t))) 
+    // Now we should modify the X coordinate at each station and only then imply this formula
+    //Left and right coordinates of the detectors
+    Bool_t isGranularity = true;
+    Double_t detectorNegativeEdge = -5.;
+    Double_t detectorPositiveEdge = 5.;
+    Double_t stripSize = 0.015;
+    std::vector<Double_t> detectorsZ = { 20.,21.,36.,37.,52.,53. };
+    // Testing the algorithm for projecting the coordinate from X detector to Y detector at each pairs
+
+    //First proton coordinates at respective detectors
+    Double_t p1FirstDetectorX = (detectorsZ.at(0) - initialPosition.Z()) * (firstProton.Px() / firstProton.Pz()) + initialPosition.X();
+    Double_t p1SecondDetectorY = (detectorsZ.at(1) - initialPosition.Z()) * (firstProton.Py() / firstProton.Pz()) + initialPosition.Y();
+    Double_t p1ThirdDetectorX = (detectorsZ.at(2) - initialPosition.Z()) * (firstProton.Px() / firstProton.Pz()) + initialPosition.X();
+    Double_t p1FourthDetectorY = (detectorsZ.at(3) - initialPosition.Z()) * (firstProton.Py() / firstProton.Pz()) + initialPosition.Y();
+    Double_t p1FifthDetectorX = (detectorsZ.at(4) - initialPosition.Z()) * (firstProton.Px() / firstProton.Pz()) + initialPosition.X();
+    Double_t p1SixthDetectorY = (detectorsZ.at(5) - initialPosition.Z()) * (firstProton.Py() / firstProton.Pz()) + initialPosition.Y();
+
+    //Accounting the granularity of the detectors for the first proton coordinates
+    Double_t p1FirstDetectorXCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p1FirstDetectorX) / (stripSize));
+    Double_t p1SecondDetectorYCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p1SecondDetectorY) / (stripSize));
+    Double_t p1ThirdDetectorXCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p1ThirdDetectorX) / (stripSize));
+    Double_t p1FourthDetectorYCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p1FourthDetectorY) / (stripSize));
+    Double_t p1FifthDetectorXCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p1FifthDetectorX) / (stripSize));
+    Double_t p1SixthDetectorYCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p1SixthDetectorY) / (stripSize));
+
+    //Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
+    Double_t p1Slope = (p1FifthDetectorX - p1FirstDetectorX) / (detectorsZ.at(4) - detectorsZ.at(0));
+    Double_t p1SlopeCentered = (p1FifthDetectorXCentered - p1FirstDetectorXCentered) / (detectorsZ.at(4) - detectorsZ.at(0));
+    Double_t p1Intercept = (p1FirstDetectorX + p1FifthDetectorX - p1Slope * (detectorsZ.at(0) + detectorsZ.at(4))) / 2;
+    Double_t p1InterceptCentered = (p1FirstDetectorXCentered + p1FifthDetectorXCentered - p1SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4))) / 2;
+
+    //Second proton coordinates at respective detectors
+
+    Double_t p2FirstDetectorX = (detectorsZ.at(0) - initialPosition.Z()) * (secondProton.Px() / secondProton.Pz()) + initialPosition.X();
+    Double_t p2SecondDetectorY = (detectorsZ.at(1) - initialPosition.Z()) * (secondProton.Py() / secondProton.Pz()) + initialPosition.Y();
+    Double_t p2ThirdDetectorX = (detectorsZ.at(2) - initialPosition.Z()) * (secondProton.Px() / secondProton.Pz()) + initialPosition.X();
+    Double_t p2FourthDetectorY = (detectorsZ.at(3) - initialPosition.Z()) * (secondProton.Py() / secondProton.Pz()) + initialPosition.Y();
+    Double_t p2FifthDetectorX = (detectorsZ.at(4) - initialPosition.Z()) * (secondProton.Px() / secondProton.Pz()) + initialPosition.X();
+    Double_t p2SixthDetectorY = (detectorsZ.at(5) - initialPosition.Z()) * (secondProton.Py() / secondProton.Pz()) + initialPosition.Y();
+
+    //Accounting the granularity of the detectors for the second proton coordinates
+    Double_t p2FirstDetectorXCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p2FirstDetectorX) / (stripSize));
+    Double_t p2SecondDetectorYCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p2SecondDetectorY) / (stripSize));
+    Double_t p2ThirdDetectorXCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p2ThirdDetectorX) / (stripSize));
+    Double_t p2FourthDetectorYCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p2FourthDetectorY) / (stripSize));
+    Double_t p2FifthDetectorXCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p2FifthDetectorX) / (stripSize));
+    Double_t p2SixthDetectorYCentered = detectorNegativeEdge + stripSize / 2 + stripSize * floor((detectorPositiveEdge + p2SixthDetectorY) / (stripSize));
+
+    //Parameters for the straight line that is used for projecting X coordinates of the first proton onto Y detectors
+    Double_t p2Slope = (p2FifthDetectorX - p2FirstDetectorX) / (detectorsZ.at(4) - detectorsZ.at(0));
+    Double_t p2SlopeCentered = (p2FifthDetectorXCentered - p2FirstDetectorXCentered) / (detectorsZ.at(4) - detectorsZ.at(0));
+    Double_t p2Intercept = (p2FirstDetectorX + p2FifthDetectorX - p2Slope * (detectorsZ.at(0) + detectorsZ.at(4))) / 2;
+    Double_t p2InterceptCentered = (p2FirstDetectorXCentered + p2FifthDetectorXCentered - p2SlopeCentered * (detectorsZ.at(0) + detectorsZ.at(4))) / 2;
+
+    //Setting the vectors of each protons combination, depending on whether the granularity is taken into account
+    if (isGranularity) {
+      p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1) * p1SlopeCentered + p1InterceptCentered, p1SecondDetectorYCentered, detectorsZ.at(1));
+      p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3) * p1SlopeCentered + p1InterceptCentered, p1FourthDetectorYCentered, detectorsZ.at(3));
+      p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5) * p1SlopeCentered + p1InterceptCentered, p1SixthDetectorYCentered, detectorsZ.at(5));
+
+      p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1) * p1SlopeCentered + p1InterceptCentered, p2SecondDetectorYCentered, detectorsZ.at(1));
+      p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3) * p1SlopeCentered + p1InterceptCentered, p2FourthDetectorYCentered, detectorsZ.at(3));
+      p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5) * p1SlopeCentered + p1InterceptCentered, p2SixthDetectorYCentered, detectorsZ.at(5));
+
+      p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1) * p2SlopeCentered + p2InterceptCentered, p1SecondDetectorYCentered, detectorsZ.at(1));
+      p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3) * p2SlopeCentered + p2InterceptCentered, p1FourthDetectorYCentered, detectorsZ.at(3));
+      p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5) * p2SlopeCentered + p2InterceptCentered, p1SixthDetectorYCentered, detectorsZ.at(5));
+
+      p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1) * p2SlopeCentered + p2InterceptCentered, p2SecondDetectorYCentered, detectorsZ.at(1));
+      p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3) * p2SlopeCentered + p2InterceptCentered, p2FourthDetectorYCentered, detectorsZ.at(3));
+      p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5) * p2SlopeCentered + p2InterceptCentered, p2SixthDetectorYCentered, detectorsZ.at(5));
+    }
+    else {
+      p1Xp1YHits.at(0).SetXYZ(detectorsZ.at(1) * p1Slope + p1Intercept, p1SecondDetectorY, detectorsZ.at(1));
+      p1Xp1YHits.at(1).SetXYZ(detectorsZ.at(3) * p1Slope + p1Intercept, p1FourthDetectorY, detectorsZ.at(3));
+      p1Xp1YHits.at(2).SetXYZ(detectorsZ.at(5) * p1Slope + p1Intercept, p1SixthDetectorY, detectorsZ.at(5));
+
+      p1Xp2YHits.at(0).SetXYZ(detectorsZ.at(1) * p1Slope + p1Intercept, p2SecondDetectorY, detectorsZ.at(1));
+      p1Xp2YHits.at(1).SetXYZ(detectorsZ.at(3) * p1Slope + p1Intercept, p2FourthDetectorY, detectorsZ.at(3));
+      p1Xp2YHits.at(2).SetXYZ(detectorsZ.at(5) * p1Slope + p1Intercept, p2SixthDetectorY, detectorsZ.at(5));
+
+      p1Yp2XHits.at(0).SetXYZ(detectorsZ.at(1) * p2Slope + p2Intercept, p1SecondDetectorY, detectorsZ.at(1));
+      p1Yp2XHits.at(1).SetXYZ(detectorsZ.at(3) * p2Slope + p2Intercept, p1FourthDetectorY, detectorsZ.at(3));
+      p1Yp2XHits.at(2).SetXYZ(detectorsZ.at(5) * p2Slope + p2Intercept, p1SixthDetectorY, detectorsZ.at(5));
+
+      p2Xp2YHits.at(0).SetXYZ(detectorsZ.at(1) * p2Slope + p2Intercept, p2SecondDetectorY, detectorsZ.at(1));
+      p2Xp2YHits.at(1).SetXYZ(detectorsZ.at(3) * p2Slope + p2Intercept, p2FourthDetectorY, detectorsZ.at(3));
+      p2Xp2YHits.at(2).SetXYZ(detectorsZ.at(5) * p2Slope + p2Intercept, p2SixthDetectorY, detectorsZ.at(5));
+    }
+
+
+    // Conditions for accounting the size of detectors
+    Bool_t p1Xp1YCondition = (fabs(p1Xp1YHits.at(0).X()) <= 5) && (fabs(p1Xp1YHits.at(0).Y()) <= 5) && (fabs(p1Xp1YHits.at(1).X()) <= 5) && (fabs(p1Xp1YHits.at(1).Y()) <= 5) && (fabs(p1Xp1YHits.at(2).X()) <= 5) && (fabs(p1Xp1YHits.at(2).Y()) <= 5);
+
+    Bool_t p1Xp2YCondition = (fabs(p1Xp2YHits.at(0).X()) <= 5) && (fabs(p1Xp2YHits.at(0).Y()) <= 5) && (fabs(p1Xp2YHits.at(1).X()) <= 5) && (fabs(p1Xp2YHits.at(1).Y()) <= 5) && (fabs(p1Xp2YHits.at(2).X()) <= 5) && (fabs(p1Xp2YHits.at(2).Y()) <= 5);
+
+    Bool_t p1Yp2XCondition = (fabs(p1Yp2XHits.at(0).X()) <= 5) && (fabs(p1Yp2XHits.at(0).Y()) <= 5) && (fabs(p1Yp2XHits.at(1).X()) <= 5) && (fabs(p1Yp2XHits.at(1).Y()) <= 5) && (fabs(p1Yp2XHits.at(2).X()) <= 5) && (fabs(p1Yp2XHits.at(2).Y()) <= 5);
+
+    Bool_t p2Xp2YCondition = (fabs(p2Xp2YHits.at(0).X()) <= 5) && (fabs(p2Xp2YHits.at(0).Y()) <= 5) && (fabs(p2Xp2YHits.at(1).X()) <= 5) && (fabs(p2Xp2YHits.at(1).Y()) <= 5) && (fabs(p2Xp2YHits.at(2).X()) <= 5) && (fabs(p2Xp2YHits.at(2).Y()) <= 5);
+
+    if (p2Xp2YCondition)
+    {
+      ERFootMuSiTrack* track = AddTrack(p2Xp2YHits.at(0), p2Xp2YHits.at(1), p2Xp2YHits.at(2));
+    }
+    if (p1Yp2XCondition)
+    {
+      ERFootMuSiTrack* track = AddTrack(p1Yp2XHits.at(0), p1Yp2XHits.at(1), p1Yp2XHits.at(2));
+    }
+    if (p1Xp2YCondition)
+    {
+      ERFootMuSiTrack* track = AddTrack(p1Xp2YHits.at(0), p1Xp2YHits.at(1), p1Xp2YHits.at(2));
+    }
+    if (p1Xp1YCondition)
+    {
+      ERFootMuSiTrack* track = AddTrack(p1Xp1YHits.at(0), p1Xp1YHits.at(1), p1Xp1YHits.at(2));
+    }
+  }
+  // Let's implement a new condition getting rid of fake hits and other unwanted hits, by continuing the momentum from the initial protons and comparing the angle between this prolonged tracks and hits 
+  /*         if(isProtonDebug)
+          {
+            TVector3 p1FirstSegmentComparison = p1Xp1YHits[1] - p1Xp1YHits[0];
+            TVector3 p1SecondSegmentComparison = p1Xp1YHits[2] - p1Xp1YHits[1];
+            Double_t p1FirstAngleComparison = p1FirstSegmentComparison.Angle(firstSegment);
+            Double_t p1SecondAngleComparison = p1SecondSegmentComparison.Angle(secondSegment);
+            TVector3 p2FirstSegmentComparison = p2Xp2YHits[1] - p2Xp2YHits[0];
+            TVector3 p2SecondSegmentComparison = p2Xp2YHits[2] - p2Xp2YHits[1];
+            Double_t p2FirstAngleComparison = p2FirstSegmentComparison.Angle(firstSegment);
+            Double_t p2SecondAngleComparison = p2SecondSegmentComparison.Angle(secondSegment);
+            if ( secondSegment.Angle(firstSegment) < fAngleBetweenHitsCut && p1FirstAngleComparison < 0.035 && p2FirstAngleComparison < 0.035)
+            {
+              ERFootMuSiTrack* track = AddTrack(vectorFirstPairY,vectorSecondPairY,vectorThirdPairY);
+              track->SetFirstHitRefIndex(hitFirstPair->GetRefIndex());
+              track->SetSecondHitRefIndex(hitSecondPair->GetRefIndex());
+              track->SetThirdHitRefIndex(hitThirdPair->GetRefIndex());
+              track->SetAnglesWithInitialP(p1FirstAngleComparison,p1SecondAngleComparison);
+            }
+          } */
+}
+//TODO Fix the copy of functions from ERAlpide
+void ERFootMuSiTrackFinder::LocalToPixel(Double_t localX, Double_t localY, Int_t& pixelNoX, Int_t& pixelNoY)
+{
+  //TODO Change hardcoded constants to information extracted from geometry 
+  pixelNoX = Int_t((localX + AlpideSpecs::plateXlength / 2) / AlpideSpecs::pixelXlength);
+  pixelNoY = Int_t((localY + AlpideSpecs::plateYlength / 2) / AlpideSpecs::pixelYlength);
+}
+void ERFootMuSiTrackFinder::PixelToLocal(Int_t pixelNoX, Int_t pixelNoY, Double_t& localX, Double_t& localY)
+{
+  localX = pixelNoX * AlpideSpecs::pixelXlength - AlpideSpecs::plateXlength / 2;
+  localY = pixelNoY * AlpideSpecs::pixelYlength - AlpideSpecs::plateYlength / 2;
 }
 //--------------------------------------------------------------------------------------------------
 ClassImp(ERFootMuSiTrackFinder)

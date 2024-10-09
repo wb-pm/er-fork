@@ -69,25 +69,29 @@ InitStatus ERAlpideDigitizer::Init()
 // -----   Public method Exec   --------------------------------------------
 void ERAlpideDigitizer::Exec(Option_t* opt)
 {
+    LOG(INFO) << "[ERAlpideDigitizer]------------Started--------------------------------------"
+        << FairLogger::endl;
     // Reset entries in output arrays
     Reset();
 
     // Temporary map for summing up energies
     std::map<std::pair<Int_t,Int_t>, Double_t> pixelEnergyMap;
-    // Going through the points
+    // TODO: maybe figure out a better way for treating the z coordinate
+    Double_t pixelZ;
+    // Going through the points and summing them by pixels
     for (Int_t iAlpidePoint = 0; iAlpidePoint < fAlpidePoints->GetEntriesFast(); iAlpidePoint++)
     {
         ERAlpidePoint* point = (ERAlpidePoint*)fAlpidePoints->At(iAlpidePoint);
-        pixelEnergyMap[{point->GetPixelNoX(),point->GetPixelNoY()}] += point->GetELoss();
-
-        LOG(DEBUG) << "Current point number: " << iAlpidePoint << " with pixel number X = " << point->GetPixelNoX() << " and Y = " << point->GetPixelNoY() << FairLogger::endl << ", total energy deposition " << pixelEnergyMap[{point->GetPixelNoX(),point->GetPixelNoY()}] << FairLogger::endl;
+        pixelEnergyMap[{point->GetPixelNoX(),point->GetPixelNoY()}] += point->GetEnergyLoss();
+        pixelZ = point->GetZIn();
+        point->Print();
     }
     for (const auto& pixel : pixelEnergyMap) {
-        Int_t pixelX = pixel.first.first;
-        Int_t pixelY = pixel.first.second;
+        Int_t pixelNoX = pixel.first.first;
+        Int_t pixelNoY = pixel.first.second;
         Double_t totalEnergy = pixel.second;
         if (totalEnergy >= fEnergyThreshold) {
-            AddAlpideDigi(pixelX,pixelY,totalEnergy);
+            AddAlpideDigi(pixelNoX,pixelNoY,pixelZ, totalEnergy);
         } 
     }
 }
@@ -101,13 +105,14 @@ void ERAlpideDigitizer::Reset()
 // ----------------------------------------------------------------------------
 void ERAlpideDigitizer::Finish()
 {
-    LOG(INFO) << "========== Finish of ERAlpideDigitizer ==================" << FairLogger::endl;
+    LOG(INFO) << "[ERAlpideDigitizer]------------Finished--------------------------------------"
+    << "The number of digis is: " << fAlpideDigis->GetEntriesFast() << FairLogger::endl;
 }
 // ----------------------------------------------------------------------------
-ERAlpideDigi* ERAlpideDigitizer::AddAlpideDigi(Int_t pixelNoX, Int_t pixelNoY, Double_t edep, Int_t chipID)
+ERAlpideDigi* ERAlpideDigitizer::AddAlpideDigi(Int_t pixelNoX, Int_t pixelNoY, Double_t pixelZ, Double_t edep, Int_t chipID)
 {
     ERAlpideDigi* digi = new((*fAlpideDigis)[fAlpideDigis->GetEntriesFast()])
-        ERAlpideDigi(fAlpideDigis->GetEntriesFast(), pixelNoX, pixelNoY, edep, chipID);
+        ERAlpideDigi(fAlpideDigis->GetEntriesFast(), pixelNoX, pixelNoY, pixelZ, edep, chipID);
     return digi;
 }
 // ----------------------------------------------------------------------------

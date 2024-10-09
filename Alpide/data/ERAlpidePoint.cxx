@@ -9,7 +9,8 @@
 #include "ERAlpidePoint.h"
 
 #include "FairLogger.h"
-//--------------------------------------------------------------------------------------------------
+//TODO: Fix having some duplicate methods
+//-------------------------------------------------------------------------------------------------- Preferably not to use the default constructor!
 ERAlpidePoint::ERAlpidePoint():
   FairMCPoint(),
   fX_out(0.), fY_out(0.), fZ_out(0.),
@@ -20,12 +21,13 @@ ERAlpidePoint::ERAlpidePoint():
 //--------------------------------------------------------------------------------------------------
 ERAlpidePoint::ERAlpidePoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID,
     Double_t mass,
-    TVector3 posIn,
+    TVector3 posIn, TVector3 posInLocal,
     TVector3 posOut, TVector3 momIn, TVector3 momOut,
     Double_t tof, Double_t length, Double_t eLoss, Int_t pdg,
     Int_t pixelNoX, Int_t pixelNoY, Int_t pixelNoX_out, Int_t pixelNoY_out):
-  FairMCPoint(trackID, -1., posIn, momIn, tof, length, eLoss),
-  fEventID(eventID),
+  FairMCPoint(trackID, -1., posIn, momIn, tof, length, eLoss,eventID),
+  fMass(mass), fMot0TrackID(mot0TrackID),
+  fX_in_local(posInLocal.X()),fY_in_local(posInLocal.Y()),fZ_in_local(posInLocal.Z()),
   fX_out(posOut.X()), fY_out(posOut.Y()), fZ_out(posOut.Z()),
   fPx_out(momOut.X()), fPy_out(momOut.Y()), fPz_out(momOut.Z()),
   fPDG(pdg), fPixelNoX(pixelNoX),fPixelNoY(pixelNoY), fPixelNoX_out(pixelNoX_out), fPixelNoY_out(pixelNoY_out) 
@@ -38,16 +40,14 @@ ERAlpidePoint::~ERAlpidePoint() {
 
 //--------------------------------------------------------------------------------------------------
 void ERAlpidePoint::Print(const Option_t* opt) const {
-  LOG(INFO) << "ERAlpidePoint: track " << fTrackID;
+  LOG(INFO) << "ERAlpidePoint: track " << fTrackID << ", event ID " << fEventId << FairLogger::endl;
   LOG(INFO) << "    Position (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;
   LOG(INFO) << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
-  LOG(INFO) << "Mother track ID " << fMot0TrackID << FairLogger::endl;
-  LOG(INFO) << "Mass " << fMass << FairLogger::endl;
+  LOG(INFO) << "    Mother track ID " << fMot0TrackID << ", Mass " << fMass << " GeV" << FairLogger::endl;
   LOG(INFO) << "    Time " << fTime << " ns,  Length " << fLength << " cm" << FairLogger::endl;
   LOG(INFO) << "    Energy loss " << fELoss << " MeV "<< FairLogger::endl;
-  LOG(INFO) << "    Pixel number along x axis (entrance): " << fPixelNoX << " along y axis (entrance): " << fPixelNoY << FairLogger::endl;
-  LOG(INFO) << "    Pixel number along x axis (exit): " << fPixelNoX_out << " along y axis (exit): " << fPixelNoY_out << FairLogger::endl;
-  LOG(INFO) << " PDG: " << fPDG << FairLogger::endl;
+  LOG(INFO) << "    Pixel number along x axis (in) " << fPixelNoX << ", along y axis (in): " << fPixelNoY << FairLogger::endl;
+  LOG(INFO) << "    PDG: " << fPDG << FairLogger::endl;
 }
 
 //--------------------------------------------------------------------------------------------------

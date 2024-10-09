@@ -8,20 +8,23 @@
 
 #include "ERAlpideDigi.h"
 
+//TODO: Implement Digi Print
 // -----   Default constructor (not to be used)  -------------------------------------------
 ERAlpideDigi::ERAlpideDigi()
   :fID(-1),
   fPixelNoX(-1),
   fPixelNoY(-1),
+  fPixelZ(-1),
   fEdep(-1),
   fChipID(-1)
 {
 }
 // -----   Constructor with parameters   -----------------------------------
-ERAlpideDigi::ERAlpideDigi(Int_t ID, Int_t pixelNoX, Int_t pixelNoY,Double_t edep, Int_t chipID)
+ERAlpideDigi::ERAlpideDigi(Int_t ID, Int_t pixelNoX, Int_t pixelNoY,Double_t pixelZ, Double_t edep, Int_t chipID)
   :fID(ID),
   fPixelNoX(pixelNoX),
   fPixelNoY(pixelNoY),
+  fPixelZ(pixelZ),
   fEdep(edep),
   fChipID(chipID)
 {
@@ -31,6 +34,7 @@ ERAlpideDigi::ERAlpideDigi(const ERAlpideDigi& right)
   :fID(right.fID),
   fPixelNoX(right.fPixelNoX),
   fPixelNoY(right.fPixelNoY),
+  fPixelZ(right.fPixelZ),
   fEdep(right.fEdep),
   fChipID(right.fChipID)
 {

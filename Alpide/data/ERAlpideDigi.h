@@ -11,7 +11,7 @@
 
 #include "FairMultiLinkedData.h"
 
-/** @class ERAlpideDigitizer
+/** @class ERAlpideDigi
  ** @brief The data class of Alpide pixel detector response 
  ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
@@ -24,18 +24,24 @@ public:
   /** Default constructor **/
     ERAlpideDigi();
   /** Constructor with parameters **/
-    ERAlpideDigi(Int_t fID, Int_t pixelNoX, Int_t pixelNoY, Double_t edep, Int_t chipID);
+    ERAlpideDigi(Int_t ID, Int_t pixelNoX, Int_t pixelNoY, Double_t pixelZ, Double_t edep, Int_t chipID);
   /** Copy constructor **/
     ERAlpideDigi(const ERAlpideDigi&);
 
   /** Destructor **/
     ~ERAlpideDigi();
 
+  /** Getters **/  
+  Int_t GetPixelNoX() const {return fPixelNoX;}
+  Int_t GetPixelNoY() const {return fPixelNoY;}
+  Double_t GetPixelZ() const {return fPixelZ;}
+
 protected:
 //Index of digi in the collection
     Int_t fID;
     Int_t fPixelNoX;
     Int_t fPixelNoY;
+    Double_t fPixelZ;
     // ID of the chip where the pixel is located
     Int_t fChipID;
 

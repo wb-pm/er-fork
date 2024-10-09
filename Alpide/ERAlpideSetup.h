@@ -12,7 +12,7 @@
 #include "TGeoPhysicalNode.h"
 
 /** @class ERAlpideSetup
- ** @brief Class for initializing Alpide geometry 
+ ** @brief Class for reading Alpide geometry 
  ** @author B.Khamidullin <khamidullinbr@jinr.ru>
  ** @version 1.0
  **

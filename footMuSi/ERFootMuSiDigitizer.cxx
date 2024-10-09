@@ -82,6 +82,7 @@ InitStatus ERFootMuSiDigitizer::Init() {
 void ERFootMuSiDigitizer::Exec(Option_t* opt) {
   Reset();
   for (const auto &itPointBranches : fQFootMuSiPoints) {
+    LOG(DEBUG) << "Number of points in " << itPointBranches.first << " is = " << itPointBranches.second->GetEntriesFast() << FairLogger::endl;
     Double_t  elossThreshold, timeThreshold;
     Double_t  elossSigma, timeSigma;
     std::map<Int_t, std::vector<Int_t>> sortedPoints;
@@ -97,7 +98,7 @@ void ERFootMuSiDigitizer::Exec(Option_t* opt) {
       sortedPoints[point->GetVolNb()].push_back(iPoint);
     }
     for (const auto &itPoint : sortedPoints) {
-      Float_t   edep = 0.; //sum edep in strip
+      Float_t   edep = 0.; //sum edep a in strip
       Float_t   time = std::numeric_limits<float>::max(); // min time in strip
       for (const auto itPointsForCurrentVolume : itPoint.second) {
         const auto* point = (ERPoint*)(itPointBranches.second->At(itPointsForCurrentVolume));

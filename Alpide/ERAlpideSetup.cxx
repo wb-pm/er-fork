@@ -5,6 +5,7 @@
  *         GNU Lesser General Public Licence version 3 (LGPL) version 3,        *  
  *                  copied verbatim in the file "LICENSE"                       *
  ********************************************************************************/
+//TODO: Figure out how Setup class works
 #include "ERAlpideSetup.h"
 
 #include "TMath.h"

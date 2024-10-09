@@ -10,13 +10,9 @@
 #include "ERAlpide.h"
 
 #include "TVirtualMC.h"
+#include "TGeoMatrix.h"
 
 #include "ERAlpideGeoPar.h"
-
-
-
-
-
 
  //--------------------------------------------------------------------------------------------------
 ERAlpide::ERAlpide() :
@@ -75,27 +71,22 @@ void ERAlpide::Register() {
 }
 //--------------------------------------------------------------------------------------------------
 Bool_t ERAlpide::ProcessHits(FairVolume* vol) {
-  static Int_t          eventID;           //!  event index
-  static Int_t          trackID;           //!  track index
-  static Int_t          mot0TrackID;       //!  0th mother track index
-  static Double_t       mass;              //!  mass
-  static TLorentzVector posIn, posOut;    //!  position
-  static TLorentzVector momIn, momOut;    //!  momentum
-  static Double32_t     time;              //!  time
-  static Double32_t     length;            //!  length
-  static Double32_t     eLoss;             //!  energy loss
-  static Int_t          pdg;                //! particle ID
+  static Int_t          eventID;           //  event index
+  static Int_t          trackID;           //  track index
+  static Int_t          mot0TrackID;       //  0th mother track index
+  static Double_t       mass;              //  mass
+  static TLorentzVector posIn, posOut;    //  position
+  static TVector3       posInLocal, posOutLocal; // local position
+  static TLorentzVector momIn, momOut;    //  momentum
+  static Double32_t     time;              //  time
+  static Double32_t     length;            //  length
+  static Double32_t     eLoss;             //  energy loss
+  static Int_t          pdg;                // particle ID
   static Int_t pixelNoX;                                       ///< number of entrance pixel along x axis 
   static Int_t pixelNoY;                                       ///< number of entrance pixel along y axis
   static Int_t pixelNoX_out;                                       ///< number of exit pixel along x axis 
   static Int_t pixelNoY_out;                                       ///< number of exit pixel along y axis
 
-  static Int_t stepNumber;
-
-  const Double_t plateXlength = 10.; ///< size of carbon plate along X axis
-  const Double_t plateYlength = 10.; ///< size of carbon plate along Y axis
-  const Double_t pixelXlength = 10. / (6. * 512.); ///<size of one pixel along X axis
-  const Double_t pixelYlength = 10. / (6. * 1024.); ///<size of one pixel along Y axis
   //Start point
   if (gMC->IsTrackEntering()) { // Return true if this is the first step of the track in sensitive volume
     eLoss = 0.;
@@ -103,48 +94,66 @@ Bool_t ERAlpide::ProcessHits(FairVolume* vol) {
 
     gMC->TrackPosition(posIn);
     gMC->TrackMomentum(momIn);
-    pixelNoX = Int_t((posIn.X() + plateXlength / 2) / pixelXlength);
-    pixelNoY = Int_t((posIn.Y() + plateYlength / 2) / pixelYlength);
     trackID = gMC->GetStack()->GetCurrentTrackNumber();
 
     time = gMC->TrackTime() * 1.0e09;// Return the current time track being transported
     length = gMC->TrackLength(); // Return the length of the current track from its origin (in cm)
     mot0TrackID = gMC->GetStack()->GetCurrentTrack()->GetMother(0);
     mass = gMC->ParticleMass(gMC->TrackPid()); // GeV/c2
-    LOG(INFO) << "mother id " << mot0TrackID << ", mass " << mass << FairLogger::endl;
-
     pdg = gMC->TrackPid();
-    stepNumber = 0;
+    TGeoHMatrix matrix;
+    gMC->GetTransformation(gMC->CurrentVolPath(), matrix);
+    Double_t globalPos[3], localPos[3];
+    posIn.Vect().GetXYZ(globalPos);
+    matrix.MasterToLocal(globalPos, localPos);
+    posInLocal.SetXYZ(localPos[0], localPos[1], localPos[2]);
+    LocalToPixel(posInLocal.X(), posInLocal.Y(), pixelNoX, pixelNoY);
   }
+  //TODO: Later implement functionality for steps in a similar capacity as for points
   if (fStoreSteps) {
     static TLorentzVector posStep, momStep;
+    static TVector3 posStepLocal;
     static ExpertTrackingStatus trackStatus;
     static TArrayI processesID;
     static Int_t pixelNoXStep, pixelNoYStep;
-    pixelNoXStep = Int_t((posStep.X() + plateXlength / 2) / pixelXlength);
-    pixelNoYStep = Int_t((posStep.Y() + plateYlength / 2) / pixelYlength);
+    static Int_t stepNumber;
 
     gMC->TrackPosition(posStep);
     gMC->TrackMomentum(momStep);
+
+    TGeoHMatrix matrix;
+    gMC->GetTransformation(gMC->CurrentVolPath(), matrix);
+    Double_t globalPos[3], localPos[3];
+    posStep.Vect().GetXYZ(globalPos);
+    matrix.MasterToLocal(globalPos, localPos);
+    posStepLocal.SetXYZ(localPos[0], localPos[1], localPos[2]);
+    LocalToPixel(posStepLocal.X(), posStepLocal.Y(), pixelNoXStep, pixelNoYStep);
+
     trackStatus = ERAlpideStep::GetTrackStatus();
     gMC->StepProcesses(processesID);
-    ERAlpideStep* AlpideStep = AddAlpideStep(eventID, stepNumber, trackID, TVector3(posStep.X(), posStep.Y(), posStep.Z()), TVector3(momStep.X(), momStep.Y(), momStep.Z()), pixelNoXStep, pixelNoYStep, gMC->TrackTime() * 1e9, gMC->TrackStep(), gMC->TrackPid(), gMC->TrackMass(), trackStatus, gMC->Edep()*1e3, gMC->TrackCharge(), processesID);
+    ERAlpideStep* AlpideStep = AddAlpideStep(eventID, stepNumber, trackID, TVector3(posStep.X(), posStep.Y(), posStep.Z()), TVector3(momStep.X(), momStep.Y(), momStep.Z()), pixelNoXStep, pixelNoYStep, gMC->TrackTime() * 1e9, gMC->TrackStep(), gMC->TrackPid(), gMC->TrackMass(), trackStatus, gMC->Edep() * 1e3, gMC->TrackCharge(), processesID);
     if (fVerboseLevel > 1) AlpideStep->Print();
+    stepNumber++;
 
   }
   eLoss += gMC->Edep() * 1e3; // MeV //Return the energy lost in the current step
-  stepNumber++;
 
   //Finish point
   if (gMC->IsTrackExiting() || gMC->IsTrackStop() || gMC->IsTrackDisappeared()) {
     //LOG(DEBUG) << "Current volume of the point is" << gMC->CurrentVolName() << FairLogger::endl;
     gMC->TrackPosition(posOut);
     gMC->TrackMomentum(momOut);
-    pixelNoX_out = Int_t((posOut.X() + plateXlength / 2) / pixelXlength);
-    pixelNoY_out = Int_t((posOut.Y() + plateYlength / 2) / pixelYlength);
+    TGeoHMatrix matrix;
+    gMC->GetTransformation(gMC->CurrentVolPath(), matrix);
+    Double_t globalPos[3], localPos[3];
+    posOut.Vect().GetXYZ(globalPos);
+    matrix.MasterToLocal(globalPos, localPos);
+    posOutLocal.SetXYZ(localPos[0], localPos[1], localPos[2]);
+    LocalToPixel(posOutLocal.X(), posOutLocal.Y(), pixelNoX_out, pixelNoY_out);
     if (eLoss > 0.) {
-      AddAlpidePoint(eventID, trackID, gMC->GetStack()->GetCurrentTrack()->GetMother(0), gMC->TrackMass(),
+      AddAlpidePoint(eventID, trackID, mot0TrackID, mass,
         TVector3(posIn.X(), posIn.Y(), posIn.Z()),
+        posInLocal,
         TVector3(posOut.X(), posOut.Y(), posOut.Z()),
         TVector3(momIn.Px(), momIn.Py(), momIn.Pz()),
         TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
@@ -194,6 +203,7 @@ void ERAlpide::CopyClones(TClonesArray* cl1, TClonesArray* cl2, Int_t offset) {
 //--------------------------------------------------------------------------------------------------
 ERAlpidePoint* ERAlpide::AddAlpidePoint(Int_t eventID, Int_t trackID, Int_t mot0TrackID, Double_t mass,
   const TVector3& posIn,
+  const TVector3& posInLocal,
   const TVector3& posOut,
   const TVector3& momIn,
   const TVector3& momOut,
@@ -202,6 +212,7 @@ ERAlpidePoint* ERAlpide::AddAlpidePoint(Int_t eventID, Int_t trackID, Int_t mot0
   Int_t size = clref.GetEntriesFast();
   return new(clref[size]) ERAlpidePoint(eventID, trackID, mot0TrackID, mass,
     TVector3(posIn.X(), posIn.Y(), posIn.Z()),
+    posInLocal,
     TVector3(posOut.X(), posOut.Y(), posOut.Z()),
     TVector3(momIn.Px(), momIn.Py(), momIn.Pz()),
     TVector3(momOut.Px(), momOut.Py(), momOut.Pz()),
@@ -261,4 +272,16 @@ Bool_t ERAlpide::CheckIfSensitive(std::string name) {
 }
 
 //--------------------------------------------------------------------------------------------------
+void ERAlpide::LocalToPixel(Double_t localX, Double_t localY, Int_t& pixelNoX, Int_t& pixelNoY)
+{
+  //TODO: Change hardcoded constants to information extracted from geometry 
+  pixelNoX = Int_t((localX + AlpideSpecs::plateXlength / 2) / AlpideSpecs::pixelXlength);
+  pixelNoY = Int_t((localY + AlpideSpecs::plateYlength / 2) / AlpideSpecs::pixelYlength);
+}
+void ERAlpide::PixelToLocal(Int_t pixelNoX, Int_t pixelNoY, Double_t& localX, Double_t& localY)
+{
+  localX = pixelNoX * AlpideSpecs::pixelXlength - AlpideSpecs::plateXlength / 2;
+  localY = pixelNoY * AlpideSpecs::pixelYlength - AlpideSpecs::plateYlength / 2;
+
+}
 ClassImp(ERAlpide)

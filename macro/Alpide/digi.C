@@ -14,10 +14,11 @@
 #include "ERRunAna.h"
 #endif
 
-void digi(Int_t nEvents = 100000)
+void digi(Int_t nEvents = 10)
 {
   //nEvents = 100000;
-  TString appendName = "TestTracks_Alpide_3foot_ranges1000mm";
+  //TString appendName = "RotatedFootTest500AMeV_1cmSpread";
+  TString appendName = "todo_correction";
   TString sim_file = "sim/sim_" + appendName + ".root";
   TString par_file = "par/par_" + appendName + ".root";
   TString digi_file = "digi/digi_" + appendName + ".root";
@@ -35,7 +36,7 @@ void digi(Int_t nEvents = 100000)
   Int_t verbose = 2; // 1 - only standard log print, 2 - print digi information 
   ERAlpideDigitizer* AlpideDigitizer = new ERAlpideDigitizer();
   //Energy threshold based on the fact that we should lose 10% protons at max
-  Double_t energyThreshold = 0.0135;
+  const Double_t energyThreshold = 0.0135;
 
   AlpideDigitizer->SetEnergyThreshold(energyThreshold); //MeV
   fRun->AddTask(AlpideDigitizer);

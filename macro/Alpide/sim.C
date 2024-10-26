@@ -20,10 +20,13 @@
 #include "ERFootMuSi.h"
 #endif
 
-void sim(Int_t nEvents = 100000)
+void sim(Int_t nEvents = 10000)
 {
+  nEvents = 10;
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
-  TString nameAppend = "UniformDecayerTest_Alpide_3foot_ranges1000mm";
+  //TString nameAppend = "UniformDecayerTest_Alpide_3foot_ranges1000mm";
+  //TString nameAppend = "CopyRotatedFootTest500AMeV_1cmSpread";
+  TString nameAppend = "todo_correction1";
   //Simulation output
   TString outFile = "sim/sim_"+nameAppend+".root";
   //Decay products file
@@ -70,7 +73,7 @@ void sim(Int_t nEvents = 100000)
   run->AddModule(target);
   // -----   Create Alpide detector  --------------------------------------------
   ERAlpide* Alpide = new ERAlpide("ERAlpide", kTRUE, detectorVerbosity);
-  Alpide->SetGeometryFileName(workDirPath + "/geometry/Alpide_nochips.geo.root");
+    Alpide->SetGeometryFileName(workDirPath + "/geometry/Alpide_nochips_box.geo.root");
   //Alpide->SetStoreSteps();
   run->AddModule(Alpide);
   //----------  Create FOOT detector --------------------------------------------
@@ -85,32 +88,35 @@ void sim(Int_t nEvents = 100000)
   z_pair = 1.;
   z_stations = 7.;
   TVector3 fZeroRotation(0., 0., 0.);
+  TVector3 smallZRotation(0.,0.,10.); //degrees
 
   ERGeoSubAssembly* C7_1st_pair = new ERGeoSubAssembly("C7_1st_pair", TVector3(x, y, z), fZeroRotation);
   ERGeoSubAssembly* C7_2nd_pair = new ERGeoSubAssembly("C7_2nd_pair", TVector3(x, y, z + z_pair + z_stations), fZeroRotation);
   ERGeoSubAssembly* C7_3rd_pair = new ERGeoSubAssembly("C7_3rd_pair", TVector3(x, y, z + 2 * z_pair + 2 * z_stations), fZeroRotation);
   ERGeoSubAssembly* C7_4th_pair = new ERGeoSubAssembly("C7_4th_pair", TVector3(x, y, z + 3 * z_pair + 3 * z_stations), fZeroRotation);
 
-  ERFootMuSiGeoComponentSingleSi* det_C7_X1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_1", TVector3(0., 0., 0.), TVector3(), "X");
-  ERFootMuSiGeoComponentSingleSi* det_C7_Y1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_2", TVector3(0., 0., z_pair), TVector3(), "Y");
-  ERFootMuSiGeoComponentSingleSi* det_C7_X2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_3", TVector3(0., 0., 0.), TVector3(), "X");
-  ERFootMuSiGeoComponentSingleSi* det_C7_Y2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_4", TVector3(0., 0., z_pair), TVector3(), "Y");
-  ERFootMuSiGeoComponentSingleSi* det_C7_X3 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_5", TVector3(0., 0., 0.), TVector3(), "X");
-  ERFootMuSiGeoComponentSingleSi* det_C7_Y3 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_6", TVector3(0., 0., z_pair), TVector3(), "Y");
-  ERFootMuSiGeoComponentSingleSi* det_C7_X4 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_7", TVector3(0., 0., 0.), TVector3(), "X");
-  ERFootMuSiGeoComponentSingleSi* det_C7_Y4 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_8", TVector3(0., 0., z_pair), TVector3(), "Y");
+  ERFootMuSiGeoComponentSingleSi* det_C7_X1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_1", TVector3(0., 0., 0.), fZeroRotation, "X");
+  ERFootMuSiGeoComponentSingleSi* det_C7_Y1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_2", TVector3(0., 0., z_pair), fZeroRotation, "Y");
   C7_1st_pair->AddComponent(det_C7_X1);
   C7_1st_pair->AddComponent(det_C7_Y1);
+  setupFootMuSi->AddSubAssembly(C7_1st_pair);
+
+  ERFootMuSiGeoComponentSingleSi* det_C7_X2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_3", TVector3(0., 0., 0.), smallZRotation, "X");
+  ERFootMuSiGeoComponentSingleSi* det_C7_Y2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_4", TVector3(0., 0., z_pair), smallZRotation, "Y");
   C7_2nd_pair->AddComponent(det_C7_X2);
   C7_2nd_pair->AddComponent(det_C7_Y2);
+  setupFootMuSi->AddSubAssembly(C7_2nd_pair);
+
+  ERFootMuSiGeoComponentSingleSi* det_C7_X3 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_5", TVector3(0., 0., 0.), fZeroRotation, "X");
+  ERFootMuSiGeoComponentSingleSi* det_C7_Y3 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_6", TVector3(0., 0., z_pair), fZeroRotation, "Y");
   C7_3rd_pair->AddComponent(det_C7_X3);
   C7_3rd_pair->AddComponent(det_C7_Y3);
+  setupFootMuSi->AddSubAssembly(C7_3rd_pair);
+  
+  ERFootMuSiGeoComponentSingleSi* det_C7_X4 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_7", TVector3(0., 0., 0.), fZeroRotation, "X");
+  ERFootMuSiGeoComponentSingleSi* det_C7_Y4 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_8", TVector3(0., 0., z_pair), fZeroRotation, "Y");
   C7_4th_pair->AddComponent(det_C7_X4);
   C7_4th_pair->AddComponent(det_C7_Y4);
-
-  setupFootMuSi->AddSubAssembly(C7_1st_pair);
-  setupFootMuSi->AddSubAssembly(C7_2nd_pair);
-  setupFootMuSi->AddSubAssembly(C7_3rd_pair);
   //Currently working with 3 pairs
 /*   setupFootMuSi->AddSubAssembly(C7_4th_pair); */
   // ------FootMuSi -------------------------------------------------------
@@ -121,7 +127,7 @@ void sim(Int_t nEvents = 100000)
   //----------  Generate initial beam --------------------------------------------
   FairPrimaryGenerator* primGen = new FairPrimaryGenerator();
 
-  Double_t kinE_MevPerNucleon = 600.;
+  Double_t kinE_MevPerNucleon = 500.;
   Double_t beamStartPosition = -10.;
   Int_t Z = 6, A = 9, Q = 6;
   TString ionName = "9C";
@@ -133,7 +139,7 @@ void sim(Int_t nEvents = 100000)
   generator9C->SetThetaSigma(0., 0.5); //for now there is a fixed 0 degree angle in the ERIonGenerator
   // generator9C->SetPhiRange(0, 45);
   //generator9C->SetBoxXYZ(0, 0, 0., 0., beamStartPosition);
-  generator9C->SetRoundXY(2., 0., 0., beamStartPosition); // задает ограничение размытия пятна пучка на мишени
+  generator9C->SetRoundXY(1., 0., 0., beamStartPosition); // задает ограничение размытия пятна пучка на мишени
   //generator9C->SetPDGType()
 
   // generator9C->SpreadingOnTarget(); 				//Sets spreading of x and y coordinates on target (where z-position is zero)
@@ -146,9 +152,10 @@ void sim(Int_t nEvents = 100000)
 
   TString interactionVol = "target9BeVol";
 
-  Double_t target_thickness = 5.;
+  Double_t target_thickness = 5.; // cm
 
-  targetDecay->Set7CUniformExcitation(0.,20.);
+  targetDecay->Set7CUniformExcitation(0.,20.); // MeV
+  //targetDecay->Set7CGaussianExcitation(6.,3.);
   targetDecay->SetInteractionVolumeName(interactionVol);
   targetDecay->SetMinStep(1e-2);
   targetDecay->SetDecayFile(decayDatFile.Data());
@@ -159,8 +166,8 @@ void sim(Int_t nEvents = 100000)
 
   decayer->AddDecay(targetDecay);
   run->SetDecayer(decayer);
-  //-------Set visualisation flag to true------------------------------------
-  run->SetStoreTraj(kFALSE);
+  //-------Set visualisation flag------------------------------------
+  run->SetStoreTraj(kTRUE);
   // -----   Initialize simulation run   ------------------------------------
   run->Init();
   // -----   Runtime database   ---------------------------------------------

@@ -272,13 +272,13 @@ Bool_t ERAlpide::CheckIfSensitive(std::string name) {
 }
 
 //--------------------------------------------------------------------------------------------------
-void ERAlpide::LocalToPixel(Double_t localX, Double_t localY, Int_t& pixelNoX, Int_t& pixelNoY)
+ void ERAlpide::LocalToPixel(Double_t localX, Double_t localY, Int_t& pixelNoX, Int_t& pixelNoY)
 {
   //TODO: Change hardcoded constants to information extracted from geometry 
   pixelNoX = Int_t((localX + AlpideSpecs::plateXlength / 2) / AlpideSpecs::pixelXlength);
   pixelNoY = Int_t((localY + AlpideSpecs::plateYlength / 2) / AlpideSpecs::pixelYlength);
 }
-void ERAlpide::PixelToLocal(Int_t pixelNoX, Int_t pixelNoY, Double_t& localX, Double_t& localY)
+ void ERAlpide::PixelToLocal(Int_t pixelNoX, Int_t pixelNoY, Double_t& localX, Double_t& localY)
 {
   localX = pixelNoX * AlpideSpecs::pixelXlength - AlpideSpecs::plateXlength / 2;
   localY = pixelNoY * AlpideSpecs::pixelYlength - AlpideSpecs::plateYlength / 2;

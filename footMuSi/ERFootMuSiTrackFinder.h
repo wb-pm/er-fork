@@ -84,7 +84,7 @@ private:
   void AddProtonDebugTracks();
   /** @brief Adds a ERFootMuSiHit to the output Collection **/
   ERFootMuSiHit* AddHit(const TVector3& xStationHit, const TVector3& yStationHit,
-                              const TVector3& xStationLocalHit, const TVector3& yStationLocalHit, 
+                              const TVector3& xStationLocalHit, const TVector3& yStationLocalHit, Int_t xChannelIndex, Int_t yChannelIndex,
                               Int_t xChannel, Int_t yChannel, Double_t xEdep, Double_t yEdep,
                               const TString& digiBranchName);
   /** @brief Adds a ERFootMuSiTrack to the output Collection **/
@@ -92,6 +92,8 @@ private:
   void CreateHitInFootMuSi(Int_t xChannelIndex, Int_t yChannelIndex, Int_t xChannel, Int_t yChannel, Double_t xEdep, Double_t yEdep,
                                const TString& xBranchName, const TString& yBranchName, const TString& trackBranchName);
   TVector3 GetGlobalHitPositionByStrip(const TString& branch_name, ERChannel channel) const;
+
+  void CreateTracks();
 
   void LocalToPixel(Double_t globalX, Double_t globalY, Int_t& pixelNoX, Int_t& pixelNoY);
   

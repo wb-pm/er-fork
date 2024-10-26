@@ -21,6 +21,9 @@
  //Since in the ERDecay7C only masses and pdg codes of ions are being used, this data will be taken from G4IonTable. But G4IonTable gives masses in MeV, so it is important to divide by 1000 for converting to GeV!
  //There is a problem with taking mass from the TDatabasePDG, because it is defined there for atoms and not for ions 
 
+const Double_t MeV2GeV = 1. / 1000.;
+const Double_t fDefaultExcitation = 20.; // MeV
+
 ERDecay7C::ERDecay7C() :
   ERDecay("7C"),
   fTargetDecayFinish(kFALSE),
@@ -66,7 +69,7 @@ Bool_t ERDecay7C::Init() {
     return kFALSE;
   }
   LOG(INFO) << "Ion 7C is not in database! Adding the 7C ion..." << FairLogger::endl;
-  const Double_t mass7C = G4IonTable::GetIonTable()->GetIonMass(1, 1) * 4 / 1000. + G4IonTable::GetIonTable()->GetIonMass(2, 3) / 1000.;
+  const Double_t mass7C = G4IonTable::GetIonTable()->GetIonMass(1, 1) * 4 * MeV2GeV + G4IonTable::GetIonTable()->GetIonMass(2, 3) * MeV2GeV;
   f7C = TDatabasePDG::Instance()->AddParticle("7C", "7C", mass7C, 0, 1e-3, 18., "Baryon", 1000060070);
   f7C->Print();
 
@@ -103,10 +106,11 @@ Bool_t ERDecay7C::Init() {
         LOG(ERROR) << "Decay energy can't be less than 0" << FairLogger::endl;
         return kFALSE;
       }
-      else {
-        LOG(WARNING) << "Decay energy is not found in " << fDecayFilePath << ", using the default value of 1 MeV" << FairLogger::endl;
-      }
-      LOG(INFO) << "Decay energy of 7C = " << fDecayFileExcitation << " MeV" << FairLogger::endl;
+      fDecayFileExcitation *= MeV2GeV;
+      LOG(INFO) << "Decay energy of 7C = " << fDecayFileExcitation << " GeV" << FairLogger::endl;
+    }
+    else {
+      LOG(WARNING) << "Decay energy is not found in " << fDecayFilePath << ", using the default value of 1 MeV" << FairLogger::endl;
     }
     //Ignore the line with masses
     std::getline(fDecayFile, headerLine);
@@ -174,7 +178,6 @@ Bool_t ERDecay7C::DecayPhaseGenerator() {
   TVector3 pp4(std::stod(outputs_components[12]), std::stod(outputs_components[13]), std::stod(outputs_components[14]));
   // Apply scale factor
   const auto excitationScale = sqrt(f7CExcitation / fDecayFileExcitation);
-  const auto MeV2GeV = 1. / 1000.;
   const auto scale = excitationScale * MeV2GeV;
   p3He *= scale;
   pp1 *= scale;
@@ -222,23 +225,23 @@ Bool_t ERDecay7C::Stepping() {
       if (lv9C.P() == 0) { // temporary fix of bug with zero kinetic energy
         return kTRUE;
       }
-      if(fIs7CGaussianExcitation)
+      if (fIs7CGaussianExcitation)
       {
         LOG(INFO) << "Excitation energy distribution is set to gaussian" << FairLogger::endl;
-        f7CExcitation = gRandom->Gaus(f7CGaussianExcitationMean,f7CGaussianExcitationSigma);
+        f7CExcitation = gRandom->Gaus(f7CGaussianExcitationMean, f7CGaussianExcitationSigma) * MeV2GeV;
 
       }
-      else if(fIs7CUniformExcitation)
+      else if (fIs7CUniformExcitation)
       {
         LOG(INFO) << "Excitation energy distribution is set to uniform" << FairLogger::endl;
-        f7CExcitation = gRandom->Uniform(f7CUniformExcitationMin,f7CUniformExcitationMax);
+        f7CExcitation = gRandom->Uniform(f7CUniformExcitationMin, f7CUniformExcitationMax) * MeV2GeV;
       }
       else
       {
-        f7CExcitation = 20.;
+        f7CExcitation = fDefaultExcitation*MeV2GeV;
         LOG(INFO) << "Excitation energy distribution is not set, using the default value of " << f7CExcitation << " MeV" << FairLogger::endl;
       }
-      LOG(DEBUG) << "The excitation energy of 7C = " << f7CExcitation << " MeV" << FairLogger::endl;
+      LOG(DEBUG) << "The excitation energy of 7C = " << f7CExcitation << " GeV" << FairLogger::endl;
       fLv7C->SetXYZM(0., 0., 0., f7C->Mass() + f7CExcitation);
       fLv7C->Boost(lv9C.BoostVector());
 

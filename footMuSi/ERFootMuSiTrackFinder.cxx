@@ -22,7 +22,6 @@
 #include "FairLogger.h"
 #include "FairLink.h"
 
-
 #include "ERRunAna.h"
 #include "ERDigi.h"
 #include "ERDecay7CEventHeader.h"
@@ -111,7 +110,7 @@ InitStatus ERFootMuSiTrackFinder::Init()
 
   FairRootManager* ioman = FairRootManager::Instance();
   if (!ioman)
-    Fatal("Init", "No FairRootManager");
+    LOG(FATAL) << "No FairRootManager" << FairLogger::endl;
   TList* allbrNames = ioman->GetBranchNameList();
   TIter nextBranch(allbrNames);
   TObjString* bName;
@@ -126,7 +125,7 @@ InitStatus ERFootMuSiTrackFinder::Init()
       fFootMuSiDigi[brName] = (TClonesArray*)ioman->GetObject(bFullName);
     }
   }
-  //For testing the idea with sending unchanged proton coordinates into the tracks
+  //For testing the idea with sending undisturbed by multiple scattering proton coordinates into the tracks
   fMCTracks = (TClonesArray*)ioman->GetObject("MCTrack");
   fMCEventHeader = (TClonesArray*)ioman->GetObject("MCEventHeader.");
   fAlpideDigis = (TClonesArray*)ioman->GetObject("AlpideDigi");
@@ -310,7 +309,7 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
             Double_t pixelLocalX = 0.0;
             Double_t pixelLocalY = 0.0;
             Double_t distanceToPixel = 0.0;
-            PixelToLocal(digiAlpide->GetPixelNoX(), digiAlpide->GetPixelNoY(), pixelLocalX, pixelLocalY);
+            ERAlpide::PixelToLocal(digiAlpide->GetPixelNoX(), digiAlpide->GetPixelNoY(), pixelLocalX, pixelLocalY);
             //distanceToPixel = fabs(pixelLocalX - (kxFirst * digiAlpide->GetPixelZ() + bxFirst));
             distanceToPixel = sqrt(pow(pixelLocalX - (kxFirst * digiAlpide->GetPixelZ() + bxFirst), 2) + pow(pixelLocalY - (kyFirst * digiAlpide->GetPixelZ() + byFirst), 2));
             distancesToPixels.push_back(distanceToPixel);
@@ -331,7 +330,6 @@ void ERFootMuSiTrackFinder::Exec(Option_t* opt)
     << FairLogger::endl;
 }
 //--------------------------------------------------------------------------------------------------
-//TODO: Implement writing the index of digi (xChannelIndex,yChannelIndex)
 void ERFootMuSiTrackFinder::CreateHitInFootMuSi(
   const Int_t xChannelIndex, const Int_t yChannelIndex, const Int_t xChannel, const Int_t yChannel,
   const Double_t xEdep, const Double_t yEdep, const TString& xDigiBranchName, const TString& yDigiBranchName,
@@ -372,7 +370,7 @@ void ERFootMuSiTrackFinder::CreateHitInFootMuSi(
   LOG(DEBUG) << " Y Station Vertex in station CS (" << yStationLocalHit.x() << " " << yStationLocalHit.y()
     << " " << yStationLocalHit.z() << ")" << FairLogger::endl << FairLogger::endl;
   ERFootMuSiHit* hit = AddHit(xStationHit, yStationHit,
-    xStationLocalHit, yStationLocalHit, xChannel, yChannel, xEdep, yEdep,
+    xStationLocalHit, yStationLocalHit, xChannelIndex, yChannelIndex,xChannel, yChannel, xEdep, yEdep,
     hitBranchName);
 }
 //--------------------------------------------------------------------------------------------------
@@ -395,12 +393,12 @@ void ERFootMuSiTrackFinder::Reset()
 ERFootMuSiHit* ERFootMuSiTrackFinder::AddHit(
   const TVector3& xStationHit, const TVector3& yStationHit,
   const TVector3& xStationLocalHit, const TVector3& yStationLocalHit,
-  const Int_t xChannel, const Int_t yChannel, const Double_t xEdep, const Double_t yEdep,
+  const Int_t xChannelIndex, const Int_t yChannelIndex, const Int_t xChannel, const Int_t yChannel, const Double_t xEdep, const Double_t yEdep,
   const TString& digiBranchName)
 {
   return new ((*fFootMuSiHit[digiBranchName])[fFootMuSiHit[digiBranchName]->GetEntriesFast()])
     ERFootMuSiHit(xStationHit, yStationHit, xStationLocalHit,
-      yStationLocalHit, xChannel, yChannel, xEdep, yEdep);
+      yStationLocalHit, xChannelIndex, yChannelIndex, xChannel, yChannel, xEdep, yEdep);
 }
 //--------------------------------------------------------------------------------------------------
 /* ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(ERFootMuSiHit* firstHit,ERFootMuSiHit* secondHit,ERFootMuSiHit* thirdHit,Double_t hitsFitChi2)
@@ -415,6 +413,7 @@ ERFootMuSiTrack* ERFootMuSiTrackFinder::AddTrack(const TVector3& firstHit, const
     ERFootMuSiTrack(firstHit, secondHit, thirdHit, distancesToPixels);
 }
 //--------------------------------------------------------------------------------------------------
+
 //TODO: Make it more concise
 void ERFootMuSiTrackFinder::AddProtonDebugTracks()
 {
@@ -575,18 +574,6 @@ void ERFootMuSiTrackFinder::AddProtonDebugTracks()
               track->SetAnglesWithInitialP(p1FirstAngleComparison,p1SecondAngleComparison);
             }
           } */
-}
-//TODO Fix the copy of functions from ERAlpide
-void ERFootMuSiTrackFinder::LocalToPixel(Double_t localX, Double_t localY, Int_t& pixelNoX, Int_t& pixelNoY)
-{
-  //TODO Change hardcoded constants to information extracted from geometry 
-  pixelNoX = Int_t((localX + AlpideSpecs::plateXlength / 2) / AlpideSpecs::pixelXlength);
-  pixelNoY = Int_t((localY + AlpideSpecs::plateYlength / 2) / AlpideSpecs::pixelYlength);
-}
-void ERFootMuSiTrackFinder::PixelToLocal(Int_t pixelNoX, Int_t pixelNoY, Double_t& localX, Double_t& localY)
-{
-  localX = pixelNoX * AlpideSpecs::pixelXlength - AlpideSpecs::plateXlength / 2;
-  localY = pixelNoY * AlpideSpecs::pixelYlength - AlpideSpecs::plateYlength / 2;
 }
 //--------------------------------------------------------------------------------------------------
 ClassImp(ERFootMuSiTrackFinder)

@@ -69,12 +69,12 @@ ERPoint::~ERPoint()
 // -----   Public method Print   -------------------------------------------
 void ERPoint::Print(const Option_t* opt /* = 0*/) const
 {
-  LOG(INFO) << "-I- ERPoint: track " << fTrackID << " mother track = " << fMot0TrackID <<  FairLogger::endl;
+  LOG(INFO) << "ERPoint: track " << fTrackID << " mother track = " << fMot0TrackID <<  FairLogger::endl;
   LOG(INFO) << "    Position (" << fX << ", " << fY << ", " << fZ << ") cm" << FairLogger::endl;
   LOG(INFO) << "    Momentum (" << fPx << ", " << fPy << ", " << fPz << ") GeV" << FairLogger::endl;
   LOG(INFO) << "    Time " << fTime << " ns,  Length " << fLength << " cm" << FairLogger::endl;
-  LOG(INFO) << "    Energy loss " << fELoss << " keV, Light yield " << fLightYield << " MeV "<<  FairLogger::endl;
-  LOG(INFO) << "PDG: " << fPID << FairLogger::endl;
+  LOG(INFO) << "    Energy loss " << fELoss << " MeV, Light yield " << fLightYield << " MeV "<<  FairLogger::endl;
+  LOG(INFO) << "    PDG: " << fPID << FairLogger::endl;
   LOG(INFO) << "    Vol number " << fVolNb << FairLogger::endl;
 }
 // -------------------------------------------------------------------------

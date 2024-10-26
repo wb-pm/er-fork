@@ -125,12 +125,12 @@ public:
   // Constructs the Alpide geometry
   virtual void ConstructGeometry();  
 
+  /** @brief Calculate the pixel number from the coordinates **/
+  static void LocalToPixel(Double_t globalX, Double_t globalY, Int_t& pixelNoX, Int_t& pixelNoY);
+  
+  static void PixelToLocal(Int_t pixelNoX, Int_t pixelNoY,Double_t& globalX, Double_t& globalY);
 protected:
 
-  /** @brief Calculate the pixel number from the coordinates **/
-  void LocalToPixel(Double_t globalX, Double_t globalY, Int_t& pixelNoX, Int_t& pixelNoY);
-  
-  void PixelToLocal(Int_t pixelNoX, Int_t pixelNoY,Double_t& globalX, Double_t& globalY);
 
 private:
 

@@ -27,6 +27,7 @@
 #include "ERDetectorList.h"
 #include "ERFootMuSiTrack.h"
 #include "ERFootMuSiPoint.h"
+#include "ERDecayMCEventHeader.h"
 
 // ----------------------------------------------------------------------------
 ERFootMuSiVertexFinder::ERFootMuSiVertexFinder()
@@ -70,6 +71,7 @@ InitStatus ERFootMuSiVertexFinder::Init()
   if (!ioman) Fatal("Init", "No FairRootManager");
 
   fFootMuSiTracks = (TClonesArray*)ioman->GetObject("FootMuSiTrack");
+  fMCEventHeader = (TClonesArray*)ioman->GetObject("MCEventHeader.");
   //todo check
 
   // Register output array fFootMuSiHits
@@ -87,12 +89,12 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
   Reset();
   //temporary vertex object for storing the vertex found at the previous iteration
   ERFootMuSiVertex* tempVertex = new ERFootMuSiVertex(-10000., -10000., -10000.);
-  const Int_t consideredTracks = 9;
+/*   const Int_t consideredTracks = 9;
   if (fFootMuSiTracks->GetEntriesFast() != consideredTracks)
   {
     LOG(INFO) << "[ERFootMuSiVertexFinder] number of tracks is not " << consideredTracks << ", skipping the vertex finding part" << FairLogger::endl;
     return;
-  }
+  } */
   //For a specific case of three protons should split the tracks into groups containing three tracks, where no coordinates are the same 
   //std::vector<std::vector<ERFootMuSiTrack*>> splitTracks(36, std::vector<ERFootMuSiTrack*>(3,nullptr));
   std::vector<std::vector<ERFootMuSiTrack*>> splitTracks;
@@ -294,6 +296,9 @@ void ERFootMuSiVertexFinder::Exec(Option_t* opt)
     ERFootMuSiVertex* vert = (ERFootMuSiVertex*)fFootMuSiVertices->At(iVert);
     LOG(INFO) << "Vertex " << iVert << ": (" << vert->X() << "," << vert->Y() << "," << vert->Z() << ")" << FairLogger::endl;
   }
+  ERDecayMCEventHeader* decayMCEventHeader = (ERDecayMCEventHeader*)fMCEventHeader;
+  LOG(INFO) << "The initial reaction position: (" << decayMCEventHeader->GetReactionPos().X() << "," << decayMCEventHeader->GetReactionPos().Y() << "," << decayMCEventHeader->GetReactionPos().Z() << ")" << FairLogger::endl;
+
   /*     for(Int_t outer = 0; outer < splitTracks.size(); outer++)
       {
         splitTracks.at(outer).clear();

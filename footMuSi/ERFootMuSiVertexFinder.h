@@ -47,6 +47,7 @@ public:
 protected:
   //Input arrays
   TClonesArray *fFootMuSiTracks;
+  TClonesArray *fMCEventHeader;
 
   //Output arrays
   TClonesArray *fFootMuSiVertices;

@@ -36,23 +36,23 @@ Correction of telescope coordinate and indexing in non-uniform station for EXP19
 #include "FairGeoMedia.h"
 #include "FairLogger.h"
 
-ERFootMuSiSetup* ERFootMuSiSetup::fInstance = nullptr;  
+ERFootMuSiSetup* ERFootMuSiSetup::fInstance = nullptr;
 //--------------------------------------------------------------------------------------------------
 ERFootMuSiStrip::ERFootMuSiStrip(Double_t globalX, Double_t globalY, Double_t globalZ,
-                                   Double_t  localX, Double_t  localY, Double_t localZ,
-                                   Double_t width)
-    : fGlobalX(globalX), fGlobalY(globalY), fGlobalZ(globalZ),
-      fLocalX(localX), fLocalY(localY), fLocalZ(localZ), fWidth(width)
+  Double_t  localX, Double_t  localY, Double_t localZ,
+  Double_t width)
+  : fGlobalX(globalX), fGlobalY(globalY), fGlobalZ(globalZ),
+  fLocalX(localX), fLocalY(localY), fLocalZ(localZ), fWidth(width)
 {
 }
 //--------------------------------------------------------------------------------------------------
 ERFootMuSiStrip::ERFootMuSiStrip(Double_t* globTrans, Double_t* localTrans, Double_t width)
-    : fGlobalX(globTrans[0]), fGlobalY(globTrans[1]), fGlobalZ(globTrans[2]),
-      fLocalX(localTrans[0]), fLocalY(localTrans[1]), fLocalZ(localTrans[2]), fWidth(width)
+  : fGlobalX(globTrans[0]), fGlobalY(globTrans[1]), fGlobalZ(globTrans[2]),
+  fLocalX(localTrans[0]), fLocalY(localTrans[1]), fLocalZ(localTrans[2]), fWidth(width)
 {
 }
 //--------------------------------------------------------------------------------------------------
-ERFootMuSiSetup* ERFootMuSiSetup::Instance(){
+ERFootMuSiSetup* ERFootMuSiSetup::Instance() {
   if (fInstance == NULL) {
     fInstance = new ERFootMuSiSetup();
     return fInstance;
@@ -94,7 +94,7 @@ Double_t ERFootMuSiSetup::GetStripPhi(const TString& componentBranchName, const 
     LOG(FATAL) << "R strips has not been filled for " << componentBranchName << FairLogger::endl;
   }
   if (stripNb >= fRStrips.at(componentBranchName).size()) {
-    LOG(FATAL) << "Wrong strip number " << stripNb << " for station " <<  componentBranchName << FairLogger::endl;
+    LOG(FATAL) << "Wrong strip number " << stripNb << " for station " << componentBranchName << FairLogger::endl;
   }
   if (fRStrips.at(componentBranchName).at(stripNb).fPhi == -1) {
     LOG(FATAL) << "Strip of station " << componentBranchName << " has not attribute phi" << FairLogger::endl;
@@ -107,7 +107,7 @@ Double_t ERFootMuSiSetup::GetStripR(const TString& componentBranchName, const In
     LOG(FATAL) << "R strips has not been filled for " << componentBranchName << FairLogger::endl;
   }
   if (stripNb >= fRStrips.at(componentBranchName).size()) {
-    LOG(FATAL) << "Wrong strip number " << stripNb << " for station " <<  componentBranchName << FairLogger::endl;
+    LOG(FATAL) << "Wrong strip number " << stripNb << " for station " << componentBranchName << FairLogger::endl;
   }
   if (fRStrips.at(componentBranchName).at(stripNb).fR == -1) {
     LOG(FATAL) << "Strip of station " << componentBranchName << " has not attribute R" << FairLogger::endl;
@@ -118,8 +118,8 @@ Double_t ERFootMuSiSetup::GetStripR(const TString& componentBranchName, const In
 TVector3 ERFootMuSiSetup::
 GetStripLocalPosition(const TString& componentBranchName, const unsigned int stripNb) const {
   return TVector3(fStrips.at(componentBranchName).at(stripNb).fLocalX,
-                  fStrips.at(componentBranchName).at(stripNb).fLocalY,
-                  fStrips.at(componentBranchName).at(stripNb).fLocalZ);
+    fStrips.at(componentBranchName).at(stripNb).fLocalY,
+    fStrips.at(componentBranchName).at(stripNb).fLocalZ);
 }
 //--------------------------------------------------------------------------------------------------
 TVector3 ERFootMuSiSetup::GetStationTranslation(const TString& componentBranchName) const {
@@ -132,8 +132,8 @@ ERFootMuSiSetup::StationType ERFootMuSiSetup::GetStationType(const TString& comp
   return fStationTypes.at(componentBranchName);
 }
 //--------------------------------------------------------------------------------------------------
-TVector3 ERFootMuSiSetup::ToStationCoordinateSystem (const TString& componentBranchName, 
-                                                       const TVector3& vectorInGlobalCS) const {
+TVector3 ERFootMuSiSetup::ToStationCoordinateSystem(const TString& componentBranchName,
+  const TVector3& vectorInGlobalCS) const {
   Double_t global[3], local[3];
   for (int i(0); i < 3; i++)
     global[i] = vectorInGlobalCS[i];
@@ -141,8 +141,8 @@ TVector3 ERFootMuSiSetup::ToStationCoordinateSystem (const TString& componentBra
   return TVector3(local);
 }
 //--------------------------------------------------------------------------------------------------
-TVector3 ERFootMuSiSetup::ToGlobalCoordinateSystem(const TString& componentBranchName, 
-                                                      const TVector3& vectorInStationCS) const {
+TVector3 ERFootMuSiSetup::ToGlobalCoordinateSystem(const TString& componentBranchName,
+  const TVector3& vectorInStationCS) const {
   Double_t global[3], local[3];
   for (int i(0); i < 3; i++)
     local[i] = vectorInStationCS[i];
@@ -152,7 +152,7 @@ TVector3 ERFootMuSiSetup::ToGlobalCoordinateSystem(const TString& componentBranc
 //--------------------------------------------------------------------------------------------------
 TGeoHMatrix GetGlobalToLocalMatrix(const TString& path) {
   TGeoIterator nextNode(gGeoManager->GetTopVolume());
-  while(nextNode()) {
+  while (nextNode()) {
     TString nodePath;
     nextNode.GetPath(nodePath);
     if (nodePath == path) {
@@ -163,8 +163,8 @@ TGeoHMatrix GetGlobalToLocalMatrix(const TString& path) {
   return nullptr;
 }
 //--------------------------------------------------------------------------------------------------
-void ERFootMuSiSetup::GetTransInMotherNode (TGeoNode const* node, Double_t b[3]) {
-  memcpy(b, node->GetMatrix()->GetTranslation(), sizeof(double)*3);
+void ERFootMuSiSetup::GetTransInMotherNode(TGeoNode const* node, Double_t b[3]) {
+  memcpy(b, node->GetMatrix()->GetTranslation(), sizeof(double) * 3);
 }
 // Написать несколько методов для работы с объемами:
 // 1) Функция получения координаты в глобальной СК. (скорее всего функция в п.1) 
@@ -174,25 +174,25 @@ void ERFootMuSiSetup::ReadGeoParamsFromParContainer() {
   if (fGeometryInited)
     return;
   LOG(DEBUG) << "Loading FootMuSi setup from parameters database file." << FairLogger::endl;
-  if ( ! gGeoManager ) {
-    std::cerr << "ERFootMuSiSetup: cannot initialise without TGeoManager!"<< std::endl;
+  if (!gGeoManager) {
+    LOG(FATAL) << "ERFootMuSiSetup: cannot initialise without TGeoManager!" << FairLogger::endl;
   }
   gGeoManager->CdTop();
-  
+
   TGeoNode* cave = gGeoManager->GetCurrentNode();
-  TGeoNode* qFootMuSi  = NULL;
+  TGeoNode* qFootMuSi = NULL;
   TGeoNode* qFootMuSiDetector = NULL;
   TGeoNode* qFootMuSiStation = NULL;
   const auto strip_width = [](TGeoNode* strip_node) {
     const auto strip_shape = strip_node->GetVolume()->GetShape();
     double low, high;
     return TMath::Min(strip_shape->GetAxisRange(1, low, high),
-                      strip_shape->GetAxisRange(2, low, high));
-  };
+      strip_shape->GetAxisRange(2, low, high));
+    };
   for (Int_t iNode = 0; iNode < cave->GetNdaughters(); iNode++) { // cycle by volumes in TOP
     TString detectorName = cave->GetDaughter(iNode)->GetName();
-    if ( detectorName.Contains("FootMuSi", TString::kIgnoreCase) ) {
-      qFootMuSi = cave->GetDaughter(iNode); 
+    if (detectorName.Contains("FootMuSi", TString::kIgnoreCase)) {
+      qFootMuSi = cave->GetDaughter(iNode);
       for (Int_t iDetector = 0; iDetector < qFootMuSi->GetNdaughters(); iDetector++) { // cycle by subassemblies in QFootMuSi
         qFootMuSiDetector = qFootMuSi->GetDaughter(iDetector);
         for (Int_t iStation = 0; iStation < qFootMuSiDetector->GetNdaughters(); iStation++) { // cycle by components in station
@@ -202,29 +202,31 @@ void ERFootMuSiSetup::ReadGeoParamsFromParContainer() {
           Double_t stripInStationTrans[3];
           Double_t stripInDetectorTrans[3];
           Double_t stripGlobTrans[3];
-          const bool is_r_station = qFootMuSiStation->GetNdaughters() == 1 
-              && TString(qFootMuSiStation->GetDaughter(0)->GetName()).Contains("r_station");
+          const bool is_r_station = qFootMuSiStation->GetNdaughters() == 1
+            && TString(qFootMuSiStation->GetDaughter(0)->GetName()).Contains("r_station");
           TString digiBranchName = qFootMuSiStationName;
           digiBranchName.Remove(digiBranchName.Last('_'), digiBranchName.Length());
-          if (qFootMuSiStationName.Contains("DoubleSi", TString::kIgnoreCase) ) {
+          if (qFootMuSiStationName.Contains("DoubleSi", TString::kIgnoreCase)) {
             TString firstStripArrayName, secondStripArrayName;
             if (qFootMuSiStationName.Contains("XY")) {
               firstStripArrayName = digiBranchName + "_X";
               secondStripArrayName = digiBranchName + "_Y";
-            } else {
+            }
+            else {
               firstStripArrayName = digiBranchName + "_Y";
-              secondStripArrayName = digiBranchName + "_X";              
+              secondStripArrayName = digiBranchName + "_X";
             }
             if (is_r_station) {
-              LOG(DEBUG) << "Read geometry info for Double R station corresponded to volume " << qFootMuSiStationName 
-                         << " and branch name " << digiBranchName << FairLogger::endl;
+              LOG(DEBUG) << "Read geometry info for Double R station corresponded to volume " << qFootMuSiStationName
+                << " and branch name " << digiBranchName << FairLogger::endl;
               auto* r_station = qFootMuSiStation->GetDaughter(0);
               FillRStrips(r_station, firstStripArrayName);
               auto* any_segment = r_station->GetDaughter(0);
               FillRStrips(any_segment, secondStripArrayName);
               fStationTypes[firstStripArrayName] = StationType::RStation;
               fStationTypes[secondStripArrayName] = StationType::RStation;
-            } else {
+            }
+            else {
               TGeoNode* doubleSiStrip;
               Bool_t    flagFirstStripReaded = kFALSE;
               Int_t     iDoubleSiStrip = 0;
@@ -237,16 +239,16 @@ void ERFootMuSiSetup::ReadGeoParamsFromParContainer() {
                 qFootMuSiStation->LocalToMaster(stripInStationTrans, stripInDetectorTrans);
                 qFootMuSiDetector->LocalToMaster(stripInDetectorTrans, stripGlobTrans);
                 fStrips[firstStripArrayName].emplace_back(stripGlobTrans, stripInStationTrans,
-                                                          strip_width(doubleSiStrip));
-                LOG(DEBUG) << firstStripArrayName << " strip " 
-                                << fStrips[firstStripArrayName].size()-1 << " global coordinates: "
-                                << stripGlobTrans[0] << ", " 
-                                << stripGlobTrans[1] << ", " 
-                                << stripGlobTrans[2] ;
-                LOG(DEBUG)  << " | local coordinates: "
-                            << boxInStripTrans[0] << ", " 
-                            << boxInStripTrans[1] << ", " 
-                            << boxInStripTrans[2] << FairLogger::endl; 
+                  strip_width(doubleSiStrip));
+                LOG(DEBUG) << firstStripArrayName << " strip "
+                  << fStrips[firstStripArrayName].size() - 1 << " global coordinates: "
+                  << stripGlobTrans[0] << ", "
+                  << stripGlobTrans[1] << ", "
+                  << stripGlobTrans[2];
+                LOG(DEBUG) << " | local coordinates: "
+                  << boxInStripTrans[0] << ", "
+                  << boxInStripTrans[1] << ", "
+                  << boxInStripTrans[2] << FairLogger::endl;
                 TGeoNode* doubleSiBox;
                 Int_t iDoubleSiBox = 0;
                 if (!flagFirstStripReaded) {
@@ -256,21 +258,21 @@ void ERFootMuSiSetup::ReadGeoParamsFromParContainer() {
                     TString siBoxName = doubleSiBox->GetName();
                     GetTransInMotherNode(doubleSiBox, boxInStripTrans);
                     (qFootMuSiStationName.Contains("XY")) ? stripInStationTrans[0] = 0
-                                                          : stripInStationTrans[1] = 0;
+                      : stripInStationTrans[1] = 0;
                     doubleSiStrip->LocalToMaster(boxInStripTrans, stripInStationTrans);
                     qFootMuSiStation->LocalToMaster(stripInStationTrans, stripInDetectorTrans);
                     qFootMuSiDetector->LocalToMaster(stripInDetectorTrans, stripGlobTrans);
                     fStrips[secondStripArrayName].emplace_back(stripGlobTrans, boxInStripTrans,
-                                                               strip_width(doubleSiBox));
-                    LOG(DEBUG) << secondStripArrayName << " strip " 
-                                << fStrips[secondStripArrayName].size()-1 << " global coordinates: "
-                                << stripGlobTrans[0] << ", " 
-                                << stripGlobTrans[1] << ", " 
-                                << stripGlobTrans[2];
-                    LOG(DEBUG)  << " | local coordinates: "
-                                << boxInStripTrans[0] << ", " 
-                                << boxInStripTrans[1] << ", " 
-                                << boxInStripTrans[2] << FairLogger::endl;; 
+                      strip_width(doubleSiBox));
+                    LOG(DEBUG) << secondStripArrayName << " strip "
+                      << fStrips[secondStripArrayName].size() - 1 << " global coordinates: "
+                      << stripGlobTrans[0] << ", "
+                      << stripGlobTrans[1] << ", "
+                      << stripGlobTrans[2];
+                    LOG(DEBUG) << " | local coordinates: "
+                      << boxInStripTrans[0] << ", "
+                      << boxInStripTrans[1] << ", "
+                      << boxInStripTrans[2] << FairLogger::endl;;
 
                   }
                   flagFirstStripReaded = kTRUE;
@@ -281,18 +283,19 @@ void ERFootMuSiSetup::ReadGeoParamsFromParContainer() {
             }
             TString stationPath;
             stationPath.Form("cave/%s/%s/%s", qFootMuSi->GetName(), qFootMuSiDetector->GetName(),
-                             qFootMuSiStationName.Data());
+              qFootMuSiStationName.Data());
             fStationGlobalToLocalMatrixies[firstStripArrayName] = GetGlobalToLocalMatrix(stationPath);
             fStationGlobalToLocalMatrixies[secondStripArrayName] = fStationGlobalToLocalMatrixies[firstStripArrayName];
             fStationGlobalToLocalMatrixies[firstStripArrayName].Print();
-          } 
-          if (qFootMuSiStationName.Contains("SingleSi", TString::kIgnoreCase) ) {
+          }
+          if (qFootMuSiStationName.Contains("SingleSi", TString::kIgnoreCase)) {
             if (is_r_station) {
-              LOG(DEBUG) << "Read geometry info for R station corresponded to volume " << qFootMuSiStationName 
-                         << " and branch name " << digiBranchName << FairLogger::endl;
+              LOG(DEBUG) << "Read geometry info for R station corresponded to volume " << qFootMuSiStationName
+                << " and branch name " << digiBranchName << FairLogger::endl;
               FillRStrips(qFootMuSiStation->GetDaughter(0), digiBranchName);
               fStationTypes[digiBranchName] = StationType::RStation;
-            } else {
+            }
+            else {
               TGeoNode* singleSiStrip;
               Int_t     iSingleSiStrip = 0;
               for (; iSingleSiStrip < qFootMuSiStation->GetNdaughters(); iSingleSiStrip++) {
@@ -300,23 +303,23 @@ void ERFootMuSiSetup::ReadGeoParamsFromParContainer() {
                 GetTransInMotherNode(singleSiStrip, stripInStationTrans);
                 qFootMuSiStation->LocalToMaster(stripInStationTrans, stripInDetectorTrans);
                 qFootMuSiDetector->LocalToMaster(stripInDetectorTrans, stripGlobTrans);
-                LOG(DEBUG) << qFootMuSiStationName << " strip " 
-                    << iSingleSiStrip << " global coordinates: "
-                    << stripGlobTrans[0] << ", " 
-                    << stripGlobTrans[1] << ", " 
-                    << stripGlobTrans[2]; 
-                LOG(DEBUG) << " | local coordinates: " 		         
-                    << stripInStationTrans[0] << ", " 
-                    << stripInStationTrans[1] << ", " 
-                    << stripInStationTrans[2] << FairLogger::endl; 
+                LOG(DEBUG) << qFootMuSiStationName << " strip "
+                  << iSingleSiStrip << " global coordinates: "
+                  << stripGlobTrans[0] << ", "
+                  << stripGlobTrans[1] << ", "
+                  << stripGlobTrans[2];
+                LOG(DEBUG) << " | local coordinates: "
+                  << stripInStationTrans[0] << ", "
+                  << stripInStationTrans[1] << ", "
+                  << stripInStationTrans[2] << FairLogger::endl;
                 fStrips[digiBranchName].emplace_back(stripGlobTrans, stripInStationTrans,
-                                                     strip_width(singleSiStrip)); 
+                  strip_width(singleSiStrip));
               }
               fStationTypes[digiBranchName] = StationType::QStation;
             }
             TString stationPath;
             stationPath.Form("cave/%s/%s/%s", qFootMuSi->GetName(), qFootMuSiDetector->GetName(),
-                             qFootMuSiStationName.Data());
+              qFootMuSiStationName.Data());
             fStationGlobalToLocalMatrixies[digiBranchName] = GetGlobalToLocalMatrix(stationPath);
             fStationGlobalToLocalMatrixies[digiBranchName].Print();
           }
@@ -341,7 +344,8 @@ void ERFootMuSiSetup::FillRStrips(TGeoNode* r_station, const TString& branch_nam
       const auto phi = combi_trans->GetRotation()->GetPhiRotation();
       fRStrips[branch_name].emplace_back(phi, -1.);
       LOG(DEBUG) << branch_name << " strip " << i_strip << " phi = " << phi << FairLogger::endl;
-    } else {
+    }
+    else {
       auto shape = dynamic_cast<TGeoSphere*>(strip->GetVolume()->GetShape());
       if (!shape) {
         LOG(FATAL) << "Unexpected shape type in R FootMuSi station" << FairLogger::endl;

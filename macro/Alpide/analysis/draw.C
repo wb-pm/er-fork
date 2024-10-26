@@ -5,8 +5,9 @@
 #include "TCanvas.h"
 #include "TH2D.h"
 #include "TPaletteAxis.h"
-
+//Confirmed that the simulations with the same exact geometry and parameters are identical 
 void simRecoComparison(TTree* reco_tree);
+void rotatedNonRotated(TTree* rotatedFootTree, TTree* nonRotatedFootTree);
 TString eventSelection = "";
 
 void draw()
@@ -14,7 +15,19 @@ void draw()
     TFile* threeProtons = new TFile("../digi/digi_TestTracks_Alpide_3foot_ranges1000mm.root");
     TTree* tree_threeProtons = (TTree*)threeProtons->Get("er");
     simRecoComparison(tree_threeProtons);
+
+    TFile* rotatedFootFile = new TFile("../sim/sim_RotatedFootTest500AMeV_1cmSpread.root");
+    TTree* rotatedFootTree = (TTree*)rotatedFootFile->Get("er");
+
+/*     TFile* copyrotatedFootFile = new TFile("../sim/sim_CopyRotatedFootTest500AMeV_1cmSpread.root");
+    TTree* copyrotatedFootTree = (TTree*)copyrotatedFootFile->Get("er"); */
+
+    TFile* nonRotatedFootFile = new TFile("../sim/sim_NonRotatedFootTest500AMeV_1cmSpread.root");
+    TTree* nonRotatedFootTree = (TTree*)nonRotatedFootFile->Get("er");
+
+    rotatedNonRotated(rotatedFootTree, nonRotatedFootTree);
 }
+
 
 void simRecoComparison(TTree* reco_tree)
 {
@@ -107,4 +120,15 @@ void simRecoComparison(TTree* reco_tree)
     canvas->cd(4);
     reco_tree->Draw("FootMuSiVertex.fZ",eventSelection,""); */
 
+}
+
+void rotatedNonRotated(TTree* rotatedFootTree, TTree* nonRotatedFootTree)
+{
+    TCanvas* canvas = new TCanvas("rotation","rotation");
+    canvas->Divide(2,2);
+    canvas->cd(1);
+    rotatedFootTree->Draw("FootMuSiPoint_C7_2nd_pair_SingleSi_SSD150_3_X.fX","","");
+
+    canvas->cd(2);
+    nonRotatedFootTree->Draw("FootMuSiPoint_C7_2nd_pair_SingleSi_SSD150_3_X.fX","","");
 }

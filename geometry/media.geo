@@ -1,8 +1,11 @@
 // --- General Media Defs. for EXPERT
 // Material format: https://fairroot.gsi.de/?q=node/34
 // Material info: http://geant4.cern.ch/UserDocumentation/UsersGuides/ForApplicationDeveloper/html/apas06.html
-Air                3  14.01  16.  39.95  7.  8.  18.  1.205e-3  .78 
-.21  .01
+// General scheme is (on the example of Air)
+//name       noComponent    A(3x)       Z(3x)       Density   Relative weights
+//           sensitivity field max.field EPSIL
+//           noCerenkovParam           
+Air                3  14.01  16.  39.95  7.  8.  18.  1.205e-3  .78 .21  .01
                    1  1  20.  .001
                    0
 vacuum             1  1.e-16  1.e-16  1.e-16
@@ -118,7 +121,8 @@ PbWO               3  207.19  183.85  16.0  82.0  74.0  8.0  8.28  0.4553  0.404
 RPCglass           -2  28.09  16.  14.  8.  2.55  1.  2.
                    0  0  20.  .001
                    0
-               
+//In case there are Cherenkov parameters
+// photon momentum in eV; l_{abs}(dielectric) or p_{abs}(metal); detection efficiency; refraction index (dielectric), rindex[0]=0 (metal)       
 RICHglass          -2  28.09  16.  14.  8.  2.2  1.  2.
                    1  0  20.  .0001
                    53

@@ -9,10 +9,11 @@
 //--------------------------------------------------------------------------------------------------
 ERFootMuSiHit::ERFootMuSiHit(const TVector3& xStationHit, 
                                      const TVector3& yStationHit, const TVector3& xStationLocalHit,
-                                     const TVector3& yStationLocalHit, const Int_t xChannel, const Int_t yChannel,
+                                     const TVector3& yStationLocalHit, Int_t xChannelIndex, Int_t yChannelIndex ,const Int_t xChannel, const Int_t yChannel,
                                      const Double_t xEdep, const Double_t yEdep)
 : fXStationHit(xStationHit), fYStationHit(yStationHit),
   fXStationLocalHit(xStationLocalHit), fYStationLocalHit(yStationLocalHit),
+  fXChannelIndex(xChannelIndex),fYChannelIndex(yChannelIndex),
   fXChannel(xChannel), fYChannel(yChannel), fXEdep(xEdep), fYEdep(yEdep)
 {
 }

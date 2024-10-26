@@ -38,7 +38,7 @@ public:
    ** @param fYEdep - Edep in FootMuSi station, which produced Y coordinate;
   **/
   ERFootMuSiHit(const TVector3& xStationHit, const TVector3& yStationHit,
-                    const TVector3& xStationLocalHit, const TVector3& yStationLocalHit, 
+                    const TVector3& xStationLocalHit, const TVector3& yStationLocalHit, Int_t xChannelIndex, Int_t yChannelIndex,
                     Int_t xChannel, Int_t yChannel, Double_t xEdep, Double_t yEdep);
   /* Accessors */
   TVector3 GetXStationHit() const {return fXStationHit;}
@@ -47,6 +47,8 @@ public:
   TVector3 GetYStationLocalHit() const {return fYStationLocalHit;}
   Int_t GetXChannel() const {return fXChannel;}
   Int_t GetYChannel() const {return fYChannel;}
+  Int_t GetXChannelIndex() const {return fXChannelIndex;}
+  Int_t GetYChannelIndex() const {return fYChannelIndex;}
   Double_t GetXEdep() const {return fXEdep;}
   Double_t GetYEdep() const {return fYEdep;}
 private:
@@ -54,6 +56,8 @@ private:
   TVector3 fYStationHit;
   TVector3 fXStationLocalHit;
   TVector3 fYStationLocalHit;
+  Int_t fXChannelIndex = -1;
+  Int_t fYChannelIndex = -1;
   Int_t fXChannel = -1;
   Int_t fYChannel = -1;
   Double_t fXEdep = -1.;

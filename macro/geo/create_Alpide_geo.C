@@ -1,3 +1,4 @@
+#if !defined(__CLING__)
 #include "TGeoManager.h"
 #include "TSystem.h"
 #include "TGeoMedium.h"
@@ -10,10 +11,13 @@
 #include "FairGeoMedia.h"
 #include "FairGeoMedium.h"
 #include "FairGeoBuilder.h"
-#include "FairLogger.h"
 
+#include "ERAlpide.h"
+#endif
 void create_Alpide_geo()
 {
+    //Create an instance of the Alpide class to get the geometrical distances and sizes from it. TODO: Overpass this solution. 
+    ERAlpide* AlpideClass = new ERAlpide();
     TGeoManager* gGeoMan = nullptr;
 
     // -------   Load media from media file   -----------------------------------
@@ -30,33 +34,34 @@ void create_Alpide_geo()
     FairGeoBuilder* geoBuild = geoLoad->getGeoBuilder();
 
     FairGeoMedium* silicon = geoMedia->getMedium("silicon");
-    if (!silicon) LOG(FATAL) << "create_Alpide_geo.C: FairMedium silicon not found" << FairLogger::endl;
+    if (!silicon) Fatal("create_Alpide_geo.C"," FairMedium silicon not found");
     geoBuild->createMedium(silicon);
     silicon->print();
-/*     TGeoMedium* pSi = gGeoMan->GetMedium("silicon");
-    if (!pSi) LOG(FATAL) << "create_Alpide_geo.C: Medium silicon not found" << FairLogger::endl; */
 
     FairGeoMedium* vacuum = geoMedia->getMedium("vacuum");
-    if (!vacuum) LOG(FATAL) << "create_Alpide_geo.C: FairMedium vacuum not found" << FairLogger::endl;
+    if (!vacuum) Fatal("create_Alpide_geo.C"," FairMedium vacuum not found");
     geoBuild->createMedium(vacuum);
     vacuum->print();
 
     FairGeoMedium* aluminium = geoMedia->getMedium("aluminium");
-    if (!aluminium) LOG(FATAL) << "create_Alpide_geo.C: FairMedium aluminium not found" << FairLogger::endl;
+    if (!aluminium) Fatal("create_Alpide_geo.C"," FairMedium aluminium not found");
     geoBuild->createMedium(aluminium);
     aluminium->print();
 
     FairGeoMedium* carbon = geoMedia->getMedium("carbon");
-    if (!carbon) LOG(FATAL) << "create_Alpide_geo.C: FairMedium carbon not found" << FairLogger::endl;
+    if (!carbon) Fatal("create_Alpide_geo.C"," FairMedium carbon not found");
     geoBuild->createMedium(carbon);
+    carbon->print();
 
     FairGeoMedium* helium = geoMedia->getMedium("helium");
-    if (!helium) LOG(FATAL) << "create_Alpide_geo.C: FairMedium helium not found" << FairLogger::endl;
+    if (!helium) Fatal("create_Alpide_geo.C"," FairMedium helium not found");
     geoBuild->createMedium(helium);
+    helium->print();
 
     FairGeoMedium* mylar = geoMedia->getMedium("mylar");
-    if (!mylar) LOG(FATAL) << "create_Alpide_geo.C: FairMedium mylar not found" << FairLogger::endl;
+    if (!mylar) Fatal("create_Alpide_geo.C"," FairMedium mylar not found");
     geoBuild->createMedium(mylar);
+    mylar->print();
     // --------------------------------------------------------------------------
   //------------------------- VOLUMES -----------------------------------------
 
@@ -99,7 +104,13 @@ void create_Alpide_geo()
     TGeoCompositeShape* hollowBox = new TGeoCompositeShape("hollowBox","aluminiumOuterBox-aluminiumInnerBox");
     TGeoVolume* aluminiumBox = new TGeoVolume("aluminiumBox",hollowBox,gGeoMan->GetMedium("aluminium"));
     Alpide->AddNode(aluminiumBox,1,new TGeoTranslation(0,0,15));
+//------------------ Mylar window -----------------------------------------
 
+    const Double_t mylarWindowLength = 10.;
+    const Double_t mylarWindowThickness = 0.01;
+    TGeoVolume* mylarWindow = gGeoMan->MakeBox("MylarWindow",gGeoMan->GetMedium("mylar"),mylarWindowLength/2,mylarWindowLength/2,mylarWindowThickness/2);
+    Alpide->AddNode(mylarWindow,1,new TGeoTranslation(0,0,30));
+    Alpide->AddNode(mylarWindow,2,new TGeoTranslation(0,0,-30));
     // Carbon plate (10x10 cm, 1 mm thick)
 /*     TGeoVolume* carbonPlate = gGeoMan->MakeBox("CarbonPlate", pC, carbonPlateSize / 2, carbonPlateSize / 2, carbonPlateThickness / 2);
     Alpide->AddNode(carbonPlate, 1, new TGeoTranslation(0, 0, 0)); */
@@ -118,7 +129,7 @@ void create_Alpide_geo()
     Alpide->AddNode(aluminiumFrameRight, 1, new TGeoTranslation(carbonPlateSize / 2 + frameWidth / 2, 0, 0));
     Alpide->AddNode(aluminiumFrameTop, 1, new TGeoTranslation(0, -(carbonPlateSize / 2 + frameWidth / 2), 0));
     Alpide->AddNode(aluminiumFrameBottom, 1, new TGeoTranslation(0, carbonPlateSize / 2 + frameWidth / 2, 0));
-    // Create a chip (30x90 mm², 100 µm thick)
+    // Create a chip (30x15 mm², 100 µm thick)
     //Should place 18 chips on a plate
     Int_t chipID = 0;
 /*     const Int_t pxRowTotal = 2;
@@ -143,7 +154,7 @@ void create_Alpide_geo()
             } */
 /*         }
     } */
-    top->AddNode(Alpide, 0, new TGeoTranslation(0., 0., 6.8));
+    top->AddNode(Alpide, 0, new TGeoTranslation(0., 0., C7ExperimentDistances::TargetCenterToWindow+C7ExperimentDistances::WindowToAlpide));
     // ---------------   Finish   -----------------------------------------------
     gGeoMan->CloseGeometry();
     gGeoMan->CheckOverlaps(0.001);
@@ -153,7 +164,6 @@ void create_Alpide_geo()
 
     // ---------------   Create geometry file   ---------------------------------
     TString geoFileName = geoPath + "/geometry/Alpide_nochips_box.geo.root";
-    //TString geoFileName = geoPath + "/geometry/Alpide_pixels.geo.root";
     TFile* geoFile = new TFile(geoFileName, "RECREATE");
     top->Write();
     geoFile->Close();

@@ -47,7 +47,7 @@ void create_target_9Be_geo()
   // General dimensions
 
   Double_t target9Be_R = 10.; // cm
-  Double_t target9Be_Z = 5; // cm
+  Double_t target9Be_Z = 5.55; // cm
 
   //Translations and rotations
 
@@ -88,5 +88,5 @@ void create_target_9Be_geo()
 
   // Draw
   TBrowser* bro = new TBrowser("bro", "bro");
-  geoM->GetTopVolume()->Draw("ogl");
+  geoM->GetTopVolume()->Draw("");
 }

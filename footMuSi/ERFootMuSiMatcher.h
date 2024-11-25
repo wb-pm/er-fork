@@ -49,13 +49,13 @@ protected:
   TClonesArray *fFootMuSiPoints;
   TClonesArray *fFootMuSiHits;
   TClonesArray *fFootMuSiTracks;
-  TClonesArray *fFootMuSiVertecies;
+  TClonesArray *fFootMuSiVertices;
   TClonesArray *fMCTracks;
   Int_t fTrueTracksNb;
   Int_t fWrongTracksNb;
   Int_t fMCTracksNb;
   Int_t fShortMCTracksNb;
-  Int_t fNotFoundVerteciesNb;
+  Int_t fNotFoundVerticesNb;
 
   //Histo
   TH1F* fHVertexDz;

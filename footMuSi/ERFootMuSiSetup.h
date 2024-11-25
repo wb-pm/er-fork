@@ -36,7 +36,7 @@ struct ERRFootMuSiStrip {
 
 class ERFootMuSiSetup : public ERSetup {
 public:
-  enum StationType {QStation, RStation};
+  enum class StationType {QStation, RStation};
   virtual ~ERFootMuSiSetup() = default;
   static ERFootMuSiSetup* Instance();
   /* Modifiers */

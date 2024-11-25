@@ -34,6 +34,7 @@ TCut getParticleInSquareDetectorCut(Double_t coordinateZ, TString particle, Doub
 {
     return Form("((reactionY + (%1$f - reactionZ)*(%2$sPy/%2$sPz)) < %3$f) && ((reactionY + (%1$f - reactionZ)*(%2$sPy/%2$sPz)) > -%3$f) && ((reactionX + (%1$f - reactionZ)*(%2$sPx/%2$sPz)) < %3$f) && ((reactionX + (%1$f - reactionZ)*(%2$sPx/%2$sPz)) > -%3$f))", coordinateZ, particle.Data(), detectorSize);
 } */
+
 const Double_t distanceWindowToAlpide = 2.05; //cm
 const Double_t distanceTargetCenterToWindow = 5.55 / 2; //cm
 const Double_t distanceAlpideToTargetCenter = distanceWindowToAlpide + distanceTargetCenterToWindow; //cm
@@ -92,6 +93,7 @@ void drawReportCanvases();
 void geoEff()
 {
     gStyle->SetOptStat(kFALSE);
+    gROOT->SetStyle("Pub");
     TString fileName = "../sim/sim_KinematicsTest500AMeV_1cmSpread.root";
     TFile* fileEventHeader = new TFile(fileName);
     treeEventHeader = (TTree*)fileEventHeader->Get("er");
@@ -399,6 +401,7 @@ void drawReportCanvases()
 
     TFile* canvasesReport = new TFile("canvasesReport.root", "RECREATE");
 
+    #if 0
     TCanvas* canvasReactionYvsReactionX = new TCanvas("canvasReactionYvsReactionX", "canvasReactionYvsReactionX", 900, 900);
     canvasReactionYvsReactionX->cd();
     treeEventHeader->Draw("reactionY:reactionX", "He3M > 0", "colz");
@@ -431,6 +434,7 @@ void drawReportCanvases()
     hReactionY->GetYaxis()->SetTitle("Counts");
     canvasReactionY->SetLeftMargin(0.12);
     canvasReactionY->SetRightMargin(0.08);
+    #endif
 
     TCanvas* canvasReactionZ = new TCanvas("canvasReactionZ", "canvasReactionZ", 900, 900);
     canvasReactionZ->cd();
@@ -440,7 +444,7 @@ void drawReportCanvases()
     hReactionZ->SetTitle("Reaction Position Z distribution");
     hReactionZ->GetXaxis()->SetTitle("z (cm)");
     hReactionZ->GetYaxis()->SetTitle("Counts");
-    canvasReactionZ->SetLeftMargin(0.12);
+    canvasReactionZ->SetLeftMargin(0.16);
     canvasReactionZ->SetRightMargin(0.08);
 
     TCanvas* canvasAlpide = new TCanvas("canvasAlpide", "canvasAlpide", 900, 450);
@@ -455,9 +459,8 @@ void drawReportCanvases()
     hAlpideP1->GetYaxis()->SetTitle("y (cm)");
     hAlpideP1->GetXaxis()->SetRangeUser(-3., 3.);
     hAlpideP1->GetYaxis()->SetRangeUser(-3., 3.);
-    gPad->SetRightMargin(0.11);
-    gPad->SetLeftMargin(0.12);
-    //drawRectangle();
+    gPad->SetLogz();
+    gPad->SetRightMargin(0.14);
     canvasAlpide->Update();
 
     canvasAlpide->cd(0);
@@ -471,8 +474,8 @@ void drawReportCanvases()
         hAlpideP2->GetXaxis()->SetRangeUser(-3., 3.);
         hAlpideP2->GetYaxis()->SetRangeUser(-3., 3.);
         gPad->SetRightMargin(0.11);
+        canvasAlpide->Update();
     }
-    canvasAlpide->Update();
 
     canvasAlpide->cd(0);
     treeEventHeader->Draw(P3momentumProjectionAlpide, "p3M > 0", "goff");
@@ -485,8 +488,8 @@ void drawReportCanvases()
         hAlpideP3->GetXaxis()->SetRangeUser(-3., 3.);
         hAlpideP3->GetYaxis()->SetRangeUser(-3., 3.);
         gPad->SetRightMargin(0.11);
+        canvasAlpide->Update();
     }
-    canvasAlpide->Update();
 
     canvasAlpide->cd(0);
     treeEventHeader->Draw(P4momentumProjectionAlpide, "p4M > 0", "goff");
@@ -512,14 +515,14 @@ void drawReportCanvases()
     hAlpideHe3->GetYaxis()->SetTitle("y (cm)");
     hAlpideHe3->GetXaxis()->SetRangeUser(-3., 3.);
     hAlpideHe3->GetYaxis()->SetRangeUser(-3., 3.);
-    gPad->SetRightMargin(0.11);
-    gPad->SetLeftMargin(0.12);
+    gPad->SetRightMargin(0.14);
+    gPad->SetLogz();
     canvasAlpide->Update();
 
-    TCanvas* canvasLastFoot = new TCanvas("canvasLastFoot", "canvasLastFoot", 900, 900);
-    canvasLastFoot->Divide(2, 2);
+    TCanvas* canvasLastFootProton = new TCanvas("canvasLastFootProton", "canvasLastFootProton", 900, 450);
+    canvasLastFootProton->Divide(2, 1);
 
-    canvasLastFoot->cd(1);
+    canvasLastFootProton->cd(1);
     Double_t allEvents = treeEventHeader->Draw(p1momentumProjectionLastFoot, "p1M > 0.", "colz");
     drawSquare();
     TH1D* hLastFootP1 = (TH1D*)gPad->GetPrimitive("htemp");
@@ -529,14 +532,15 @@ void drawReportCanvases()
     hLastFootP1->GetYaxis()->SetTitle("y (cm)");
     hLastFootP1->GetXaxis()->SetRangeUser(-9.,9.);
     hLastFootP1->GetYaxis()->SetRangeUser(-9.,9.);
-    gPad->SetRightMargin(0.13);
+    gPad->SetRightMargin(0.16);
+    gPad->SetLogz();
+    canvasLastFootProton->Update();
 
     Double_t allEventsInLastFoot = treeEventHeader->Draw(p1momentumProjectionLastFoot, "p1M > 0." && cut_p1InLastFoot, "goff");
     std::cout << "All events: " << allEvents << std::endl;
     std::cout << "Geometrical efficiency of detecting first proton = " << allEventsInLastFoot / allEvents << std::endl;
-    canvasLastFoot->Update();
 
-    canvasLastFoot->cd(0);
+    canvasLastFootProton->cd(0);
     Double_t p2EventsInSquare = treeEventHeader->Draw(p2momentumProjectionLastFoot, "p2M > 0.", "goff");
     drawSquare();
     if ((TH1D*)gPad->GetPrimitive("htemp")) {
@@ -549,9 +553,9 @@ void drawReportCanvases()
     }
     Double_t p2EventsInLastFoot = treeEventHeader->Draw(p2momentumProjectionLastFoot, "p2M > 0." && cut_p2InLastFoot, "goff");
     std::cout << "Geometrical efficiency of detecting second proton = " << p2EventsInLastFoot / allEvents << std::endl;
-    canvasLastFoot->Update();
+    canvasLastFootProton->Update();
 
-    canvasLastFoot->cd(0);
+    canvasLastFootProton->cd(0);
     Double_t p3EventsInSquare = treeEventHeader->Draw(p3momentumProjectionLastFoot, "p3M > 0.", "goff");
     drawSquare();
     if ((TH1D*)gPad->GetPrimitive("htemp")) {
@@ -564,9 +568,9 @@ void drawReportCanvases()
     }
     Double_t p3EventsInLastFoot = treeEventHeader->Draw(p3momentumProjectionLastFoot, "p3M > 0." && cut_p3InLastFoot, "goff");
     std::cout << "Geometrical efficiency of detecting third proton = " << p3EventsInLastFoot / allEvents << std::endl;
-    canvasLastFoot->Update();
+    canvasLastFootProton->Update();
 
-    canvasLastFoot->cd(0);
+    canvasLastFootProton->cd(0);
     Double_t p4EventsInSquare = treeEventHeader->Draw(p4momentumProjectionLastFoot, "p4M > 0.", "goff");
     drawSquare();
     if ((TH1D*)gPad->GetPrimitive("htemp")) {
@@ -579,9 +583,9 @@ void drawReportCanvases()
     }
     Double_t p4EventsInLastFoot = treeEventHeader->Draw(p4momentumProjectionLastFoot, "p4M > 0." && cut_p4InLastFoot, "goff");
     std::cout << "Geometrical efficiency of detecting fourth proton = " << p4EventsInLastFoot / allEvents << std::endl;
-    canvasLastFoot->Update();
+    canvasLastFootProton->Update();
 
-    canvasLastFoot->cd(2);
+    canvasLastFootProton->cd(2);
     Double_t threepEventsInSquare = treeEventHeader->Draw(p1momentumProjectionLastFoot, "p1M > 0." && cut_p2InLastFoot && cut_p3InLastFoot && cut_p4InLastFoot, "colz");
     std::cout << "Geometrical efficiency of detecting three protons (p2,p3,p4) = " << threepEventsInSquare / allEvents << std::endl;
     drawSquare();
@@ -592,10 +596,13 @@ void drawReportCanvases()
     hLastFootP1ProtonsCoincidence->GetYaxis()->SetTitle("y (cm)");
     hLastFootP1ProtonsCoincidence->GetXaxis()->SetRangeUser(-9.,9.);
     hLastFootP1ProtonsCoincidence->GetYaxis()->SetRangeUser(-9.,9.);
-    gPad->SetRightMargin(0.13);
-    canvasLastFoot->Update();
+    gPad->SetRightMargin(0.16);
+    gPad->SetLogz();
+    canvasLastFootProton->Update();
 
-    canvasLastFoot->cd(3);
+    TCanvas* canvasLastFootHelium = new TCanvas("canvasLastFootHelium", "canvasLastFootHelium", 900, 450);
+    canvasLastFootHelium->Divide(2, 1);
+    canvasLastFootHelium->cd(1);
     TString He3momentumProjectionLastFoot = Form("reactionY + (%f - reactionZ)*(He3Py/He3Pz):reactionX + (%f - reactionZ)*(He3Px/He3Pz)", distanceLastFoot, distanceLastFoot);
     Double_t He3Events = treeEventHeader->Draw(He3momentumProjectionLastFoot, "He3M > 0.", "colz");
     drawSquare();
@@ -606,12 +613,15 @@ void drawReportCanvases()
     hLastFootHe3->GetYaxis()->SetTitle("y (cm)");
     hLastFootHe3->GetXaxis()->SetRangeUser(-9.,9.);
     hLastFootHe3->GetYaxis()->SetRangeUser(-9.,9.);
-    gPad->SetRightMargin(0.13);
+    gPad->SetRightMargin(0.15);
+    gPad->SetLogz();
+
+    canvasLastFootHelium->cd(0);
     Double_t He3EventsInLastFoot = treeEventHeader->Draw(He3momentumProjectionLastFoot, "He3M > 0." && cut_He3InLastFoot, "goff");
     std::cout << "Geometrical efficiency of detecting helium-3 = " << He3EventsInLastFoot / allEvents << std::endl;
-    canvasLastFoot->Update();
+    canvasLastFootHelium->Update();
 
-    canvasLastFoot->cd(4);
+    canvasLastFootHelium->cd(2);
     Double_t He3EventsProtonsInSquare = treeEventHeader->Draw(He3momentumProjectionLastFoot, "He3M > 0." && cut_p1InLastFoot && cut_p2InLastFoot && cut_p3InLastFoot && cut_p4InLastFoot, "colz");
     drawSquare();
     TH1D* hLastFootHe3ProtonsCoincidence = (TH1D*)gPad->GetPrimitive("htemp");
@@ -621,7 +631,8 @@ void drawReportCanvases()
     hLastFootHe3ProtonsCoincidence->GetYaxis()->SetTitle("y (cm)");
     hLastFootHe3ProtonsCoincidence->GetXaxis()->SetRangeUser(-9.,9.);
     hLastFootHe3ProtonsCoincidence->GetYaxis()->SetRangeUser(-9.,9.);
-    gPad->SetRightMargin(0.13);
+    gPad->SetRightMargin(0.15);
+    gPad->SetLogz();
 
     TCanvas* canvasBeamSpread = new TCanvas("canvasBeamSpread", "canvasBeamSpread", 900, 900);
     canvasBeamSpread->cd();
@@ -631,9 +642,10 @@ void drawReportCanvases()
     hC9BeamSpreadXY->SetTitle("C9 Beam X-Y spread");
     hC9BeamSpreadXY->GetXaxis()->SetTitle("x (cm)");
     hC9BeamSpreadXY->GetYaxis()->SetTitle("y (cm)");
-    canvasBeamSpread->SetLeftMargin(0.11);
-    canvasBeamSpread->SetRightMargin(0.11);
+    canvasBeamSpread->SetLeftMargin(0.15);
+    canvasBeamSpread->SetRightMargin(0.13);
 
+    #if 0
     TCanvas* canvasBeamX = new TCanvas("canvasBeamX", "canvasBeamX", 900, 900);
     canvasBeamX->cd();
     treeEventHeader->Draw("MCTrack.fStartX", "MCTrack.fMotherId == -1", "");
@@ -655,10 +667,10 @@ void drawReportCanvases()
     hC9BeamY->GetYaxis()->SetTitle("Counts");
     canvasBeamY->SetLeftMargin(0.12);
     canvasBeamY->SetRightMargin(0.08);
+    #endif
 
-    TCanvas* canvasExcitationEnergy = new TCanvas("canvasExcitationEnergy", "canvasExcitationEnergy", 1200, 600);
-    canvasExcitationEnergy->Divide(2,1);
-    canvasExcitationEnergy->cd(1);
+    TCanvas* canvasExcitationEnergy = new TCanvas("canvasExcitationEnergy", "canvasExcitationEnergy", 1600, 900);
+    canvasExcitationEnergy->cd();
     treeEventHeader->Draw(decayEnergy, "p1M > 0." && cut_decayEnergyMoreThan0, "");
     TH1D* hE0to20MeV = (TH1D*)gPad->GetPrimitive("htemp");
     hE0to20MeV->SetName("hE0to20MeV");
@@ -667,7 +679,7 @@ void drawReportCanvases()
     hE0to20MeV->SetLineWidth(3);
     hE0to20MeV->GetXaxis()->SetTitle("E* (MeV)");
     hE0to20MeV->GetYaxis()->SetTitle("Counts");
-    gPad->SetLeftMargin(0.12);
+    gPad->SetLeftMargin(0.15);
     gPad->SetRightMargin(0.08);
     canvasExcitationEnergy->Update();
 
@@ -677,9 +689,9 @@ void drawReportCanvases()
     hE0to20MeVLastFoot->SetTitle("Excitation energy distribution (4p coincidence)");
     hE0to20MeVLastFoot->GetXaxis()->SetTitle("E* (MeV)");
     hE0to20MeVLastFoot->GetYaxis()->SetTitle("Counts");
+    hE0to20MeVLastFoot->SetLineWidth(3);
     TLine* line10MeV = new TLine(10.,0,10.,hE0to20MeVLastFoot->GetMaximum());
     line10MeV->Draw();
-    gPad->SetLeftMargin(0.12);
     gPad->SetRightMargin(0.08);
     canvasExcitationEnergy->Update();
 
@@ -698,8 +710,9 @@ void drawReportCanvases()
     drawSquare();
     canvasExcitationEnergy->Update();
 }
+    TCanvas* canvasExcitationEnergyProton = new TCanvas("canvasExcitationEnergyProton","canvasExcitationEnergyProton", 900,900);
 
-    canvasExcitationEnergy->cd(2);
+    canvasExcitationEnergyProton->cd();
     Double_t eventsE0to10MeVLastFoot = treeEventHeader->Draw(p1momentumProjectionLastFoot, "p1M > 0." && cut_decayEnergyMoreThan0 && cut_decayEnergy, "colz");
     TH1D* hE0to10MeVLastFoot2 = (TH1D*)gPad->GetPrimitive("htemp");
     hE0to10MeVLastFoot2->SetName("hE0to10MeVLastFoot2");
@@ -710,10 +723,11 @@ void drawReportCanvases()
     hE0to10MeVLastFoot2->GetYaxis()->SetRangeUser(-9.,9.);
 
     gPad->SetRightMargin(0.13);
+    gPad->SetLogz();
     drawSquare();
-    canvasExcitationEnergy->Update();
+    canvasExcitationEnergyProton->Update();
 
-    canvasExcitationEnergy->cd(0);
+    canvasExcitationEnergyProton->cd(0);
     Double_t p1eventsE0to10MeVLastFoot = treeEventHeader->Draw(p1momentumProjectionLastFoot, "p1M > 0." && cut_decayEnergyMoreThan0 && cut_decayEnergy && cut_p1InLastFoot, "goff");
 
     Double_t p2eventsE0to10MeVLastFoot = treeEventHeader->Draw(p2momentumProjectionLastFoot, "p2M > 0." && cut_decayEnergyMoreThan0 && cut_decayEnergy && cut_p2InLastFoot, "goff");
@@ -735,6 +749,7 @@ void drawReportCanvases()
     std::cout << "Geometrical efficiency of detecting He3 = " << He3eventsE0to10MeVLastFoot / eventsE0to10MeVLastFoot << std::endl;
     std::cout << "Overall geometrical efficiency = " << allParticlesInE0to10MeVLastFoot/eventsE0to10MeVLastFoot << std::endl;
 
+    #if 0
     canvasesReport->WriteObject(canvasReactionYvsReactionX, "canvasReactionYvsReactionX");
     canvasesReport->WriteObject(canvasReactionX, "canvasReactionX");
     canvasesReport->WriteObject(canvasReactionY, "canvasReactionY");
@@ -745,4 +760,5 @@ void drawReportCanvases()
     canvasesReport->WriteObject(canvasBeamX, "canvasBeamX");
     canvasesReport->WriteObject(canvasBeamY, "canvasBeamY");
     canvasesReport->WriteObject(canvasExcitationEnergy,"canvasExcitationEnergy");
+    #endif
 }

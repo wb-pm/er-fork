@@ -22,7 +22,7 @@
 
 void sim(Int_t nEvents = 10000)
 {
-  nEvents = 10;
+  nEvents = 100;
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
   //TString nameAppend = "UniformDecayerTest_Alpide_3foot_ranges1000mm";
   //TString nameAppend = "CopyRotatedFootTest500AMeV_1cmSpread";
@@ -81,19 +81,19 @@ void sim(Int_t nEvents = 10000)
   setupFootMuSi->SetXMLParametersFile(paramFileFootMuSi);
   setupFootMuSi->SetGeoName("FootMuSiTmp");
   //----------  FOOT stations placement --------------------------------------------
-  Double_t x, y, z_pair, z_stations, z;
+  Double_t x, y, z_pair, z_between_stations, z;
   x = 0.;
   y = 0.;
   z = 17.;
   z_pair = 1.;
-  z_stations = 7.;
+  z_between_stations = 7.;
   TVector3 fZeroRotation(0., 0., 0.);
   TVector3 smallZRotation(0.,0.,10.); //degrees
 
   ERGeoSubAssembly* C7_1st_pair = new ERGeoSubAssembly("C7_1st_pair", TVector3(x, y, z), fZeroRotation);
-  ERGeoSubAssembly* C7_2nd_pair = new ERGeoSubAssembly("C7_2nd_pair", TVector3(x, y, z + z_pair + z_stations), fZeroRotation);
-  ERGeoSubAssembly* C7_3rd_pair = new ERGeoSubAssembly("C7_3rd_pair", TVector3(x, y, z + 2 * z_pair + 2 * z_stations), fZeroRotation);
-  ERGeoSubAssembly* C7_4th_pair = new ERGeoSubAssembly("C7_4th_pair", TVector3(x, y, z + 3 * z_pair + 3 * z_stations), fZeroRotation);
+  ERGeoSubAssembly* C7_2nd_pair = new ERGeoSubAssembly("C7_2nd_pair", TVector3(x, y, z + z_pair + z_between_stations), fZeroRotation);
+  ERGeoSubAssembly* C7_3rd_pair = new ERGeoSubAssembly("C7_3rd_pair", TVector3(x, y, z + 2 * z_pair + 2 * z_between_stations), fZeroRotation);
+  ERGeoSubAssembly* C7_4th_pair = new ERGeoSubAssembly("C7_4th_pair", TVector3(x, y, z + 3 * z_pair + 3 * z_between_stations), fZeroRotation);
 
   ERFootMuSiGeoComponentSingleSi* det_C7_X1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_1", TVector3(0., 0., 0.), fZeroRotation, "X");
   ERFootMuSiGeoComponentSingleSi* det_C7_Y1 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_2", TVector3(0., 0., z_pair), fZeroRotation, "Y");
@@ -101,8 +101,8 @@ void sim(Int_t nEvents = 10000)
   C7_1st_pair->AddComponent(det_C7_Y1);
   setupFootMuSi->AddSubAssembly(C7_1st_pair);
 
-  ERFootMuSiGeoComponentSingleSi* det_C7_X2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_3", TVector3(0., 0., 0.), smallZRotation, "X");
-  ERFootMuSiGeoComponentSingleSi* det_C7_Y2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_4", TVector3(0., 0., z_pair), smallZRotation, "Y");
+  ERFootMuSiGeoComponentSingleSi* det_C7_X2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_3", TVector3(0., 0., 0.), fZeroRotation, "X");
+  ERFootMuSiGeoComponentSingleSi* det_C7_Y2 = new ERFootMuSiGeoComponentSingleSi("SingleSi", "SingleSi_SSD150_4", TVector3(0., 0., z_pair), fZeroRotation, "Y");
   C7_2nd_pair->AddComponent(det_C7_X2);
   C7_2nd_pair->AddComponent(det_C7_Y2);
   setupFootMuSi->AddSubAssembly(C7_2nd_pair);
@@ -139,7 +139,8 @@ void sim(Int_t nEvents = 10000)
   generator9C->SetThetaSigma(0., 0.5); //for now there is a fixed 0 degree angle in the ERIonGenerator
   // generator9C->SetPhiRange(0, 45);
   //generator9C->SetBoxXYZ(0, 0, 0., 0., beamStartPosition);
-  generator9C->SetRoundXY(1., 0., 0., beamStartPosition); // задает ограничение размытия пятна пучка на мишени
+  const Double_t beamXYRadius = 1.;
+  generator9C->SetRoundXY(beamXYRadius, 0., 0., beamStartPosition); // задает ограничение размытия пятна пучка на мишени
   //generator9C->SetPDGType()
 
   // generator9C->SpreadingOnTarget(); 				//Sets spreading of x and y coordinates on target (where z-position is zero)
@@ -152,7 +153,7 @@ void sim(Int_t nEvents = 10000)
 
   TString interactionVol = "target9BeVol";
 
-  Double_t target_thickness = 5.; // cm
+  const Double_t target_thickness = AlpideSpecs::TargetThickness; // cm
 
   targetDecay->Set7CUniformExcitation(0.,20.); // MeV
   //targetDecay->Set7CGaussianExcitation(6.,3.);

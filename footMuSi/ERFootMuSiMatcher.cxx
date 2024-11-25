@@ -28,7 +28,7 @@ ERFootMuSiMatcher::ERFootMuSiMatcher()
   fWrongTracksNb(0),
   fMCTracksNb(0),
   fShortMCTracksNb(0),
-  fNotFoundVerteciesNb(0)
+  fNotFoundVerticesNb(0)
 {
 }
 // ----------------------------------------------------------------------------
@@ -40,7 +40,7 @@ ERFootMuSiMatcher::ERFootMuSiMatcher(Int_t verbose)
   fWrongTracksNb(0),
   fMCTracksNb(0),
   fShortMCTracksNb(0),
-  fNotFoundVerteciesNb(0)
+  fNotFoundVerticesNb(0)
 {
 }
 // ----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ InitStatus ERFootMuSiMatcher::Init()
   fFootMuSiPoints = (TClonesArray*) ioman->GetObject("FootMuSiPoint");
   fFootMuSiHits = (TClonesArray*) ioman->GetObject("FootMuSiHit");
   fFootMuSiTracks = (TClonesArray*) ioman->GetObject("FootMuSiTrack");
-  fFootMuSiVertecies = (TClonesArray*) ioman->GetObject("FootMuSiVertex");
+  fFootMuSiVertices = (TClonesArray*) ioman->GetObject("FootMuSiVertex");
 
   fHVertexDz = new TH1F("Vertex z quality", "Vertex z quality", 5000, 0., .5);
   fHVertexDxy = new TH1F("Vertex xy quality", "Vertex xy quality", 5000, 0., .5);
@@ -126,31 +126,31 @@ void ERFootMuSiMatcher::Exec(Option_t* opt)
  fMCTracksNb += pointsOnTracks.size();
  fShortMCTracksNb+= shortMCTracks;
 
- Int_t notFoundVerteciesNb = 0;
+ Int_t notFoundVerticesNb = 0;
  //Выделяем mc вершины по массиву треков
- std::vector<MCVertex> MCVertecies;
+ std::vector<MCVertex> MCVertices;
  for (Int_t iTrack = 0; iTrack < fMCTracks->GetEntriesFast(); iTrack++){
     ERMCTrack* mcTrack = (ERMCTrack*)fMCTracks->At(iTrack);
     Bool_t addedToMC = kFALSE;
     if (mcTrack->GetMotherId() == -1){
-      for(std::vector<MCVertex>::iterator it = MCVertecies.begin(); it!=MCVertecies.end(); it++){
+      for(std::vector<MCVertex>::iterator it = MCVertices.begin(); it!=MCVertices.end(); it++){
         if ( ((*it).x - mcTrack->GetStartX() < 0.01) &&
              ((*it).y - mcTrack->GetStartY() < 0.01) &&
              ((*it).y - mcTrack->GetStartY() < 0.01))
             addedToMC = kTRUE;
       }
       if (!addedToMC)
-        MCVertecies.push_back(MCVertex(mcTrack->GetStartX(), mcTrack->GetStartY(), mcTrack->GetStartZ()));
+        MCVertices.push_back(MCVertex(mcTrack->GetStartX(), mcTrack->GetStartY(), mcTrack->GetStartZ()));
     }
   }
   //Смотрим какие вершины нашли
-  for(std::vector<MCVertex>::iterator it = MCVertecies.begin(); it!=MCVertecies.end(); it++){
+  for(std::vector<MCVertex>::iterator it = MCVertices.begin(); it!=MCVertices.end(); it++){
       MCVertex mcVertex = (*it);
       Bool_t found = kFALSE;
       Float_t distFound = 99999999.;
       ERFootMuSiVertex* vertFound;
-      for(Int_t iVert =0; iVert < fFootMuSiVertecies->GetEntriesFast(); iVert++ ){
-        ERFootMuSiVertex* vert = (ERFootMuSiVertex*)fFootMuSiVertecies->At(iVert);
+      for(Int_t iVert =0; iVert < fFootMuSiVertices->GetEntriesFast(); iVert++ ){
+        ERFootMuSiVertex* vert = (ERFootMuSiVertex*)fFootMuSiVertices->At(iVert);
         Float_t dist = TMath::Sqrt((vert->X()-mcVertex.x)*(vert->X()-mcVertex.x) +
                                    (vert->Y()-mcVertex.y)*(vert->Y()-mcVertex.y) +
                                    (vert->Z()-mcVertex.z)*(vert->Z()-mcVertex.z));
@@ -163,7 +163,7 @@ void ERFootMuSiMatcher::Exec(Option_t* opt)
         }
       }
       if (!found){
-        notFoundVerteciesNb++;
+        notFoundVerticesNb++;
       }else{
         fHVertexDz->Fill(TMath::Abs(vertFound->Z() - mcVertex.z));
         fHVertexDxy->Fill(TMath::Sqrt((vertFound->Y() - mcVertex.y)*(vertFound->Y() - mcVertex.y)
@@ -171,8 +171,8 @@ void ERFootMuSiMatcher::Exec(Option_t* opt)
       }
    }
 
-   std::cout << "Not found primary vertecies:" << notFoundVerteciesNb << std::endl;
-   fNotFoundVerteciesNb += notFoundVerteciesNb;
+   std::cout << "Not found primary vertecies:" << notFoundVerticesNb << std::endl;
+   fNotFoundVerticesNb += notFoundVerticesNb;
 }
 //----------------------------------------------------------------------------
 
@@ -194,7 +194,7 @@ void ERFootMuSiMatcher::Finish()
   std::cout << "Wrong tracks: " << fWrongTracksNb << std::endl;
   std::cout << "Eff. all: " << (Float_t)fTrueTracksNb/(Float_t)fMCTracksNb << std::endl;
   std::cout << "Eff. long: " << (Float_t)fTrueTracksNb/(Float_t)(fMCTracksNb-fShortMCTracksNb)<< std::endl;
-  std::cout << "Not found primary vertecies: " << fNotFoundVerteciesNb << std::endl;
+  std::cout << "Not found primary vertecies: " << fNotFoundVerticesNb << std::endl;
 
   fHVertexDz->Write();
   fHVertexDxy->Write();

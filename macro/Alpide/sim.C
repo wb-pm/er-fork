@@ -1,3 +1,4 @@
+//The code is mainly taken from simulations of FOOT detectors, but with addition of Alpide
 #if !defined(__CLING__)
 
 
@@ -20,17 +21,17 @@
 #include "ERFootMuSi.h"
 #endif
 
-void sim(Int_t nEvents = 10000)
+void sim(Int_t nEvents = 10)
 {
-  nEvents = 100;
+  nEvents = 1000;
   TString workDirPath = gSystem->Getenv("VMCWORKDIR");
   //TString nameAppend = "UniformDecayerTest_Alpide_3foot_ranges1000mm";
   //TString nameAppend = "CopyRotatedFootTest500AMeV_1cmSpread";
-  TString nameAppend = "todo_correction1";
+  TString nameAppend = "test";
   //Simulation output
   TString outFile = "sim/sim_"+nameAppend+".root";
   //Decay products file
-  TString decayDatFile = workDirPath + "/input/generators/Decay7C.dat";
+  TString decayDatFile = workDirPath + "/input/generators/Decay7C_10kEvents.dat";
   //Output parameters
   TString parFile = "par/par_"+nameAppend+".root";
   //FOOT detector setup

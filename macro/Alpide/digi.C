@@ -16,9 +16,9 @@
 
 void digi(Int_t nEvents = 10)
 {
-  //nEvents = 100000;
+  nEvents = 1000;
   //TString appendName = "RotatedFootTest500AMeV_1cmSpread";
-  TString appendName = "todo_correction";
+  TString appendName = "test";
   TString sim_file = "sim/sim_" + appendName + ".root";
   TString par_file = "par/par_" + appendName + ".root";
   TString digi_file = "digi/digi_" + appendName + ".root";

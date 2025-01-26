@@ -18,11 +18,11 @@
 void reco()
 {
     //File paths
-    TString appendName = "";
-    TString inFile = "sim/sim.root" + appendName;
-    TString outFile = "reco/reco.root" + appendName;
-    TString parFile = "par/reco_par.root" + appendName;
-    TString geoFile = "geo/setup_Alpide.root";
+    TString appendName = "test";
+    TString inFile = "sim/sim_" + appendName + ".root";
+    TString outFile = "reco/reco_" + appendName + ".root";
+    TString parFile = "par/reco_par_" + appendName + ".root";
+    TString geoFile = "setup/setup_" + appendName + ".root";
     //Open simulation
     TFile* file = TFile::Open(inFile.Data());
     TTree* tree = (TTree*)file->Get("er");

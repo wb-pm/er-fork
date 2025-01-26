@@ -4,6 +4,7 @@
 #include "TMath.h"
 
 #include "FairRun.h"
+#include "FairRunSim.h"
 #include "FairRuntimeDb.h"
 #include "FairEventHeader.h"
 
@@ -14,7 +15,11 @@
 
 using std::map;
 using std::vector;
+using std::make_tuple;
+using std::tie;
+using std::distance;
 
+const Double_t edep_threshold = 0.0001;
 //Things TODO:
 //1) replace shuffle by two-component vector sorting
 //2) Poisson lambda as a function of activity and time window
@@ -39,8 +44,6 @@ ERGadastDigitizer::ERGadastDigitizer()
 {
 }
 // ----------------------------------------------------------------------------
-
-// ----------------------------------------------------------------------------
 ERGadastDigitizer::ERGadastDigitizer(Int_t verbose)
   : FairTask("ER Gadast Digitization scheme ", verbose),
   fSetup(NULL),
@@ -61,8 +64,6 @@ ERGadastDigitizer::ERGadastDigitizer(Int_t verbose)
 }
 // ----------------------------------------------------------------------------
 
-// ----------------------------------------------------------------------------
-
 ERGadastDigitizer::~ERGadastDigitizer()
 {
   delete fSetup;
@@ -73,22 +74,22 @@ ERGadastDigitizer::~ERGadastDigitizer()
 void ERGadastDigitizer::SetCsILC(Float_t lc)
 {
   fCsILCFun = [lc](BlockAddress, size_t, size_t, size_t) {return lc;};
-  fCsILCGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
 }
 
 // ----------------------------------------------------------------------------
 
-void ERGadastDigitizer::SetCsILC(std::map<BlockAddress, float>& lc)
+void ERGadastDigitizer::SetCsILC(map<BlockAddress, float>& lc)
 {
   fCsILCFun = [lc](BlockAddress address, size_t, size_t, size_t) {
     return lc.at(address);
     };
-  fCsILCGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
 }
 
 // ----------------------------------------------------------------------------
 
-void ERGadastDigitizer::SetCsILC(std::map<BlockAddress, CoefficientMatrix>& lc)
+void ERGadastDigitizer::SetCsILC(map<BlockAddress, CoefficientMatrix>& lc)
 {
   fCsILCFun = [&lc](BlockAddress address, size_t x, size_t y, size_t z) {
     //LOG(DEBUG) << "CsILCFun: wall=" << address.first << ", block=" << address.second << ", x cell=" << x << ", y cell=" << y << ", z cell=" << z << FairLogger::endl;
@@ -101,7 +102,7 @@ void ERGadastDigitizer::SetCsILC(std::map<BlockAddress, CoefficientMatrix>& lc)
     const size_t x_size = matrix.size();
     const size_t y_size = matrix.at(0).size();
     const size_t z_size = matrix.at(0).at(0).size();
-    return std::make_tuple(x_size, y_size, z_size);
+    return make_tuple(x_size, y_size, z_size);
     };
 }
 
@@ -110,37 +111,37 @@ void ERGadastDigitizer::SetCsILC(std::map<BlockAddress, CoefficientMatrix>& lc)
 void ERGadastDigitizer::SetCsIEdepError(Float_t a, Float_t b, Float_t c)
 {
   fCsILCAFun = [a](BlockAddress, size_t, size_t, size_t) {return a;};
-  fCsILCAGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCAGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
   fCsILCBFun = [b](BlockAddress, size_t, size_t, size_t) {return b;};
-  fCsILCBGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCBGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
   fCsILCCFun = [c](BlockAddress, size_t, size_t, size_t) {return c;};
-  fCsILCCGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCCGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
 }
 
 // ----------------------------------------------------------------------------
 
-void ERGadastDigitizer::SetCsIEdepError(std::map<BlockAddress, float>& a,
-  std::map<BlockAddress, float>& b,
-  std::map<BlockAddress, float>& c) {
+void ERGadastDigitizer::SetCsIEdepError(map<BlockAddress, float>& a,
+  map<BlockAddress, float>& b,
+  map<BlockAddress, float>& c) {
   fCsILCAFun = [a](BlockAddress address, size_t, size_t, size_t) {
     return a.at(address);
     };
-  fCsILCAGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCAGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
   fCsILCBFun = [b](BlockAddress address, size_t, size_t, size_t) {
     return b.at(address);
     };
-  fCsILCBGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCBGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
   fCsILCCFun = [c](BlockAddress address, size_t, size_t, size_t) {
     return c.at(address);
     };
-  fCsILCCGrid = [](BlockAddress) {return std::make_tuple(1, 1, 1);};
+  fCsILCCGrid = [](BlockAddress) {return make_tuple(1, 1, 1);};
 }
 
 // ----------------------------------------------------------------------------
 
-void ERGadastDigitizer::SetCsIEdepError(std::map<BlockAddress, CoefficientMatrix>& a,
-  std::map<BlockAddress, CoefficientMatrix>& b,
-  std::map<BlockAddress, CoefficientMatrix>& c) {
+void ERGadastDigitizer::SetCsIEdepError(map<BlockAddress, CoefficientMatrix>& a,
+  map<BlockAddress, CoefficientMatrix>& b,
+  map<BlockAddress, CoefficientMatrix>& c) {
   fCsILCAFun = [&a](BlockAddress address, size_t x, size_t y, size_t z) {
     LOG(DEBUG) << "fCsILCAFun: wall=" << address.first << ", block=" << address.second
       << ", x cell=" << x << ", y cell=" << y << ", z cell=" << z << FairLogger::endl;
@@ -153,7 +154,7 @@ void ERGadastDigitizer::SetCsIEdepError(std::map<BlockAddress, CoefficientMatrix
     const size_t x_size = matrix.size();
     const size_t y_size = matrix.at(0).size();
     const size_t z_size = matrix.at(0).at(0).size();
-    return std::make_tuple(x_size, y_size, z_size);
+    return make_tuple(x_size, y_size, z_size);
     };
 
   fCsILCBFun = [&b](BlockAddress address, size_t x, size_t y, size_t z) {
@@ -168,7 +169,7 @@ void ERGadastDigitizer::SetCsIEdepError(std::map<BlockAddress, CoefficientMatrix
     const size_t x_size = matrix.size();
     const size_t y_size = matrix.at(0).size();
     const size_t z_size = matrix.at(0).at(0).size();
-    return std::make_tuple(x_size, y_size, z_size);
+    return make_tuple(x_size, y_size, z_size);
     };
 
   fCsILCCFun = [&c](BlockAddress address, size_t x, size_t y, size_t z) {
@@ -183,7 +184,7 @@ void ERGadastDigitizer::SetCsIEdepError(std::map<BlockAddress, CoefficientMatrix
     const size_t x_size = matrix.size();
     const size_t y_size = matrix.at(0).size();
     const size_t z_size = matrix.at(0).at(0).size();
-    return std::make_tuple(x_size, y_size, z_size);
+    return make_tuple(x_size, y_size, z_size);
     };
 
 }
@@ -236,8 +237,8 @@ InitStatus ERGadastDigitizer::Init()
 void ERGadastDigitizer::Exec(Option_t* opt)
 {
   FairRootManager* ioman = FairRootManager::Instance();
-  if(ioman->GetEntryNr() % 100000 == 0){
-  LOG(INFO) << "Digitization of event number " << ioman->GetEntryNr() << std::endl;
+  if (ioman->GetEntryNr() % 10000 == 0) {
+    LOG(INFO) << "Digitization of event number " << ioman->GetEntryNr() << std::endl;
   }
   // Reset entries in output arrays
   Reset();
@@ -253,6 +254,7 @@ void ERGadastDigitizer::Exec(Option_t* opt)
     pointsCsI[point->GetWall()][point->GetBlock()][point->GetCell()].push_back(iPoint);
   }
 
+  LOG(DEBUG) << "fGadastLaBrPoints contains entries: " << fGadastLaBrPoints->GetEntriesFast() << FairLogger::endl;
   // Map points by cells: pointsLaBr[iCell]
   map<Int_t, vector<Int_t> > pointsLaBr;
   for (Int_t iPoint = 0; iPoint < fGadastLaBrPoints->GetEntriesFast(); iPoint++) {
@@ -272,18 +274,19 @@ void ERGadastDigitizer::Exec(Option_t* opt)
       for (const auto& itCell : itBlock.second) {
         Double_t edep = 0.; // sum edep in cell
         Float_t edepSigma = 0.; // sum edep sigma in cell
-        Double_t energydep = 0.;
+        //TODO: Change writing this variable into the tree
+        Double_t gaus4MeV = 0.; // edep in case of full energy deposition of 4 MeV gamma
         size_t x_countsLCA, y_countsLCA, z_countsLCA;
-        std::tie(x_countsLCA, y_countsLCA, z_countsLCA) = fCsILCAGrid(address);
+        tie(x_countsLCA, y_countsLCA, z_countsLCA) = fCsILCAGrid(address);
         //Since the resolution is uniform throughout the crystal, it doesn't make sense to output these values
 /*           LOG(DEBUG) << "x_countsLCA: " << x_countsLCA << " y_countsLCA: " << y_countsLCA << " z_countsLCA: " << z_countsLCA << FairLogger::endl;
           LOG(DEBUG) << "x_binLCA: " << x_binLCA << " y_binLCA: " << y_binLCA << " z_binLCA: " << z_binLCA << FairLogger::endl; */
-        //A matrix for all of the energy depositions, based on the fact in which part of the crystal it was deposited (and also by which gamma quantum). The size is determined 
-        std::vector<std::vector<std::vector<std::vector<float> > > > separatedenergydeps(x_countsLCA, std::vector<std::vector<std::vector<float> > >(y_countsLCA, std::vector<std::vector<float> >(z_countsLCA, vector<float>(fMultiplicity * 3, 0))));
-        std::vector<Double_t> energydeps(fMultiplicity * 3, 0.0);
-        std::vector<Double_t> changedenergydeps(fMultiplicity * 3, 0.0);
-        std::vector<Double_t> poissonenergydeps(fMultiplicity * 2, 0.0);
-        std::vector<Double_t> finalenergydeps(fMultiplicity * 2, 0.0);
+          //A matrix for all of the energy depositions, based on the fact in which part of the crystal it was deposited (and also by which gamma quantum). The size is determined 
+        vector<vector<vector<vector<float> > > > separatedenergydeps(x_countsLCA, vector<vector<vector<float> > >(y_countsLCA, vector<vector<float> >(z_countsLCA, vector<float>(fMultiplicity * 3, 0.0))));
+        vector<Double_t> energydeps(fMultiplicity * 3, 0.0);
+        vector<Double_t> changedenergydeps(fMultiplicity * 3, 0.0);
+        vector<Double_t> poissonenergydeps(fMultiplicity * 2, 0.0);
+        vector<Double_t> finalenergydeps(fMultiplicity * 2, 0.0);
         Float_t time = std::numeric_limits<float>::max(); // first time in cell
 
         for (const auto iPoint : itCell.second) {
@@ -293,100 +296,71 @@ void ERGadastDigitizer::Exec(Option_t* opt)
           TVector3 pos;
           point->PositionIn(pos);
 
-          //number of parts with different light collection (by each axis)
+          //number of parts with different light collection (for each axis of the crystal)
           size_t x_countsLC, y_countsLC, z_countsLC;
-          std::tie(x_countsLC, y_countsLC, z_countsLC) = fCsILCGrid(address);
-/*           LOG(DEBUG) << "x_countsLC: " << x_countsLC << " y_countsLC: " << y_countsLC << " z_countsLC: " << z_countsLC << FairLogger::endl; */
+          tie(x_countsLC, y_countsLC, z_countsLC) = fCsILCGrid(address);
+          /*           LOG(DEBUG) << "x_countsLC: " << x_countsLC << " y_countsLC: " << y_countsLC << " z_countsLC: " << z_countsLC << FairLogger::endl; */
           size_t x_binLC, y_binLC, z_binLC;
           //part of the crystal with its own LC coefficient, where point energy deposition has occured
-          std::tie(x_binLC, y_binLC, z_binLC) = fSetup->GetCsIMeshElement(&pos, x_countsLC, y_countsLC, z_countsLC);
+          tie(x_binLC, y_binLC, z_binLC) = fSetup->GetCsIMeshElement(&pos, x_countsLC, y_countsLC, z_countsLC);
           LOG(DEBUG) << "x_binLC: " << x_binLC << " y_binLC: " << y_binLC << " z_binLC: " << z_binLC << FairLogger::endl;
 
           size_t x_binLCA, y_binLCA, z_binLCA;
-          std::tie(x_binLCA, y_binLCA, z_binLCA) = fSetup->GetCsIMeshElement(&pos, x_countsLCA, y_countsLCA, z_countsLCA);
+          tie(x_binLCA, y_binLCA, z_binLCA) = fSetup->GetCsIMeshElement(&pos, x_countsLCA, y_countsLCA, z_countsLCA);
           const float A = fCsILCAFun(address, x_binLCA, y_binLCA, z_binLCA);
-//          LOG(DEBUG) << "GetMotherID = " << point->GetMot0TrackID() << FairLogger::endl;
-          //Applying the light output non-uniformity
+          //          LOG(DEBUG) << "GetMotherID = " << point->GetMot0TrackID() << FairLogger::endl;
+                    //Applying the light output non-uniformity
           separatedenergydeps.at(x_binLCA).at(y_binLCA).at(z_binLCA).at(point->GetParentGammaTrackID()) += fCsILCFun(address, x_binLC, y_binLC, z_binLC) * point->GetEnergyLoss();
           LOG(DEBUG) << "Point number " << iPoint << " GetParentGammaTrackID = " << point->GetParentGammaTrackID() << FairLogger::endl;
           LOG(DEBUG) << "Point number " << iPoint << " with energy deposition before LC: " << point->GetEnergyLoss() << FairLogger::endl;
-          LOG(DEBUG) << "Point number " << iPoint << " with energy deposition after LC: " << fCsILCFun(address,x_binLC,y_binLC,z_binLC)*point->GetEnergyLoss() << FairLogger::endl;
+          LOG(DEBUG) << "Point number " << iPoint << " with energy deposition after LC: " << fCsILCFun(address, x_binLC, y_binLC, z_binLC) * point->GetEnergyLoss() << FairLogger::endl;
 
           size_t x_countsLCB, y_countsLCB, z_countsLCB;
-          std::tie(x_countsLCB, y_countsLCB, z_countsLCB) = fCsILCBGrid(address);
+          tie(x_countsLCB, y_countsLCB, z_countsLCB) = fCsILCBGrid(address);
           size_t x_binLCB, y_binLCB, z_binLCB;
-          std::tie(x_binLCB, y_binLCB, z_binLCB) = fSetup->GetCsIMeshElement(&pos, x_countsLCB, y_countsLCB, z_countsLCB);
+          tie(x_binLCB, y_binLCB, z_binLCB) = fSetup->GetCsIMeshElement(&pos, x_countsLCB, y_countsLCB, z_countsLCB);
           const float B = fCsILCBFun(address, x_binLCB, y_binLCB, z_binLCB);
 
           size_t x_countsLCC, y_countsLCC, z_countsLCC;
-          std::tie(x_countsLCC, y_countsLCC, z_countsLCC) = fCsILCCGrid(address);
+          tie(x_countsLCC, y_countsLCC, z_countsLCC) = fCsILCCGrid(address);
           size_t x_binLCC, y_binLCC, z_binLCC;
-          std::tie(x_binLCC, y_binLCC, z_binLCC) = fSetup->GetCsIMeshElement(&pos, x_countsLCC, y_countsLCC, z_countsLCC);
+          tie(x_binLCC, y_binLCC, z_binLCC) = fSetup->GetCsIMeshElement(&pos, x_countsLCC, y_countsLCC, z_countsLCC);
           const float C = fCsILCCFun(address, x_binLCC, y_binLCC, z_binLCC);
 
-          //energydep = fCsILCFun(address, x_binLC, y_binLC, z_binLC) * point->GetEnergyLoss();
-          //changedenergydeps[point->GetParentGammaTrackID()] += gRandom->Gaus(energydep, sqrt(pow(A, 2) + pow(B * TMath::Sqrt(energydep), 2) + pow(C * energydep, 2)));
-      //energydeps[point->GetParentGammaTrackID()] += fCsILCFun(address, x_binLC, y_binLC, z_binLC) * point->GetEnergyLoss();
-
-      //Energy depositions, altered by the Gauss distribution
-      /*for(int i = 0; i < fMultiplicity*3; i++){
-        if (energydeps[i] <= 0.0001)
-        {;}
-        else
-      {
-        changedenergydeps[i] = gRandom->Gaus(energydeps[i], sqrt(pow(A, 2) + pow(B * TMath::Sqrt(energydeps[i]), 2) + pow(C * energydeps[i], 2)));
-        //changedenergydeps[i] = gRandom->Gaus(energydeps[i], 0.11*energydeps[i]);
-      }
-        }   */
         }
         //Applying Gaussian to all energy depositions, again based on the place of energy depositions
         for (auto ix = separatedenergydeps.begin(); ix != separatedenergydeps.end(); ++ix) {
           for (auto iy = ix->begin(); iy != ix->end(); ++iy) {
             for (auto iz = iy->begin(); iz != iy->end(); ++iz) {
               for (auto imult = iz->begin(); imult != iz->end(); ++imult) {
-                if (*imult <= 0.0001) {
+                if (*imult <= edep_threshold) {
                   continue;
                 }
                 else {
-                  *imult = gRandom->Gaus(*imult, sqrt(pow(fCsILCAFun(address, std::distance(separatedenergydeps.begin(), ix), std::distance(ix->begin(), iy), std::distance(iy->begin(), iz)), 2) + pow(fCsILCBFun(address, std::distance(separatedenergydeps.begin(), ix), std::distance(ix->begin(), iy), std::distance(iy->begin(), iz)) * TMath::Sqrt(*imult), 2) + pow(fCsILCCFun(address, std::distance(separatedenergydeps.begin(), ix), std::distance(ix->begin(), iy), std::distance(iy->begin(), iz)) * *imult, 2)));
+                  edepSigma = sqrt(pow(fCsILCAFun(address, distance(separatedenergydeps.begin(), ix), distance(ix->begin(), iy), distance(iy->begin(), iz)), 2) + pow(fCsILCBFun(address, distance(separatedenergydeps.begin(), ix), distance(ix->begin(), iy), distance(iy->begin(), iz)) * TMath::Sqrt(*imult), 2) + pow(fCsILCCFun(address, distance(separatedenergydeps.begin(), ix), distance(ix->begin(), iy), distance(iy->begin(), iz)) * *imult, 2));
+                  LOG(DEBUG) << "The generated sigma of the Gaussian for CsI = " << edepSigma << ". The energy is " << *imult << FairLogger::endl;
+                  gaus4MeV = *imult; 
 
-                  changedenergydeps[std::distance(iz->begin(), imult)] += *imult;
+                  *imult = gRandom->Gaus(*imult, edepSigma);
+                  if(fabs(gaus4MeV - 4.) < 1e-7){
+                    gaus4MeV = *imult;
+                    std::cout << "Gaus energy deposition" << gaus4MeV << std::endl;
+                  }
+                  else
+                  {
+                    gaus4MeV = 0;
+                  }
+
+                  changedenergydeps[distance(iz->begin(), imult)] += *imult;
                 }
               }
             }
           }
         }
-        LOG(DEBUG) << "changed energy depositions:" << FairLogger::endl;
-        for (auto& i: changedenergydeps)
+        LOG(DEBUG) << "Changed energy depositions:" << FairLogger::endl;
+        for (auto& i : changedenergydeps)
         {
-            LOG(DEBUG) << i << ' ';
-        }
-        //Counters for gammas of each type, arriving to detector before applying Poisson algorithm
-        int CsGammas_Before = 0;
-        for (int i = 0; i < fMultiplicity; i++)
-        {
-          if (changedenergydeps[i] >= 0.0001)
-          {
-            CsGammas_Before++;
-          }
-        }
-
-        int Co1Gammas_Before = 0;
-        for (int i = fMultiplicity; i < fMultiplicity * 2; i++)
-        {
-          if (changedenergydeps[i] >= 0.0001)
-          {
-            Co1Gammas_Before++;
-          }
-        }
-
-        int Co2Gammas_Before = 0;
-        for (int i = fMultiplicity * 2; i < fMultiplicity * 3; i++)
-        {
-          if (changedenergydeps[i] >= 0.0001)
-          {
-            Co2Gammas_Before++;
-          }
+          LOG(DEBUG) << i << ' ';
         }
         //Setting to 0 respective quantity of energy depositions (according to previously generated Poisson numbers)
         LOG(DEBUG) << "Poisson for caesium: " << events_poisson_Cs << ", for cobalt: " << events_poisson_Co << FairLogger::endl;
@@ -400,35 +374,6 @@ void ERGadastDigitizer::Exec(Option_t* opt)
           changedenergydeps[fMultiplicity * 2 + i] = 0.;
         }
 
-        int CsGammas_After = 0;
-        for (int i = 0; i < fMultiplicity; i++)
-        {
-          if (changedenergydeps[i] >= 0.0001)
-          {
-            CsGammas_After++;
-          }
-          else { ; }
-        }
-        //Counters for gammas of each type, left in the detector after applying Poisson algorithm
-        int Co1Gammas_After = 0;
-        for (int i = fMultiplicity; i < fMultiplicity * 2; i++)
-        {
-          if (changedenergydeps[i] >= 0.0001)
-          {
-            Co1Gammas_After++;
-          }
-          else { ; }
-        }
-
-        int Co2Gammas_After = 0;
-        for (int i = fMultiplicity * 2; i < fMultiplicity * 3; i++)
-        {
-          if (changedenergydeps[i] >= 0.0001)
-          {
-            Co2Gammas_After++;
-          }
-          else { ; }
-        }
         //Considering here the fact that gammas from cobalt-60 are co-dependent, they are created simultaneously
         for (int i = 0; i < fMultiplicity; i++) {
           poissonenergydeps[i] = changedenergydeps[i];
@@ -436,7 +381,7 @@ void ERGadastDigitizer::Exec(Option_t* opt)
         }
         //Creating a vector of times passed between energy depositions registered by the detector		  		  
         std::uniform_real_distribution<> distime(0., fSignalsInterval); //interval of time in which the numbers are generated
-        std::vector<Double_t> rndtime(fMultiplicity * 2, 0.);
+        vector<Double_t> rndtime(fMultiplicity * 2, 0.);
         for (auto& i : rndtime)
         {
           i = distime(fMtGenerator);
@@ -444,16 +389,16 @@ void ERGadastDigitizer::Exec(Option_t* opt)
         //rndtime.front() = 0; //one of the energy depositions is set to take place at the beginning
         std::sort(rndtime.begin(), rndtime.end());
         LOG(DEBUG) << "Generated times, arranged in order: " << FairLogger::endl;
-        for(auto& i :rndtime)
+        for (auto& i : rndtime)
         {
           LOG(DEBUG) << i << ' ';
         }
         std::cout << FairLogger::endl;
         //Random shuffle of energy depositions (so that the order is not always Cs, Co1, Co2)
-        std::shuffle(poissonenergydeps.begin(),poissonenergydeps.end(),fMtGenerator);
+        std::shuffle(poissonenergydeps.begin(), poissonenergydeps.end(), fMtGenerator);
         //Changing the energy depositions according to the exponential decay based on "rndtime" vector and "fShapingTime" constant
         LOG(DEBUG) << "Shuffled energy depositions: " << FairLogger::endl;
-        for(auto& i :poissonenergydeps)
+        for (auto& i : poissonenergydeps)
         {
           LOG(DEBUG) << i << ' ';
         }
@@ -463,30 +408,30 @@ void ERGadastDigitizer::Exec(Option_t* opt)
         }
         for (int i = 1; i < fMultiplicity * 2; i++) {
           for (int j = 0; j < i; j++) {
-            if(poissonenergydeps[i] >= 0.00001)
+            if (poissonenergydeps[i] >= edep_threshold)
             {
-            finalenergydeps[i] += poissonenergydeps[j] * exp(-(rndtime[i] - rndtime[j]) / fDecayTime);
+              finalenergydeps[i] += poissonenergydeps[j] * exp(-(rndtime[i] - rndtime[j]) / fDecayTime);
             }
           }
         }
         LOG(DEBUG) << "Set of final energy depositions: " << FairLogger::endl;
-        for(auto& i :finalenergydeps)
+        for (auto& i : finalenergydeps)
         {
           LOG(DEBUG) << i << ' ';
         }
         edep = *std::max_element(finalenergydeps.begin(), finalenergydeps.end());
         std::cout << FairLogger::endl;
         LOG(DEBUG) << "Final energy deposition = " << edep << FairLogger::endl;
-        if (edep <= 0.0001)
+        if (edep <= edep_threshold)
           continue;
         Float_t timeSigma = TMath::Sqrt(fCsITimeErrorA / edep);
         time = gRandom->Gaus(time, timeSigma);
 
-        AddCsIDigi(edep, itWall.first, itBlock.first, itCell.first, events_poisson_Cs, events_poisson_Co, CsGammas_Before, CsGammas_After,
-          Co1Gammas_Before, Co1Gammas_After, Co2Gammas_Before, Co2Gammas_After);
+        AddCsIDigi(edep, gaus4MeV, itWall.first, itBlock.first, itCell.first, events_poisson_Cs, events_poisson_Co);
       }
     }
   }
+  //Digitizing points in LaBr3 detectors
   for (const auto& itCell : pointsLaBr) {
     Float_t edep = 0; // sum edep in cell
     Float_t time = std::numeric_limits<float>::max(); // first time in cell
@@ -507,97 +452,35 @@ void ERGadastDigitizer::Exec(Option_t* opt)
   }
 }
 //----------------------------------------------------------------------------
-//The basic digitizer
-/*void ERGadastDigitizer::Exec(Option_t* opt)
-
+void ERGadastDigitizer::Print(bool isFile, TString fileName)
 {
-  // Reset entries in output arrays
-  Reset();
-
-  // Sort points by sensentive volumes
-  // Map points by cells: pointsCsI[iWall][iBlock][iCell]
-  map<Int_t, map<Int_t, map <Int_t, vector<Int_t> > > > pointsCsI;
-  for (Int_t iPoint = 0; iPoint < fGadastCsIPoints->GetEntriesFast(); iPoint++){
-    ERGadastCsIPoint* point = (ERGadastCsIPoint*)fGadastCsIPoints->At(iPoint);
-    pointsCsI[point->GetWall()][point->GetBlock()][point->GetCell()].push_back(iPoint);
+  FairLogger* logger = FairLogger::GetLogger();
+  if (isFile) {
+    logger->SetLogVerbosityLevel("LOW");
+    logger->SetLogToFile(kTRUE);
+    logger->SetLogToScreen(kFALSE);
+    logger->SetLogFileLevel("INFO");
+    logger->SetLogFileName(fileName);
   }
-
-  // Map points by cells: pointsLaBr[iCell]
-  map<Int_t, vector<Int_t> > pointsLaBr;
-  for (Int_t iPoint = 0; iPoint < fGadastLaBrPoints->GetEntriesFast(); iPoint++){
-    ERGadastLaBrPoint* point = (ERGadastLaBrPoint*)fGadastLaBrPoints->At(iPoint);
-    pointsLaBr[point->GetCell()].push_back(iPoint);
-  }
-
-  for (const auto &itWall : pointsCsI){
-    for (const auto &itBlock : itWall.second){
-      BlockAddress address = std::make_pair(itWall.first, itBlock.first);
-      for (const auto &itCell : itBlock.second){
-        Float_t edep = 0; // sum edep in cell
-        Float_t edepSigma = 0; // sum edep in cell
-        Float_t time = std::numeric_limits<float>::max(); // first time in cell
-        for (const auto iPoint : itCell.second){
-          ERGadastCsIPoint* point = (ERGadastCsIPoint*)fGadastCsIPoints->At(iPoint);
-          if (point->GetTime() < time)
-            time = point->GetTime();
-          TVector3 pos;
-          point->PositionIn(pos);
-
-          size_t x_counts, y_counts, z_counts;
-          std::tie(x_counts, y_counts, z_counts) = fCsILCGrid(address);
-          size_t x_bin, y_bin, z_bin;
-          std::tie(x_bin, y_bin, z_bin) = fSetup->GetCsIMeshElement(&pos, x_counts, y_counts, z_counts);
-          edep += fCsILCFun(address, x_bin, y_bin, z_bin) * point->GetEnergyLoss();
-
-          std::tie(x_counts, y_counts, z_counts) = fCsILCAGrid(address);
-          std::tie(x_bin, y_bin, z_bin) = fSetup->GetCsIMeshElement(&pos, x_counts, y_counts, z_counts);
-          const float A = fCsILCAFun(address, x_bin, y_bin, z_bin);
-
-          std::tie(x_counts, y_counts, z_counts) = fCsILCBGrid(address);
-          std::tie(x_bin, y_bin, z_bin) = fSetup->GetCsIMeshElement(&pos, x_counts, y_counts, z_counts);
-          const float B = fCsILCBFun(address, x_bin, y_bin, z_bin);
-
-          std::tie(x_counts, y_counts, z_counts) = fCsILCCGrid(address);
-          std::tie(x_bin, y_bin, z_bin) = fSetup->GetCsIMeshElement(&pos, x_counts, y_counts, z_counts);
-          const float C = fCsILCCFun(address, x_bin, y_bin, z_bin);
-
-          edepSigma = sqrt(pow(A, 2) + pow(B * TMath::Sqrt(edep), 2) + pow(C * edep, 2));
-        }
-
-        edep = gRandom->Gaus(edep, edepSigma);
-        if (edep < fCsIElossThreshold)
-          continue;
-        Float_t timeSigma = TMath::Sqrt(fCsITimeErrorA/edep);
-        time = gRandom->Gaus(time, timeSigma);
-
-        AddCsIDigi(edep, itWall.first, itBlock.first, itCell.first);
-      }
-    }
-  }
-
-  for (const auto &itCell : pointsLaBr){
-    Float_t edep = 0; // sum edep in cell
-    Float_t time = std::numeric_limits<float>::max(); // first time in cell
-    for (const auto iPoint : itCell.second){
-      ERGadastLaBrPoint* point = (ERGadastLaBrPoint*)fGadastLaBrPoints->At(iPoint);
-      edep += point->GetEnergyLoss();
-      if (point->GetTime() < time)
-        time = point->GetTime();
-    }
-    Float_t edepSigma = sqrt(pow(fLaBrEdepErrorA,2) + pow(fLaBrEdepErrorB*TMath::Sqrt(edep),2) + pow(fLaBrEdepErrorC*edep,2));
-    edep = gRandom->Gaus(fLaBrLC*edep, edepSigma);
-    if (edep < fLaBrElossThreshold)
-      continue;
-    Float_t timeSigma = TMath::Sqrt(fLaBrTimeErrorA/edep);
-    time = gRandom->Gaus(time, timeSigma);
-
-    AddLaBrDigi(edep,itCell.first);
-  }
-}*/
-//----------------------------------------------------------------------------
-void ERGadastDigitizer::Print()
-{
-  ;
+  LOG(INFO) << "ERGadastDigitizer Parameters: " << FairLogger::endl
+    << "fPoissonCs: " << fPoissonCs << FairLogger::endl
+    << "fPoissonCo: " << fPoissonCo << FairLogger::endl
+    << "fSeed: " << fSeed << FairLogger::endl
+    << "fMultiplicity: " << fMultiplicity << FairLogger::endl
+    << "fSignalsInterval: " << fSignalsInterval << FairLogger::endl
+    << "fDecayTime: " << fDecayTime << FairLogger::endl
+    << "fCsITimeErrorA: " << fCsITimeErrorA << FairLogger::endl
+    << "fLaBrLC: " << fLaBrLC << FairLogger::endl
+    << "fLaBrEdepErrorA: " << fLaBrEdepErrorA << FairLogger::endl
+    << "fLaBrEdepErrorB: " << fLaBrEdepErrorB << FairLogger::endl
+    << "fLaBrEdepErrorC: " << fLaBrEdepErrorC << FairLogger::endl
+    << "fLaBrTimeErrorA: " << fLaBrTimeErrorA << FairLogger::endl
+    << "fCsIElossThreshold: " << fCsIElossThreshold << FairLogger::endl
+    << "fLaBrElossThreshold: " << fLaBrElossThreshold << FairLogger::endl
+    << "fCsILC: " << fCsILCFun(BlockAddress(), 0, 0, 0) << FairLogger::endl;
+  //if constexpr (std::is_same<decltype(fC))
+  logger->SetLogToFile(kFALSE);
+  logger->SetLogToScreen(kTRUE);
 }
 //----------------------------------------------------------------------------
 void ERGadastDigitizer::Reset()
@@ -619,14 +502,10 @@ void ERGadastDigitizer::Finish()
 // ----------------------------------------------------------------------------
 
 // ----------------------------------------------------------------------------
-ERGadastCsIDigi* ERGadastDigitizer::AddCsIDigi(Float_t Edep, Int_t wall, Int_t block, Int_t cell, Int_t Events_Poisson_Cs,
-  Int_t Events_Poisson_Co, Int_t CsGammas_Before, Int_t CsGammas_After, Int_t Co1Gammas_Before, Int_t Co1Gammas_After,
-  Int_t Co2Gammas_Before, Int_t Co2Gammas_After)
+ERGadastCsIDigi* ERGadastDigitizer::AddCsIDigi(Float_t Edep, Float_t edep_sigma, Int_t wall, Int_t block, Int_t cell, Int_t Events_Poisson_Cs, Int_t Events_Poisson_Co)
 {
   ERGadastCsIDigi* digi = new((*fGadastCsIDigi)[fGadastCsIDigi->GetEntriesFast()])
-    ERGadastCsIDigi(fGadastCsIDigi->GetEntriesFast(), Edep, wall, block, cell, Events_Poisson_Cs,
-      Events_Poisson_Co, CsGammas_Before, CsGammas_After, Co1Gammas_Before, Co1Gammas_After, Co2Gammas_Before,
-      Co2Gammas_After);
+    ERGadastCsIDigi(fGadastCsIDigi->GetEntriesFast(), Edep, edep_sigma,wall, block, cell, Events_Poisson_Cs, Events_Poisson_Co);
   return digi;
 }
 // ----------------------------------------------------------------------------

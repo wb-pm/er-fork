@@ -50,8 +50,8 @@ public:
 
   /** Virtual method Exec **/
   virtual void Exec(Option_t* opt);
-/* Print ERGadastDigitizer parameters either to terminal or to a file*/
-  virtual void Print();
+/* Print ERGadastDigitizer parameters either to the terminal or to a file*/
+  virtual void Print(bool isFile = false, TString fileName="");
 
   /** Virtual method Finish **/
   virtual void Finish();
@@ -78,8 +78,8 @@ public:
   void SetLaBrEdepError(Float_t a, Float_t b, Float_t c) {fLaBrEdepErrorA = a;fLaBrEdepErrorB = b;fLaBrEdepErrorC = c;}
   void SetLaBrTimeError(Float_t a) {fLaBrTimeErrorA = a;}
   
-  void SetCsIElossThreshold(Float_t treshold){fCsIElossThreshold = treshold;}
-  void SetLaBrElossThreshold(Float_t treshold){fLaBrElossThreshold = treshold;}
+  void SetCsIElossThreshold(Float_t threshold){fCsIElossThreshold = threshold;}
+  void SetLaBrElossThreshold(Float_t threshold){fLaBrElossThreshold = threshold;}
 
   void SetGammasMultiplicity(Int_t multiplicity){fMultiplicity = multiplicity;}
   void SetDecayTime(Double_t decayTime){fDecayTime = decayTime;}
@@ -88,7 +88,7 @@ public:
   void SetPoissonCs(Double_t poissonCs){fPoissonCs = poissonCs;}
   void SetPoissonCo(Double_t poissonCo){fPoissonCo = poissonCo;}
 
-  void SetSeed(Int_t seed){fMtGenerator.seed(seed);}
+  void SetSeed(Int_t seed){fMtGenerator.seed(seed);fSeed = seed;}
   /** Accessors **/ 
 
 protected:
@@ -149,9 +149,7 @@ protected:
       [](BlockAddress)  {return std::make_tuple(1,1,1);};
 protected:
   
-  ERGadastCsIDigi* AddCsIDigi(Float_t Edep,Int_t wall,Int_t block, Int_t cell, Int_t Events_Poisson_Cs, 
-  Int_t Events_Poisson_Co, Int_t CsGammas_Before, Int_t CsGammas_After, Int_t Co1Gammas_Before, Int_t Co1Gammas_After, 
-  Int_t Co2Gammas_Before, Int_t Co2Gammas_After);
+  ERGadastCsIDigi* AddCsIDigi(Float_t Edep,Float_t EdepSigma, Int_t wall,Int_t block, Int_t cell, Int_t Events_Poisson_Cs, Int_t Events_Poisson_Co);
   ERGadastLaBrDigi* AddLaBrDigi(Float_t Edep, Int_t cell);
   
 private:

@@ -1,3 +1,20 @@
+#if !defined(__CLING__)
+
+#include "TGeoManager.h"
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TGeoTrd2.h"
+#include "TGeoCompositeShape.h"
+#include "TMath.h"
+#include "TFile.h"
+
+#include "FairGeoLoader.h"
+#include "FairGeoInterface.h"
+#include "FairGeoMedium.h"
+#include "FairGeoMedia.h"
+#include "FairGeoBuilder.h"
+#endif
+
 // ----- One cell CsI parameters ----------------------------------------------
 Double_t cellOutX1 = 6.02, cellOutX2 = 7.28; 
 Double_t cellOutY1 = 3.52, cellOutY2 = 4.15; 

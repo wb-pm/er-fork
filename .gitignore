@@ -13,4 +13,7 @@ core*
 FairRoot-v-17.10_patches/
 er.code-workspace
 macro/EXPC7/
-macro/Gadast/Pics/
+macro/Gadast/Pics/**
+macro/Gadast/**/*.txt
+macro/Gadast/**/*.pdf
+*.eps

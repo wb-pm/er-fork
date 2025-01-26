@@ -12,8 +12,9 @@ void Import_GDML_Export_ROOT()
 
 	TGDMLParse parser;
 	// Define your input GDML file HERE
-	TString gdmlName = "gadast_test2021";
+	TString gdmlName = "gadast_single_crystal_large";
 	TGeoVolume* gdmlTop = parser.GDMLReadFile (gdmlName + ".gdml");
+	std::cout << "GDML file " << gdmlName + ".gdml" << " has been parsed" << std::endl;
 	TGeoVolume* rootTop = new TGeoVolumeAssembly("TOP");
 
 	gGeoManager->SetTopVolume(gdmlTop);
@@ -30,6 +31,7 @@ void Import_GDML_Export_ROOT()
 	// Define you output ROOT file HERE
 	TFile* outfile = new TFile(gdmlName + ".root", "RECREATE");
 	rootTop->Write();
+	std::cout << "ROOT file " << gdmlName + ".root" << " has been created" << std::endl;
 	//outfile->Close();
   
 }

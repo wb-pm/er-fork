@@ -55,18 +55,18 @@ void drawSpectra()
 { 
 	gROOT->SetStyle("Pub");
 	gStyle->SetLineWidth(1);
-/* 	TFile *frExp = new TFile("ROOT_Files/sub_back_877.root", "READ");
+/* 	TFile *frExp = new TFile("../ROOT_Files/sub_back_877.root", "READ");
 	histExp = (TH1D*)frExp->Get("Subtracted_Background_Energy"); */
-	TFile *frExpFront = new TFile("ROOT_Files/892_ft.root", "READ");
+	TFile *frExpFront = new TFile("../ROOT_Files/892_ft.root", "READ");
 	histExpFront = (TH1D*)frExpFront->Get("Calibrated_Fitting");
-/* 	TFile *frExpSide = new TFile("ROOT_Files/892_st.root");
+/* 	TFile *frExpSide = new TFile("../ROOT_Files/892_st.root");
 	histExpSide = (TH1D*)frExpSide->Get("Calibrated Fitting"); */
-	TFile *frExpSide = new TFile("ROOT_Files/892_st2.root");
+	TFile *frExpSide = new TFile("../ROOT_Files/892_st2.root");
 	histExpSide = (TH1D*)frExpSide->Get("hist_calibrated_spectrum");
 	histExpSide->SetLineColor(kBlue);
-	TFile *frExpCs = new TFile("ROOT_Files/sub_back_877cs.root", "READ");
+	TFile *frExpCs = new TFile("../ROOT_Files/sub_back_877cs.root", "READ");
 	histExpCs = (TH1D*)frExpCs->Get("Subtracted_Background_Energy");
-	TFile *frExpCo = new TFile("ROOT_Files/sub_back_877co.root", "READ");
+	TFile *frExpCo = new TFile("../ROOT_Files/sub_back_877co.root", "READ");
 	histExpCo = (TH1D*)frExpCo->Get("Subtracted_Background_Energy");	
 	histExpFront->Rebin(8);
 	histExpCs->Rebin(8);

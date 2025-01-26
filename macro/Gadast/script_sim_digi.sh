@@ -1,12 +1,12 @@
 #!/bin/bash
+file_postfix="test.root"
+simulation_file="sim_${file_postfix}"
+digi_file="digi_${file_postfix}"
+numberEvents=30000
+geometry_file="gadast_test2021.gdml"
+gammas_multiplicity=4
 
-#simulation_file="resolutionTests/SeedTestStandardDigiNormalLengthSideCuts1mmPlate6cmCo380kBqNoResolutionNoLONU2.root"
-simulation_file="sim_regularCrystal_plate6cm30mln.root"
-digi_file="separateDigi/LONU/A0177B00978C02265_digi_lonu_sim_regularCrystal_plate6cm_Co390kBq_Interval20.root"
-parameters_file="ParametersROOT/par_sim_regularCrystal_plate6cm30mln.root"
-numberEvents=30000000
-
-#Function to run simulation
+#Function to run a simulation
 run_simulation() {
     if [ -f "$simulation_file" ]; then
         echo "Warning: The file '$simulation_file' already exists."
@@ -14,7 +14,7 @@ run_simulation() {
         case "$choice" in
         y|Y )
             echo "Overwriting the file..."
-            root -l -q 'simulation.C('$numberEvents',"gadast_test2021.gdml", 0., 180., 0., 360., "'$simulation_file'")'
+            root -l -q 'simulation.C('$numberEvents',"'$geometry_file'",'$gammas_multiplicity', 0., 180., 0., 360., "'$file_postfix'")'
             ;;
         n|N )
             echo "Operation aborted. The file was not overwritten."
@@ -24,10 +24,10 @@ run_simulation() {
             ;;
         esac
     else
-        root -l -q 'simulation.C('$numberEvents',"gadast_test2021.gdml", 0., 180., 0., 360., "'$simulation_file'")'
+        root -l -q 'simulation.C('$numberEvents',"'$geometry_file'",'$gammas_multiplicity', 0., 180., 0., 360., "'$file_postfix'")'
     fi
 }
-#Function to run digitization
+#Function to run the digitization
 run_digitization() {
     if [ -f "$digi_file" ]; then
         echo "Warning: The file '$digi_file' already exists."
@@ -35,7 +35,7 @@ run_digitization() {
         case "$choice" in
         y|Y )
             echo "Overwriting the file..."
-            root -l -q 'digitization.C('$numberEvents',"'$simulation_file'", "'$parameters_file'", "'$digi_file'",4)'
+            root -l -q 'digitization.C('$numberEvents','$gammas_multiplicity',"'$file_postfix'")'
             ;;
         n|N )
             echo "Operation aborted. The file was not overwritten."
@@ -45,7 +45,7 @@ run_digitization() {
             ;;
         esac
     else
-        root -l -q 'digitization.C('$numberEvents',"'$simulation_file'", "'$parameters_file'", "'$digi_file'",4)'
+        root -l -q 'digitization.C('$numberEvents','$gammas_multiplicity',"'$file_postfix'")'
     fi
 }
 echo "Choose an option:"
@@ -72,4 +72,3 @@ case "$main_choice" in
     echo "Invalid input. Exiting."
     ;;
 esac 
-#root -l -q 'sim_digi.C(10000,"gadast_test2021.gdml", 90., 90., 180., 180., "onlyCobalt1stStraight.root")' simulation where sources are oriented through the crystal's axis

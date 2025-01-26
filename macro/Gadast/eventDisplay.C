@@ -1,14 +1,23 @@
+#if !defined(__CLING__)
+#include "FairRunAna.h"
+#include "FairRuntimeDb.h"
+#include "FairParRootFileIo.h"
+#include "FairEventManager.h"
+#include "FairMCTracks.h"
+#include "FairMCPointDraw.h"
+#endif
+
 void eventDisplay()
 {
   FairRunAna *fRun= new FairRunAna();
   
   FairRuntimeDb* rtdb = fRun->GetRuntimeDb();
   FairParRootFileIo*  parIo1 = new FairParRootFileIo();
-  parIo1->open("par.root");
+  parIo1->open("par_test.root");
   rtdb->setFirstInput(parIo1);
   //rtdb->print();
   
-  fRun->SetInputFile("sim.root");
+  fRun->SetInputFile("sim_test.root");
   fRun->SetOutputFile("EventDisplay.root");
   
   FairEventManager *fMan= new FairEventManager();

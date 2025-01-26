@@ -16,12 +16,11 @@
 
 #endif
 
-void simulation(int nEvents = 1,TString geometry_file_name = "gadast_test2021.gdml", Double32_t theta_min = 0, 
-Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TString file_name = "sim.root")
+void simulation(int nEvents = 1,TString geometry_file_name = "gadast_test2021.gdml", Int_t multiplicity = 1, Double32_t theta_min = 0, Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TString file_postfix = "test.root")
 {
   //---------------------Files-----------------------------------------------
-  TString outFile= file_name;
-  TString parFile= "ParametersROOT/par_"+file_name;
+  TString outFile= "sim_"+file_postfix;
+  TString parFile= "par_"+file_postfix;
   // ------------------------------------------------------------------------
 
   // -----   Timer   --------------------------------------------------------
@@ -60,7 +59,7 @@ Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TS
   // -----   Create PrimaryGenerator   --------------------------------------
    FairPrimaryGenerator* primGen = new FairPrimaryGenerator();
   //Изотропно в ЛАБ системе
-  Int_t multiplicity = 4;
+  multiplicity = 4;
   Int_t pdgId = 22; // gamma PID
   Double_t mass = TDatabasePDG::Instance()->GetParticle(pdgId)->Mass();
 

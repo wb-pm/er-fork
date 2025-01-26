@@ -66,16 +66,16 @@ void drawSpectraV2()
 
     printSigmas(aGlobalCoefLONU,bGlobalCoefLONU,cGlobalCoefLONU,true);
     printSigmas(aGlobalCoefNoLONU,bGlobalCoefNoLONU,cGlobalCoefNoLONU,false);
-    TH1D* experiment_for_no_lonu_hist = readExperimentHist("ExperimentData/SideMeasurements/892_st.root");
-    TH1D* experiment_for_lonu_hist = (TH1D*)experiment_for_no_lonu_hist->Clone();
+    TH1D* experiment_for_no_lonu_hist = readExperimentHist("../ExperimentData/SideMeasurements/892_st.root");
+    TH1D* experiment_for_lonu_hist = (TH1D*)experiment_for_no_lonu_hist->Clone("experiment_for_lonu_hist");
     std::vector<Double_t> energyValuesNoLonu = {661.662,1173.240,1332.508};
     std::vector<Double_t> energyValuesLonu = {659.625,1168.21,1330.25};
-    calibrateExperiment(experiment_for_no_lonu_hist, energyValuesNoLonu);
     calibrateExperiment(experiment_for_lonu_hist, energyValuesLonu);
+    calibrateExperiment(experiment_for_no_lonu_hist, energyValuesNoLonu);
 
-    TH1D* simulation_lonu_hist = readSimulationHist("separateDigi/LONU/A0167B00978C02265_digi_lonu_sim_regularCrystal_plate6cm_Co400kBq_Interval10usDecay4us.root","lonu_hist",experiment_for_lonu_hist);
+    TH1D* simulation_lonu_hist = readSimulationHist("../separateDigi/LONU/A0167B00978C02265_digi_lonu_sim_regularCrystal_plate6cm_Co400kBq_Interval10usDecay4us.root","lonu_hist",experiment_for_lonu_hist);
 
-    TH1D* simulation_no_lonu_hist = readSimulationHist("separateDigi/No_LONU/A0187B00978C02265_digi_no_lonu_sim_regularCrystal_plate6cm_Co380kBq_Interval10usDecay4us.root","no_lonu_hist",experiment_for_no_lonu_hist);
+    TH1D* simulation_no_lonu_hist = readSimulationHist("../separateDigi/No_LONU/A0187B00978C02265_digi_no_lonu_sim_regularCrystal_plate6cm_Co380kBq_Interval10usDecay4us.root","no_lonu_hist",experiment_for_no_lonu_hist);
 
     TH1D* simulation_lonu_calibrated_hist = fillHistogramWithOther(experiment_for_no_lonu_hist, simulation_lonu_hist);
     //drawSimExp(simulation_lonu_hist, experiment_for_lonu_hist);

@@ -1,4 +1,4 @@
-//The code is mainly taken from simulations of FOOT detectors, but with addition of Alpide
+//The code is mainly taken from simulations of FOOT detectors, but with addition of Alpide detector
 #if !defined(__CLING__)
 
 
@@ -28,17 +28,30 @@ void sim(Int_t nEvents = 10)
   //TString nameAppend = "UniformDecayerTest_Alpide_3foot_ranges1000mm";
   //TString nameAppend = "CopyRotatedFootTest500AMeV_1cmSpread";
   TString nameAppend = "test";
+  //Creating the directories if they don't exist
   //Simulation output
+  if(gSystem->AccessPathName("sim/"))
+  {
+    gSystem->mkdir("sim/");
+  };
   TString outFile = "sim/sim_"+nameAppend+".root";
   //Decay products file
   TString decayDatFile = workDirPath + "/input/generators/Decay7C_10kEvents.dat";
   //Output parameters
+  if(gSystem->AccessPathName("par/"))
+  {
+    gSystem->mkdir("par/");
+  };
   TString parFile = "par/par_"+nameAppend+".root";
   //FOOT detector setup
   TString paramFileFootMuSi = workDirPath + "/db/footMuSi/footMuSiParts_7C.xml";
   //Target geometry
   TString targetGeoFileName = workDirPath + "/geometry/target_9Be_5cm_geo.root";
   //Output geometry setup
+  if(gSystem->AccessPathName("setup/"))
+  {
+    gSystem->mkdir("setup/");
+  };
   TString setup_name = "setup/setup_"+nameAppend+".root";
 
   //-------Set LOG verbosity  -----------------------------------------------

@@ -15,3 +15,6 @@ FairRoot-v-17.10_patches
 macro/EXPC7/local
 macro/EXPC7/input
 er.code-workspace
+macro/Alpide/analysis/output/**
+macro/Gadast/Pics/**
+macro/Gadast/**/*.txt

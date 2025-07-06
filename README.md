@@ -2,7 +2,7 @@
 ExpertRoot(ER) is a [FairRoot](https://github.com/FairRootGroup/FairRoot)-based framework dedicated
 to the simulation, reconstruction, data acquisition, and analysis of the nuclear physics experiments.
 Primarily developed for the needs of experiments on fragment separator 
-[ACCULLINA-2](http://aculina.jinr.ru/a-2.html) at Fleurov Nuclear Research in JINR and experiment
+[ACCULLINA-2](http://aculina.jinr.ru/a-2.html) at Flerov Nuclear Research in JINR and experiment
 [EXPERT](http://aculina.jinr.ru/expert.html) on fragment separator SUPER-FRS at FAIR in GSI.
 
 ## Library Stack
@@ -37,49 +37,71 @@ for different studies.
 Due to high dependencies on the external packages of various versions, we strongly recommend to use
 the docker-image [docker](https://www.docker.com) to deploy ER installation.
 
-1. Install docker engine on your system: https://docs.docker.com/engine/install/ubuntu/
-2. Follow docker post-installation steps: https://docs.docker.com/engine/install/linux-postinstall/
-2. Clone ER repository:
+0. Install docker engine on your system: https://docs.docker.com/engine/install/ubuntu/
+1. Follow docker post-installation steps: https://docs.docker.com/engine/install/linux-postinstall/
+2. Clone ER repository of this fork to a designated folder:
 
 ```
-git clone https://github.com/FLNR-JINR/er/
-cd er
+git clone https://github.com/wb-pm/er-fork .
 git checkout dev
 ```
 
 3. Build docker image with _ER_:
 
 ```
-docker build --build-arg ER=dev -t er .
+docker build -t er-wbpm .
+```
+The previous steps have to be done just once. In order to work witha certain branch of the repository: 
+
+4. Inside the folder with _ER_ checkout the desired branch (skip the step if using the default _dev_ branch):
+```
+#remote branch
+git checkout -b <desired_branch> origin/<desired_branch>
+
+#existing local branch
+git checkout <desired_branch>
 ```
 
-4. Run _er_ container, compile updated sources, run simulation:
+5. Run _er_ container, compile updated sources:
 
 ```
-docker run --entrypoint /bin/bash --net=host -v $(pwd):/opt/er -v $(pwd)/macro/He10/sim:/opt/run -w /opt/run -v /tmp/.X11-unix:/tmp/.X11-unix  -v $HOME/.Xauthority:/home/jovyan/.Xauthority:rw -e DISPLAY=$DISPLAY -it er
+#Run docker container of the created image
+docker run \
+  --log-driver none \
+  --entrypoint /bin/bash \
+  --net=host \ 
+  --name er-container \
+  -v $(pwd):/opt/er \ 
+  -v $(pwd)/macro/:/opt/run \
+  -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v $HOME/.Xauthority:/home/jovyan/.Xauthority:rw \
+  -w /opt/run  \  
+  -e DISPLAY=$DISPLAY \
+  -it er
+
+#Then compile the ER version of the chosen branch
 cd /opt/er
 mkdir build
 cd build
 export SIMPATH=/opt/FairSoft/
 export FAIRROOTPATH=/opt/FairRoot/
 cmake ../ -DACCULINNA_GO4=/opt/accdaq/install/
-make -j8
+make -j4
 source ./config.sh
-# to run with new build
-cd /opt/run/
-root -l sim_digi.C
 ```
 
-where -v is used to map your host working directory '/path_to/macro/He10/sim' and working 
-directory  '/opt/run' inside container; -w /opt/run - set working directory for interactive session;
--e DISPLAY=$DISPLAY is needed to forward gui from container to host machine; -it - to set interactive session.
+`entrypoint /bin/bash` - overwrite the default entrypoint of the image;
+`-log-driver none` - don't write the logs, since the log files can eventually take up a lot of disk storage. Another option might be to use `-log-driver local` (See more at [Docker logging](https://docs.docker.com/engine/logging/);
+`-v <host_directory>:<container_directory>` is used to map your host working directory '$(pwd)' with ER and '$(pwd)/macro' with macros to directories inside the container;
+`-w /opt/run` - set the default directory in the container;
+`-e DISPLAY=$DISPLAY` - forward GUI from container to host machine;
+`-it` - set interactive session.
 
-Redifinition of `entrypoint` is needed because `er/build/config.sh` may not exists in mapped volume.
-
+More information about different options for running the containers and Docker CLI reference in general can be found at [Docker run options](https://docs.docker.com/reference/cli/docker/container/run/).
+Instructions on running the simulation can be found in 'macro/Gadast' folder.
 ## Step by Step installation
-
-In case Docker-image installation is not preferable or impossible in some reasons one can install 
-all dependencies using the following instructions.
+MOST PROBABLY OBSOLETE!!!
+In case Docker-image installation is not preferable or impossible in some reasons one can install all dependencies using the following instructions.
 
 ### 1. Install [FairSoft](https://github.com/FairRootGroup/FairSoft/tree/dev)
 
@@ -200,7 +222,7 @@ cd build && cmake build . && ctest -R exp1904_h7_sim
 
 # Authors and contributors
 
-**ER** is currently developed and mantained at [FLNR](http://flerovlab.jinr.ru/) and [LIT](https://lit.jinr.ru/en) by:
+**ER** is currently developed and maintained at [FLNR](http://flerovlab.jinr.ru/) and [LIT](https://lit.jinr.ru/en) by:
 
 * [Vitaliy Schetinin](mailto:schetinin@jinr.ru)
 * [Sergey Belogurov](mailto:belogurov@jinr.ru)
@@ -210,3 +232,4 @@ cd build && cmake build . && ctest -R exp1904_h7_sim
 * [Ivan Muzalevskii](mailto:muzalevsky@jinr.ru)
 * [Ilyas Satyshev](mailto:satyshev@jinr.ru)
 * [Sofya Rymzhanova](mailto:rymzhanova@jinr.ru)
+* [Bulat Khamidullin](mailto:khamidullinbr@jinr.ru)

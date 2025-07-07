@@ -1,5 +1,5 @@
 Here is an example of GADAST simulation and digitization, reproducing the test experiments, conducted in Warsaw, November 2021. 
-1. Run docker container (see main [README](../../README.MD), step 5)
+1. Run docker container (see main [README](../../README.md), step 5)
 
 2. One can run the given bash script and then will be prompted to run either a simulation, digitization or both in succession.
 ```

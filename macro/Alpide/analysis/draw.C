@@ -12,20 +12,20 @@ TString eventSelection = "";
 
 void draw()
 {
-    TFile* threeProtons = new TFile("../digi/digi_TestTracks_Alpide_3foot_ranges1000mm.root");
+    TFile* threeProtons = new TFile("../digi/digi_test.root");
     TTree* tree_threeProtons = (TTree*)threeProtons->Get("er");
     simRecoComparison(tree_threeProtons);
 
-    TFile* rotatedFootFile = new TFile("../sim/sim_RotatedFootTest500AMeV_1cmSpread.root");
-    TTree* rotatedFootTree = (TTree*)rotatedFootFile->Get("er");
+    //TFile* rotatedFootFile = new TFile("../sim/sim_RotatedFootTest500AMeV_1cmSpread.root");
+    //TTree* rotatedFootTree = (TTree*)rotatedFootFile->Get("er");
 
 /*     TFile* copyrotatedFootFile = new TFile("../sim/sim_CopyRotatedFootTest500AMeV_1cmSpread.root");
     TTree* copyrotatedFootTree = (TTree*)copyrotatedFootFile->Get("er"); */
 
-    TFile* nonRotatedFootFile = new TFile("../sim/sim_NonRotatedFootTest500AMeV_1cmSpread.root");
+    TFile* nonRotatedFootFile = new TFile("../sim/sim_test.root");
     TTree* nonRotatedFootTree = (TTree*)nonRotatedFootFile->Get("er");
 
-    rotatedNonRotated(rotatedFootTree, nonRotatedFootTree);
+//    rotatedNonRotated(rotatedFootTree, nonRotatedFootTree);
 }
 
 

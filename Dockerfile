@@ -4,6 +4,8 @@ ARG DEPENDENCIES=ghcr.io/flnr-jinr/fs_oct17p4:latest
 
 FROM ${DEPENDENCIES}
 
+RUN apt-get update
+
 RUN apt-get install nano
 
 WORKDIR /opt
@@ -23,7 +25,7 @@ RUN git clone https://github.com/flnr-jinr/ACCULINNA_go4_user_library accdaq &&\
 	cmake ../ -DCMAKE_INSTALL_PREFIX=/opt/accdaq/install &&\
 	make install -j4
 
-RUN cd /opt && git clone https://github.com/flnr-jinr/er &&\
+RUN cd /opt && git clone https://github.com/wb-pm/er-fork &&\
 	cd er &&\
 	git checkout ${ER} &&\
 	export SIMPATH=/opt/FairSoft/ &&\
@@ -34,4 +36,5 @@ RUN cd /opt && git clone https://github.com/flnr-jinr/er &&\
 	make -j4
 
 COPY entrypoint.sh /etc/entrypoint.sh
+RUN echo ". /etc/entrypoint.sh" >> /home/jovyan/.bashrc
 ENTRYPOINT ["/etc/entrypoint.sh"]

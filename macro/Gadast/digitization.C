@@ -22,7 +22,7 @@ using std::vector;
 using std::map;
 using std::pair;
 
-void digitization(int nEvents = 1e5, int multiplicity = 1, TString file_postfix = "test.root")
+void digitization(int nEvents = 30000, int multiplicity = 4, TString file_postfix = "test.root")
 {
   //file_postfix = "4MeV_large_crystal_center.root";
   TString sim_file = "sim_" + file_postfix;

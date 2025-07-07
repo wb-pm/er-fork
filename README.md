@@ -1,9 +1,6 @@
 # ER
-ExpertRoot(ER) is a [FairRoot](https://github.com/FairRootGroup/FairRoot)-based framework dedicated
-to the simulation, reconstruction, data acquisition, and analysis of the nuclear physics experiments.
-Primarily developed for the needs of experiments on fragment separator 
-[ACCULLINA-2](http://aculina.jinr.ru/a-2.html) at Flerov Nuclear Research in JINR and experiment
-[EXPERT](http://aculina.jinr.ru/expert.html) on fragment separator SUPER-FRS at FAIR in GSI.
+ExpertRoot(ER) is a [FairRoot](https://github.com/FairRootGroup/FairRoot)-based framework dedicated to the simulation, reconstruction, data acquisition, and analysis of the nuclear physics experiments.
+Primarily developed for the needs of experiments on fragment separator [ACCULLINA-2](http://aculina.jinr.ru/a-2.html) at Flerov Nuclear Research in JINR and experiment [EXPERT](http://aculina.jinr.ru/expert.html) on fragment separator SUPER-FRS at FAIR in GSI.
 
 ## Library Stack
 
@@ -26,16 +23,13 @@ for different studies.
 ## Key features:
 
 * User-defined interactions: reactions and decays.
-* It is possible to take into account energy losses of projectiles in the target and the beam 
-  detector components such as ToF scintillators and MWPC stations.
+* It is possible to take into account energy losses of projectiles in the target and the beam detector components such as ToF scintillators and MWPC stations.
 * Simulation and analysis of cocktail and defocusing beam.
-* Accounting for energy losses in the dead layers of the detector during reconstruction of ejectiles
-  energies by experimental data.
+* Accounting for energy losses in the dead layers of the detector during reconstruction of ejectiles energies by experimental data.
 
 ## Run using Docker
 
-Due to high dependencies on the external packages of various versions, we strongly recommend to use
-the docker-image [docker](https://www.docker.com) to deploy ER installation.
+Due to high dependencies on the external packages of various versions, we strongly recommend to use the docker-image [docker](https://www.docker.com) to deploy ER installation.
 
 0. Install docker engine on your system: https://docs.docker.com/engine/install/ubuntu/
 1. Follow docker post-installation steps: https://docs.docker.com/engine/install/linux-postinstall/
@@ -79,7 +73,7 @@ docker run \
   -e DISPLAY=$DISPLAY \
   -it er
 
-#Then compile the ER version of the chosen branch
+#When run for the first time, ER classes have to be compiled
 cd /opt/er
 mkdir build
 cd build
@@ -96,6 +90,15 @@ source ./config.sh
 `-w /opt/run` - set the default directory in the container;
 `-e DISPLAY=$DISPLAY` - forward GUI from container to host machine;
 `-it` - set interactive session.
+
+In case of adding new classes supplement CMakeLists.txt in the folder with you class files. Modify following blocks of code -- INCLUDE_DIRECTORIES and SRCS.
+
+To compile your changes (or after switching to another git branch) run docker container and execute:
+```
+cd /opt/er/build
+cmake ../ -DACCULINNA_GO4=/opt/accdaq/install/ #Can be omitted, if ACCULINNA_GO4 is not used
+make -j4
+```
 
 More information about different options for running the containers and Docker CLI reference in general can be found at [Docker run options](https://docs.docker.com/reference/cli/docker/container/run/).
 Instructions on running the simulation can be found in 'macro/Gadast' folder.

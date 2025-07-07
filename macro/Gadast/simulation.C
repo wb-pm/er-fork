@@ -16,7 +16,7 @@
 
 #endif
 
-void simulation(int nEvents = 1,TString geometry_file_name = "gadast_test2021.gdml", Int_t multiplicity = 1, Double32_t theta_min = 0, Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TString file_postfix = "test.root")
+void simulation(int nEvents = 30000,TString geometry_file_name = "gadast_test2021.gdml", Int_t multiplicity = 4, Double32_t theta_min = 0, Double32_t theta_max = 180, Double32_t phi_min = 0, Double32_t phi_max = 360, TString file_postfix = "test.root")
 {
   //---------------------Files-----------------------------------------------
   TString outFile= "sim_"+file_postfix;

@@ -1,7 +1,6 @@
 build/
 docs/_build/
 *.root
-*.png
 core_dump*
 macro/h7_test/cuts
 macro/h7_test/parameters
